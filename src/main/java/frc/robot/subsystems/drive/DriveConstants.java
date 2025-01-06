@@ -51,6 +51,12 @@ public class DriveConstants {
   public static final int frontRightTurnCanId = 6;
   public static final int backRightTurnCanId = 8;
 
+  // Absolute encoder analog ports
+  public static final int frontLeftAbsoluteEncoderPort = 0;
+  public static final int backLeftAbsoluteEncoderPort = 1;
+  public static final int frontRightAbsoluteEncoderPort = 2;
+  public static final int backRightAbsoluteEncoderPort = 3;
+
   // Drive motor configuration
   public static final int driveMotorCurrentLimit = 50;
   public static final double wheelRadiusMeters = Units.inchesToMeters(1.5);
@@ -82,8 +88,14 @@ public class DriveConstants {
 
   // Turn encoder configuration
   public static final boolean turnEncoderInverted = true;
-  public static final double turnEncoderPositionFactor = 2 * Math.PI; // Rotations -> Radians
-  public static final double turnEncoderVelocityFactor = (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
+  public static final double turnEncoderPositionFactor =
+      2 * Math.PI / turnMotorReduction; // Rotor Rotations -> Wheel Radians
+  public static final double turnEncoderVelocityFactor =
+      (2 * Math.PI) / 60.0 / turnMotorReduction; // Rotor RPM -> Wheel Rad/Sec
+  public static final double turnAbsoluteEncoderPositionFactor =
+      2 * Math.PI; // Rotations -> Radians
+  public static final double turnAbsoluteEncoderVelocityFactor =
+      (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
 
   // Turn PID configuration
   public static final double turnKp = 2.0;
