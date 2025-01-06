@@ -20,7 +20,10 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -71,6 +74,9 @@ public class Drive extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
+  private final SwerveSetpointGenerator setpointGenerator;
+  private SwerveSetpoint previousSetpoint;
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -110,6 +116,10 @@ public class Drive extends SubsystemBase {
         (targetPose) -> {
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
+    setpointGenerator =
+        new SwerveSetpointGenerator(ppConfig, maxModuleRotationVelocityRadiansPerSec);
+    previousSetpoint =
+        new SwerveSetpoint(getChassisSpeeds(), getModuleStates(), DriveFeedforwards.zeros(4));
 
     // Configure SysId
     sysId =
@@ -193,6 +203,12 @@ public class Drive extends SubsystemBase {
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxSpeedMetersPerSec);
 
+    // Alternate setpoint generation using 254's swerve setpoint generator (needs to be tested)
+    // previousSetpoint = setpointGenerator.generateSetpoint(previousSetpoint, speeds, 0.02);
+    // SwerveModuleState[] setpointStates = previousSetpoint.moduleStates();
+    // SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxSpeedMetersPerSec);
+    // ChassisSpeeds discreteSpeeds = speeds;
+
     // Log unoptimized setpoints
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
     Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
@@ -210,6 +226,13 @@ public class Drive extends SubsystemBase {
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
       modules[i].runCharacterization(output);
+    }
+  }
+
+  /** Spins the modules in place with the specified output */
+  public void runTurnOpenLoop(double output) {
+    for (int i = 0; i < 4; i++) {
+      modules[i].runTurnOpenLoop(output);
     }
   }
 
@@ -319,5 +342,13 @@ public class Drive extends SubsystemBase {
   /** Returns the maximum angular speed in radians per sec. */
   public double getMaxAngularSpeedRadPerSec() {
     return maxSpeedMetersPerSec / driveBaseRadius;
+  }
+
+  /**
+   * Returns the current rotation velocity of the swerve module with the given index in rad per sec.
+   * Only used for configuration of swerve setpoint generator
+   */
+  public double getModuleRotationVelocityRadPerSec(int moduleIndex) {
+    return modules[moduleIndex].getModuleRotationVelocityRadPerSec();
   }
 }

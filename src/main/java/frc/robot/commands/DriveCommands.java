@@ -295,4 +295,44 @@ public class DriveCommands {
     Rotation2d lastAngle = new Rotation2d();
     double gyroDelta = 0.0;
   }
+
+  /** Measures the max rotation velocity of a swerve module in radians per second */
+  public static Command maxModuleRotationVelocityCharacterization(Drive drive) {
+    double[] maxTurnVelocities = new double[4];
+
+    return Commands.sequence(
+        // Reset max velocities
+        Commands.runOnce(
+            () -> {
+              for (int i = 0; i < 4; i++) {
+                maxTurnVelocities[i] = 0.0;
+              }
+            }),
+
+        // Run the modules at full open-loop output and record max velocities
+        Commands.run(
+                () -> {
+                  drive.runTurnOpenLoop(12.0);
+                  for (int i = 0; i < 4; i++) {
+                    double currentVelocity = drive.getModuleRotationVelocityRadPerSec(i);
+                    if (currentVelocity > maxTurnVelocities[i]) {
+                      maxTurnVelocities[i] = currentVelocity;
+                    }
+                  }
+                },
+                drive)
+            .withTimeout(5.0),
+
+        // Print out the maximum velocities
+        Commands.runOnce(
+            () -> {
+              NumberFormat formatter = new DecimalFormat("#0.000");
+              System.out.println(
+                  "********** Max Module Rotation Velocity Characterization Results **********");
+              for (int i = 0; i < 4; i++) {
+                System.out.println(
+                    "\tModule " + i + ": " + formatter.format(maxTurnVelocities[i]) + " rad/sec");
+              }
+            }));
+  }
 }

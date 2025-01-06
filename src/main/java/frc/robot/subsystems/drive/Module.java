@@ -78,6 +78,11 @@ public class Module {
     io.setTurnPosition(new Rotation2d());
   }
 
+  /** Runs the turn motor with the specified output. */
+  public void runTurnOpenLoop(double output) {
+    io.setTurnOpenLoop(output);
+  }
+
   /** Disables all outputs to motors. */
   public void stop() {
     io.setDriveOpenLoop(0.0);
@@ -97,6 +102,14 @@ public class Module {
   /** Returns the current drive velocity of the module in meters per second. */
   public double getVelocityMetersPerSec() {
     return inputs.driveVelocityRadPerSec * wheelRadiusMeters;
+  }
+
+  /**
+   * Returns the current rotation velocity of the module in rad per sec. Only used for configuration
+   * of swerve setpoint generator.
+   */
+  public double getModuleRotationVelocityRadPerSec() {
+    return inputs.turnVelocityRadPerSec;
   }
 
   /** Returns the module position (turn angle and drive position). */
