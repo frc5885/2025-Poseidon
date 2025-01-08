@@ -101,7 +101,7 @@ public class ModuleIOSpark implements ModuleIO {
               case 0 -> frontLeftAbsoluteEncoderPort;
               case 1 -> frontRightAbsoluteEncoderPort;
               case 2 -> backLeftAbsoluteEncoderPort;
-              case 3 -> backLeftAbsoluteEncoderPort;
+              case 3 -> backRightAbsoluteEncoderPort;
               default -> 0;
             });
     driveController = driveSpark.getClosedLoopController();
