@@ -99,13 +99,13 @@ public class DriveConstants {
       (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
 
   // Turn PID configuration
-  public static final double turnKp = 1.0;
-  public static final double turnKd = 0.2;
+  public static final double turnKp = 2.0;
+  public static final double turnKd = 0.0;
   public static final double turnSimP = 8.0;
   public static final double turnSimD = 0.0;
   public static final double turnPIDMinInput = 0; // Radians
   public static final double turnPIDMaxInput = 2 * Math.PI; // Radians
-  public static final double turnMaxErrorTolerance = Units.degreesToRadians(2.0);
+  public static final double turnMaxErrorTolerance = Units.degreesToRadians(1.0);
 
   // PathPlanner configuration
   public static final double robotMassKg = 74.088;
