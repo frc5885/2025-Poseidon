@@ -61,8 +61,7 @@ public class DriveConstants {
   // Drive motor configuration
   public static final int driveMotorCurrentLimit = 35;
   public static final double wheelRadiusMeters = Units.inchesToMeters(1.75);
-  public static final double driveMotorReduction =
-      6.75 / 1.0; // SDS Mk4i L2
+  public static final double driveMotorReduction = 6.75 / 1.0; // SDS Mk4i L2
   public static final DCMotor driveGearbox = DCMotor.getNEO(1);
 
   // Drive encoder configuration

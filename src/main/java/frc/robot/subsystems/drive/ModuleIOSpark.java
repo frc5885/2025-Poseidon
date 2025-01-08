@@ -159,7 +159,9 @@ public class ModuleIOSpark implements ModuleIO {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .positionWrappingEnabled(true)
         .positionWrappingInputRange(turnPIDMinInput, turnPIDMaxInput)
-        .pidf(turnKp, 0.0, turnKd, 0.0);
+        .pidf(turnKp, 0.0, turnKd, 0.0)
+        .maxMotion
+        .allowedClosedLoopError(turnMaxErrorTolerance);
     turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -265,6 +267,6 @@ public class ModuleIOSpark implements ModuleIO {
     double setpoint =
         MathUtil.inputModulus(
             rotation.plus(zeroRotation).getRadians(), turnPIDMinInput, turnPIDMaxInput);
-    turnController.setReference(setpoint, ControlType.kPosition);
+    turnController.setReference(setpoint, ControlType.kMAXMotionPositionControl);
   }
 }
