@@ -79,7 +79,6 @@ public class DriveConstants {
   public static final double driveSimD = 0.0;
   public static final double driveSimKs = 0.0;
   public static final double driveSimKv = 0.0789;
-  public static final double driveMaxErrorTolerance = Units.degreesToRadians(2.0);
 
   // Turn motor configuration
   public static final boolean turnInverted = true;
@@ -105,7 +104,7 @@ public class DriveConstants {
   public static final double turnSimD = 0.0;
   public static final double turnPIDMinInput = 0; // Radians
   public static final double turnPIDMaxInput = 2 * Math.PI; // Radians
-  public static final double turnMaxErrorTolerance = Units.degreesToRadians(1.0);
+  public static final double turnMaxErrorTolerance = Units.degreesToRadians(2.0);
 
   // PathPlanner configuration
   public static final double robotMassKg = 74.088;

@@ -265,6 +265,12 @@ public class ModuleIOSpark implements ModuleIO {
     double setpoint =
         MathUtil.inputModulus(
             rotation.plus(zeroRotation).getRadians(), turnPIDMinInput, turnPIDMaxInput);
-    turnController.setReference(setpoint, ControlType.kPosition);
+    double currentPosition = turnEncoder.getPosition();
+    if (Math.abs(currentPosition - setpoint) > turnMaxErrorTolerance) {
+        turnController.setReference(setpoint, ControlType.kPosition);
+    }
+    else {
+        turnController.setReference(currentPosition, ControlType.kPosition);
+    }
   }
 }
