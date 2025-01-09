@@ -141,14 +141,14 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // Reset gyro to 0° when B button is pressed
+    // Reset odometry to (0, 0), 0° when B button is pressed
     controller
         .b()
         .onTrue(
             Commands.runOnce(
                     () -> {
                       drive.setPose(new Pose2d());
-                      questNav.resetPose();
+                      questNav.setRobotPose(new Pose2d());
                     },
                     drive)
                 .ignoringDisable(true));
