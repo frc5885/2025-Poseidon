@@ -29,6 +29,7 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.drive.QuestNav;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -40,6 +41,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final QuestNav questNav;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -83,6 +85,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         break;
     }
+    questNav = new QuestNav();
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -143,9 +146,10 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    () -> {
+                      drive.setPose(new Pose2d());
+                      questNav.resetPose();
+                    },
                     drive)
                 .ignoringDisable(true));
   }
