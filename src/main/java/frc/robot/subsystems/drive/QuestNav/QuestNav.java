@@ -44,8 +44,9 @@ public class QuestNav extends SubsystemBase {
    * @param realRobotPose The desired Pose2d of the robot in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
-    Pose2d realQuestPose = realRobotPose.transformBy(QuestNavConstants.robotToQuestTransform);
-    questToFieldTransform = realQuestPose.minus(getRawQuestPose());
+    Pose2d robotPoseInQuestFOR = robotPoseInQuestFOR(getRawQuestPose());
+    questToFieldTransform = realRobotPose.minus(robotPoseInQuestFOR);
+    System.out.println("QuestToField: " + questToFieldTransform);
   }
 
   /**
@@ -55,25 +56,35 @@ public class QuestNav extends SubsystemBase {
    * @return The Pose2d of the robot in field coordinates
    */
   public Pose2d getRobotPose() {
-    return getRawQuestPose()
-        .transformBy(questToFieldTransform)
-        .transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+    Pose2d robotPoseInQuestFOR = robotPoseInQuestFOR(getRawQuestPose());
+    // Logger.recordOutput("Odometry/RobotPoseInQuestFOR", robotPoseInQuestFOR);
+    // Logger.recordOutput("Odometry/RawQuestPose", getRawQuestPose());
+    return robotPoseInQuestFOR.plus(questToFieldTransform);
   }
 
   /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
-  public Pose2d getRawQuestPose() {
+  private Pose2d getRawQuestPose() {
     float[] questnavPosition = questNavIOInputs.position;
     return new Pose2d(questnavPosition[2], -questnavPosition[0], getRawQuestRotation());
   }
 
   /** Returns the yaw angle from the Quest's eulerAngles */
-  public Rotation2d getRawQuestRotation() {
+  private Rotation2d getRawQuestRotation() {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
-    float ret = eulerAngles[1];
+    float ret = -eulerAngles[1];
     ret %= 360;
     if (ret < 0) {
       ret += 360;
     }
     return new Rotation2d(Units.degreesToRadians(ret));
+  }
+
+  /** Returns the robot pose in the Quest's FOR given the quest's reported pose in its own FOR */
+  private Pose2d robotPoseInQuestFOR(Pose2d questPoseInQuestFOR) {
+    Logger.recordOutput("Odometry/questPoseInQuestFOR", questPoseInQuestFOR);
+    Logger.recordOutput(
+        "Odometry/robotPoseInQuestFOR",
+        questPoseInQuestFOR.transformBy(QuestNavConstants.robotToQuestTransform.inverse()));
+    return questPoseInQuestFOR.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
   }
 }

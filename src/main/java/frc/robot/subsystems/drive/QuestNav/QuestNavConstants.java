@@ -6,7 +6,7 @@ import edu.wpi.first.math.util.Units;
 
 public class QuestNavConstants {
   // Physical offset from the robot center to the Quest headset.
-  // Quest is 16 inches in front of the robot center
+  // Quest is 14 inches in front of the robot center
   public static final Transform2d robotToQuestTransform =
-      new Transform2d(Units.inchesToMeters(16.0), 0, new Rotation2d());
+      new Transform2d(Units.inchesToMeters(14.0), 0, new Rotation2d());
 }
