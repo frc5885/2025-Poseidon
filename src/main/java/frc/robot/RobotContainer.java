@@ -33,6 +33,7 @@ import frc.robot.subsystems.drive.ModuleIOSpark;
 import frc.robot.subsystems.drive.QuestNav.QuestNav;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -76,7 +77,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
+        questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
         break;
 
       default:

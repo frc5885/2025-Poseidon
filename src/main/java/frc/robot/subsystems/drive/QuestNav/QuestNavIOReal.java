@@ -1,7 +1,5 @@
 package frc.robot.subsystems.drive.QuestNav;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.FloatArraySubscriber;
 import edu.wpi.first.networktables.IntegerPublisher;
@@ -45,22 +43,5 @@ public class QuestNavIOReal implements QuestNavIO {
     if (questMiso.get() == 99) {
       questMosi.set(0);
     }
-  }
-
-  @Override
-  public Pose2d getRawQuestPose() {
-    float[] questnavPosition = questPosition.get();
-    return new Pose2d(questnavPosition[2], -questnavPosition[0], getRawQuestRotation());
-  }
-
-  @Override
-  public Rotation2d getRawQuestRotation() {
-    float[] eulerAngles = questEulerAngles.get();
-    float ret = eulerAngles[1];
-    ret %= 360;
-    if (ret < 0) {
-      ret += 360;
-    }
-    return new Rotation2d(ret);
   }
 }

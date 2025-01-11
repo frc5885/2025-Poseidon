@@ -17,16 +17,11 @@ public class QuestNav extends SubsystemBase {
   private final QuestNavIO questNavIO;
   private final QuestNavIOInputsAutoLogged questNavIOInputs = new QuestNavIOInputsAutoLogged();
 
-  // Physical offset from the robot center to the Quest headset.
-  // Quest is 16 inches in front of the robot center
-  private final Transform2d robotToQuestTransform =
-      new Transform2d(Units.inchesToMeters(16.0), 0, new Rotation2d());
-
   // Transform to map between the quest's local coordinate system and field coordinates.
   private Transform2d questToFieldTransform = new Transform2d();
 
   /**
-   * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest to field
+   * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
    * transform
    */
   public QuestNav(QuestNavIO questNavIO, Pose2d realRobotPose) {
@@ -49,8 +44,8 @@ public class QuestNav extends SubsystemBase {
    * @param realRobotPose The desired Pose2d of the robot in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
-    Pose2d realQuestPose = realRobotPose.transformBy(robotToQuestTransform);
-    questToFieldTransform = realQuestPose.minus(questNavIO.getRawQuestPose());
+    Pose2d realQuestPose = realRobotPose.transformBy(QuestNavConstants.robotToQuestTransform);
+    questToFieldTransform = realQuestPose.minus(getRawQuestPose());
   }
 
   /**
@@ -60,9 +55,25 @@ public class QuestNav extends SubsystemBase {
    * @return The Pose2d of the robot in field coordinates
    */
   public Pose2d getRobotPose() {
-    return questNavIO
-        .getRawQuestPose()
+    return getRawQuestPose()
         .transformBy(questToFieldTransform)
-        .transformBy(robotToQuestTransform.inverse());
+        .transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+  }
+
+  /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
+  public Pose2d getRawQuestPose() {
+    float[] questnavPosition = questNavIOInputs.position;
+    return new Pose2d(questnavPosition[2], -questnavPosition[0], getRawQuestRotation());
+  }
+
+  /** Returns the yaw angle from the Quest's eulerAngles */
+  public Rotation2d getRawQuestRotation() {
+    float[] eulerAngles = questNavIOInputs.eulerAngles;
+    float ret = eulerAngles[1];
+    ret %= 360;
+    if (ret < 0) {
+      ret += 360;
+    }
+    return new Rotation2d(Units.degreesToRadians(ret));
   }
 }

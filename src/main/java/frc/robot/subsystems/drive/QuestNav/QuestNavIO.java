@@ -1,7 +1,5 @@
 package frc.robot.subsystems.drive.QuestNav;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface QuestNavIO {
@@ -19,14 +17,4 @@ public interface QuestNavIO {
 
   /** Clean up questnav subroutine messages after they've been processed on the headset. */
   public default void cleanUpQuestNavMessages() {}
-
-  /** Returns the yaw angle from the Quest's eulerAngles */
-  public default Pose2d getRawQuestPose() {
-    return new Pose2d(0, 0, getRawQuestRotation());
-  }
-
-  /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
-  public default Rotation2d getRawQuestRotation() {
-    return new Rotation2d();
-  }
 }
