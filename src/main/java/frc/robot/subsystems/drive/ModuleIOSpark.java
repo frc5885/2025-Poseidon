@@ -164,8 +164,8 @@ public class ModuleIOSpark implements ModuleIO {
         .closedLoop
         .maxMotion
         .allowedClosedLoopError(turnMaxErrorTolerance)
-        .maxVelocity(1000)
-        .maxAcceleration(10000);
+        .maxVelocity(turnMaxVelocityRadPerSec)
+        .maxAcceleration(turnMaxAccelerationRadPerSecSq);
     turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
