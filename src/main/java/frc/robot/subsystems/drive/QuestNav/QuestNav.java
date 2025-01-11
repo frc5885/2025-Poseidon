@@ -57,8 +57,9 @@ public class QuestNav extends SubsystemBase {
    */
   public Pose2d getRobotPose() {
     Pose2d robotPoseInQuestFOR = robotPoseInQuestFOR(getRawQuestPose());
-    // Logger.recordOutput("Odometry/RobotPoseInQuestFOR", robotPoseInQuestFOR);
-    // Logger.recordOutput("Odometry/RawQuestPose", getRawQuestPose());
+    Logger.recordOutput("Odometry/RobotPoseInQuestFOR", robotPoseInQuestFOR);
+    Logger.recordOutput("Odometry/RawQuestPose", getRawQuestPose());
+    Logger.recordOutput("Odometry/QuestYaw", getRawQuestRotation());
     return robotPoseInQuestFOR.plus(questToFieldTransform);
   }
 
@@ -71,11 +72,7 @@ public class QuestNav extends SubsystemBase {
   /** Returns the yaw angle from the Quest's eulerAngles */
   private Rotation2d getRawQuestRotation() {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
-    float ret = -eulerAngles[1];
-    ret %= 360;
-    if (ret < 0) {
-      ret += 360;
-    }
+    float ret = 180 - eulerAngles[1] % 360;
     return new Rotation2d(Units.degreesToRadians(ret));
   }
 
@@ -84,7 +81,7 @@ public class QuestNav extends SubsystemBase {
     Logger.recordOutput("Odometry/questPoseInQuestFOR", questPoseInQuestFOR);
     Logger.recordOutput(
         "Odometry/robotPoseInQuestFOR",
-        questPoseInQuestFOR.transformBy(QuestNavConstants.robotToQuestTransform.inverse()));
+        questPoseInQuestFOR.plus(QuestNavConstants.robotToQuestTransform.inverse()));
     return questPoseInQuestFOR.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
   }
 }
