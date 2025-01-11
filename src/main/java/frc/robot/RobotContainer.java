@@ -29,6 +29,11 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
+import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOReal;
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -40,6 +45,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final SimpleManipulator m_manipulator;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -59,6 +65,7 @@ public class RobotContainer {
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3));
+        m_manipulator = new SimpleManipulator(new ElevatorIOReal(ElevatorConstants.kElevatorSparkId));
         break;
 
       case SIM:
@@ -70,6 +77,8 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
+        // TODO add ElevatorIOSim
+        m_manipulator = new SimpleManipulator(new ElevatorIO() {});
         break;
 
       default:
@@ -81,6 +90,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        m_manipulator = new SimpleManipulator(new ElevatorIO() {});
         break;
     }
 
