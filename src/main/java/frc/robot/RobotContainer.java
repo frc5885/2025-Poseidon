@@ -30,7 +30,9 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.drive.QuestNav;
+import frc.robot.subsystems.drive.QuestNav.QuestNav;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -62,6 +64,7 @@ public class RobotContainer {
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3));
+        questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
         break;
 
       case SIM:
@@ -73,6 +76,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
+        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         break;
 
       default:
@@ -84,9 +88,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         break;
     }
-    questNav = new QuestNav(drive::getPose);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
