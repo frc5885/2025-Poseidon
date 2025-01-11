@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -29,7 +30,10 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.drive.QuestNav;
+import frc.robot.subsystems.drive.QuestNav.QuestNav;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -61,6 +65,7 @@ public class RobotContainer {
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3));
+        questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
         break;
 
       case SIM:
@@ -72,6 +77,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
+        questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
         break;
 
       default:
@@ -83,9 +89,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         break;
     }
-    questNav = new QuestNav();
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -124,8 +130,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> controller.getLeftY(),
-            () -> controller.getLeftX(),
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
     // Lock to 0° when A button is held
@@ -134,24 +140,28 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
-                () -> controller.getLeftY(),
-                () -> controller.getLeftX(),
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
                 () -> new Rotation2d()));
 
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    // Reset odometry to (0, 0), 0° when B button is pressed
+    // Reset gyro to 0° when B button is pressed
     controller
         .b()
         .onTrue(
             Commands.runOnce(
                     () -> {
-                      drive.setPose(new Pose2d());
-                      questNav.setRobotPose(new Pose2d());
+                      Pose2d newPose =
+                          new Pose2d(drive.getPose().getTranslation(), new Rotation2d());
+                      drive.setPose(newPose);
+                      questNav.setRobotPose(newPose);
                     },
                     drive)
                 .ignoringDisable(true));
+
+    controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
   }
 
   /**
