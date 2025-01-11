@@ -32,6 +32,8 @@ public class QuestNav extends SubsystemBase {
   @Override
   public void periodic() {
     questNavIO.updateInputs(questNavIOInputs);
+    Logger.processInputs("QuestNav", questNavIOInputs);
+
     questNavIO.cleanUpQuestNavMessages();
 
     Logger.recordOutput("Odometry/Quest", getRobotPose());
@@ -57,7 +59,6 @@ public class QuestNav extends SubsystemBase {
    */
   public Pose2d getRobotPose() {
     Pose2d robotPoseInQuestFOR = robotPoseInQuestFOR(getRawQuestPose());
-    Logger.recordOutput("Odometry/RobotPoseInQuestFOR", robotPoseInQuestFOR);
     Logger.recordOutput("Odometry/RawQuestPose", getRawQuestPose());
     Logger.recordOutput("Odometry/QuestYaw", getRawQuestRotation());
     return robotPoseInQuestFOR.plus(questToFieldTransform);
