@@ -1,13 +1,17 @@
 package frc.robot.subsystems.simplemanipulator.elevator;
 
+import static frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOReal implements ElevatorIO {
@@ -19,6 +23,19 @@ public class ElevatorIOReal implements ElevatorIO {
     m_elevatorSpark = new SparkMax(elevatorSparkId, MotorType.kBrushless);
     m_elevatorEncoder = m_elevatorSpark.getEncoder();
     m_elevatorController = m_elevatorSpark.getClosedLoopController();
+    // TODO add more configs
+    var elevatorConfig = new SparkMaxConfig();
+    elevatorConfig
+        .encoder
+        .positionConversionFactor(kElevatorEncoderPositionFactor)
+        .velocityConversionFactor(kElevatorEncoderVelocityFactor);
+    tryUntilOk(
+        m_elevatorSpark,
+        5,
+        () ->
+            m_elevatorSpark.configure(
+                elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(m_elevatorSpark, 5, () -> m_elevatorEncoder.setPosition(0.0));
   }
 
   @Override
@@ -26,11 +43,11 @@ public class ElevatorIOReal implements ElevatorIO {
     ifOk(
         m_elevatorSpark,
         m_elevatorEncoder::getPosition,
-        (position) -> inputs.elevatorPosition = position);
+        (positionMeters) -> inputs.elevatorPositionMeters = positionMeters);
     ifOk(
         m_elevatorSpark,
         m_elevatorEncoder::getVelocity,
-        (velocity) -> inputs.elevatorVelocity = velocity);
+        (velocityMetersPerSec) -> inputs.elevatorVelocityMetersPerSec = velocityMetersPerSec);
     ifOk(
         m_elevatorSpark,
         new DoubleSupplier[] {m_elevatorSpark::getAppliedOutput, m_elevatorSpark::getBusVoltage},
@@ -47,9 +64,8 @@ public class ElevatorIOReal implements ElevatorIO {
   }
 
   @Override
-  public void setElevatorPosition(double position) {
-    double setpoint = position;
-    m_elevatorController.setReference(setpoint, ControlType.kPosition);
+  public void setElevatorPosition(double positionMeters) {
+    m_elevatorController.setReference(positionMeters, ControlType.kPosition);
   }
 
   @Override

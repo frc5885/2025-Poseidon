@@ -20,35 +20,35 @@ public class Elevator {
   public void runElevatorOpenLoop(double outputVolts) {
     // TODO MUST match the real implementation!
     if (outputVolts > 0) {
-      m_io.setElevatorOpenLoop(isWithinUpperBound(getPosition()) ? outputVolts : 0.0);
+      m_io.setElevatorOpenLoop(isWithinUpperBound(getPositionMeters()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {
-      m_io.setElevatorOpenLoop(isWithinLowerBound(getPosition()) ? outputVolts : 0.0);
+      m_io.setElevatorOpenLoop(isWithinLowerBound(getPositionMeters()) ? outputVolts : 0.0);
     } else {
       m_io.setElevatorOpenLoop(outputVolts);
     }
   }
 
-  public void runElevatorSetpoint(double positionSetpoint) {
-    m_io.setElevatorPosition(positionSetpoint);
+  public void runElevatorSetpoint(double positionMetersSetpoint) {
+    m_io.setElevatorPosition(positionMetersSetpoint);
   }
 
   public void stop() {
     m_io.stop();
   }
 
-  public boolean isWithinUpperBound(double position) {
-    return position < kElevatorUpperBound;
+  public boolean isWithinUpperBound(double positionMeters) {
+    return positionMeters < kElevatorUpperBoundMeters;
   }
 
-  public boolean isWithinLowerBound(double position) {
-    return position > kElevatorLowerBound;
+  public boolean isWithinLowerBound(double positionMeters) {
+    return positionMeters > kElevatorLowerBoundMeters;
   }
 
-  public double getPosition() {
-    return m_inputs.elevatorPosition;
+  public double getPositionMeters() {
+    return m_inputs.elevatorPositionMeters;
   }
 
-  public double getVelocity() {
-    return m_inputs.elevatorVelocity;
+  public double getVelocityMetersPerSec() {
+    return m_inputs.elevatorVelocityMetersPerSec;
   }
 }

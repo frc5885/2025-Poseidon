@@ -6,8 +6,8 @@ public interface ElevatorIO {
   @AutoLog
   public static class ElevatorIOInputs {
     public boolean elevatorConnected = false;
-    public double elevatorPosition = 0.0;
-    public double elevatorVelocity = 0.0;
+    public double elevatorPositionMeters = 0.0;
+    public double elevatorVelocityMetersPerSec = 0.0;
     public double elevatorAppliedVolts = 0.0;
     public double elevatorCurrentAmps = 0.0;
   }
@@ -16,7 +16,7 @@ public interface ElevatorIO {
 
   public default void setElevatorOpenLoop(double outputVolts) {}
 
-  public default void setElevatorPosition(double position) {}
+  public default void setElevatorPosition(double positionMeters) {}
 
   public default void stop() {}
 }

@@ -19,6 +19,6 @@ public class SimpleManipulator extends SubsystemBase {
   public void periodic() {
     m_elevator.periodic();
 
-    m_elevator.runElevatorOpenLoop(12.0);
+    m_elevator.runElevatorSetpoint(12.0);
   }
 }
