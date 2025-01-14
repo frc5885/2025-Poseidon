@@ -7,6 +7,7 @@ package frc.robot.subsystems.drive.QuestNav;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -18,7 +19,8 @@ public class QuestNav extends SubsystemBase {
   private final QuestNavIOInputsAutoLogged questNavIOInputs = new QuestNavIOInputsAutoLogged();
 
   // Transform to map between the quest's local coordinate system and field coordinates.
-  private Transform2d questToFieldTransform = new Transform2d();
+  private Rotation2d questToFieldAngleOffset = new Rotation2d();
+  private Translation2d questToFieldTranslationOffset = new Translation2d();
 
   /**
    * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
@@ -37,6 +39,16 @@ public class QuestNav extends SubsystemBase {
     questNavIO.cleanUpQuestNavMessages();
 
     Logger.recordOutput("Odometry/Quest", getRobotPose());
+    Pose2d questWithCorrectedAngle = new Pose2d(getRawQuestPose().getTranslation(), getRawQuestRotation().plus(questToFieldAngleOffset));
+    Logger.recordOutput("Odometry/QuestRaw", getRawQuestPose());
+    Logger.recordOutput("Odometry/QuestWithCorrectedAngle", questWithCorrectedAngle);
+
+    Pose2d questWithCorrectedTranslation = new Pose2d(questWithCorrectedAngle.getTranslation().rotateBy(questToFieldAngleOffset).plus(questToFieldTranslationOffset), questWithCorrectedAngle.getRotation());
+    Logger.recordOutput("Odometry/QuestWithCorectedTranslation", questWithCorrectedTranslation);
+
+    // Test
+    Pose2d robotPoseFromQuest = questWithCorrectedTranslation.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+    Logger.recordOutput("Odometry/RobotPoseFromQuest", robotPoseFromQuest);
   }
 
   /**
@@ -46,9 +58,9 @@ public class QuestNav extends SubsystemBase {
    * @param realRobotPose The desired Pose2d of the robot in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
-    Pose2d robotPoseInQuestFOR = robotPoseInQuestFOR(getRawQuestPose());
-    questToFieldTransform = realRobotPose.minus(robotPoseInQuestFOR);
-    System.out.println("QuestToField: " + questToFieldTransform);
+    Pose2d realQuestPose = realRobotPose.transformBy(QuestNavConstants.robotToQuestTransform);
+    questToFieldAngleOffset = realQuestPose.getRotation().minus(getRawQuestRotation());
+    questToFieldTranslationOffset = realQuestPose.getTranslation().minus(getRawQuestPose().getTranslation());
   }
 
   /**
@@ -59,9 +71,8 @@ public class QuestNav extends SubsystemBase {
    */
   public Pose2d getRobotPose() {
     Pose2d robotPoseInQuestFOR = robotPoseInQuestFOR(getRawQuestPose());
-    Logger.recordOutput("Odometry/RawQuestPose", getRawQuestPose());
-    Logger.recordOutput("Odometry/QuestYaw", getRawQuestRotation());
-    return robotPoseInQuestFOR.plus(questToFieldTransform);
+    // return robotPoseInQuestFOR.plus(questToFieldTransform);
+    return new Pose2d();
   }
 
   /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
@@ -73,16 +84,12 @@ public class QuestNav extends SubsystemBase {
   /** Returns the yaw angle from the Quest's eulerAngles */
   private Rotation2d getRawQuestRotation() {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
-    float ret = 180 - eulerAngles[1] % 360;
+    float ret = -eulerAngles[1];
     return new Rotation2d(Units.degreesToRadians(ret));
   }
 
   /** Returns the robot pose in the Quest's FOR given the quest's reported pose in its own FOR */
   private Pose2d robotPoseInQuestFOR(Pose2d questPoseInQuestFOR) {
-    Logger.recordOutput("Odometry/questPoseInQuestFOR", questPoseInQuestFOR);
-    Logger.recordOutput(
-        "Odometry/robotPoseInQuestFOR",
-        questPoseInQuestFOR.plus(QuestNavConstants.robotToQuestTransform.inverse()));
     return questPoseInQuestFOR.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
   }
 }
