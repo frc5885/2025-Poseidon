@@ -25,19 +25,17 @@ public class ElevatorIOSim implements ElevatorIO {
             kElevatorUpperBoundMeters,
             true,
             0.0);
-    m_controller = new PIDController(elevatorSimKp, 0, elevatorSimKd);
+    m_controller = new PIDController(elevatorSimKp, 0.0, elevatorSimKd);
   }
 
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
     if (m_isClosedLoop) {
-      m_elevatorAppliedVolts =
-          m_controller.calculate(m_elevatorSim.getPositionMeters())
-              + elevatorSimKv * m_elevatorSim.getVelocityMetersPerSecond()
-              + elevatorSimKg * 9.8;
+      m_elevatorAppliedVolts = m_controller.calculate(m_elevatorSim.getPositionMeters());
     }
 
-    m_elevatorAppliedVolts = MathUtil.clamp(m_elevatorAppliedVolts, -12.0, 12.0);
+    m_elevatorAppliedVolts =
+        MathUtil.clamp(m_elevatorAppliedVolts + elevatorSimKg * 9.8, -12.0, 12.0);
     m_elevatorSim.setInputVoltage(m_elevatorAppliedVolts);
     m_elevatorSim.update(0.02);
 

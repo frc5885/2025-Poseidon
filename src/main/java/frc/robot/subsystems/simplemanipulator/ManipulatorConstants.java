@@ -27,7 +27,6 @@ public class ManipulatorConstants {
 
     public static final double elevatorSimKp = 5.0;
     public static final double elevatorSimKd = 0.0;
-    public static final double elevatorSimKv = 0.1;
     public static final double elevatorSimKg = 0.1;
   }
 }
