@@ -18,9 +18,9 @@ public class QuestNav extends SubsystemBase {
   private final QuestNavIO questNavIO;
   private final QuestNavIOInputsAutoLogged questNavIOInputs = new QuestNavIOInputsAutoLogged();
 
-  // Transform to map between the quest's local coordinate system and field coordinates.
-  private Rotation2d questToFieldAngleOffset = new Rotation2d();
-  private Translation2d questToFieldTranslationOffset = new Translation2d();
+  // Transform to map between the quest's local coordinate system and field coordinates
+  // The translation and rotation get handled separately
+  private Transform2d questToField = new Transform2d();
 
   /**
    * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
@@ -35,61 +35,73 @@ public class QuestNav extends SubsystemBase {
   public void periodic() {
     questNavIO.updateInputs(questNavIOInputs);
     Logger.processInputs("QuestNav", questNavIOInputs);
-
     questNavIO.cleanUpQuestNavMessages();
 
-    // quest in quest coords
-    Pose2d questInQuestCoords = getRawQuestPose();
-    Logger.recordOutput("Odometry/QuestRaw", questInQuestCoords);
-
-    // robot in quest coords
-    Pose2d robotInQuestCoords = questInQuestCoords.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
-    Logger.recordOutput("Odometry/RobotInQuestCoords", robotInQuestCoords);
-
-    // robot in quest coords rotated
-    Pose2d robotInQuestCoordsRotated = new Pose2d(robotInQuestCoords.getTranslation(),
-        robotInQuestCoords.getRotation().plus(questToFieldAngleOffset));
-    Logger.recordOutput("Odometry/RobotInQuestCoordsRotated", robotInQuestCoordsRotated);
-
-    // robot in field coords (axes corrected)
-    Pose2d robotInFieldCoords = new Pose2d(robotInQuestCoords.getTranslation().rotateBy(questToFieldAngleOffset),
-        robotInQuestCoordsRotated.getRotation());
-    Logger.recordOutput("Odometry/RobotInFieldCoords", robotInFieldCoords);
-
-    // robot in field coords (axes corrected and translated)
-    Pose2d robotInFieldCoordsTranslated = new Pose2d(robotInFieldCoords.getTranslation().plus(questToFieldTranslationOffset),
-        robotInFieldCoords.getRotation());
-    Logger.recordOutput("Odometry/RobotInFieldCoordsFinal", robotInFieldCoordsTranslated);
+    Logger.recordOutput("Odometry/RobotInFieldCoordsFinal", getRobotPose());
   }
 
   /**
-   * Sets the current robot pose in FIELD coordinates. Internally, this calculates and stores the
-   * transform needed to map the Quest’s coordinate system to field coordinates.
+   * Updates the transform that maps Quest coordinates to field coordinates.
    *
-   * @param realRobotPose The desired Pose2d of the robot in field coordinates
+   * <p>This method takes in a robot pose in field coordinates and compares it to the robot’s
+   * current pose in Quest coordinates. It then calculates the translation and rotation offsets
+   * needed to align Quest coordinates with the field reference frame. The resulting transform is
+   * stored for future pose conversions.
+   *
+   * @param realRobotPose The desired robot pose in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
-    // store quest to field angle
-    Pose2d questInQuestCoords = getRawQuestPose();
-    Pose2d robotInQuestCoords = questInQuestCoords.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
-    questToFieldAngleOffset = realRobotPose.getRotation().minus(robotInQuestCoords.getRotation());
+    // Get our “robot in quest coordinates” (raw Quest pose transformed by the inverse robot->Quest
+    // transform)
+    Pose2d robotInQuestCoords =
+        getRawQuestPose().transformBy(QuestNavConstants.robotToQuestTransform.inverse());
 
-    // store quest to field translation
-    Pose2d robotInQuestCoordsRotated = new Pose2d(robotInQuestCoords.getTranslation(),
-        robotInQuestCoords.getRotation().plus(questToFieldAngleOffset));
-        Pose2d robotInFieldCoords = new Pose2d(robotInQuestCoords.getTranslation().rotateBy(questToFieldAngleOffset),
-        robotInQuestCoordsRotated.getRotation());
-    questToFieldTranslationOffset = realRobotPose.getTranslation().minus(robotInFieldCoords.getTranslation());
+    Rotation2d questToFieldAngleOffset =
+        realRobotPose.getRotation().minus(robotInQuestCoords.getRotation());
+
+    // Rotate the Quest translation by the needed offset, then find how far apart
+    // the rotated Quest translation is from the real robot pose in field coords
+    Translation2d rotatedQuestTranslation =
+        robotInQuestCoords.getTranslation().rotateBy(questToFieldAngleOffset);
+    Translation2d questToFieldTranslationOffset =
+        realRobotPose.getTranslation().minus(rotatedQuestTranslation);
+
+    // Create and store the overall transform
+    questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
   }
 
   /**
-   * Returns the current robot pose in FIELD coordinates, incorporating the Quest's local readings,
-   * the physical offset of the Quest on the robot, and the transform set by setRobotPose().
+   * Returns the current robot pose in field coordinates.
+   *
+   * <p>It uses the raw Quest pose, adjusts for the physical offset of the Quest device, and applies
+   * the Quest-to-field transform set by {@link #setRobotPose(Pose2d)}. This results in a Pose2d
+   * that represents the robot's position and orientation relative to the field's coordinate system.
    *
    * @return The Pose2d of the robot in field coordinates
    */
   public Pose2d getRobotPose() {
-    return new Pose2d();
+    // 1) Pose of the quest in its own coordinates
+    Pose2d questInQuestCoords = getRawQuestPose();
+
+    // 2) Transform to get "robot in quest coords" (raw Quest pose transformed by the inverse
+    // robot->Quest transform)
+    Pose2d robotInQuestCoords =
+        questInQuestCoords.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+
+    // 3) Combine rotations: robot's rotation + questToField rotation
+    Rotation2d fieldRotation = robotInQuestCoords.getRotation().plus(questToField.getRotation());
+
+    // 4) Rotate the translation by questToField rotation
+    Translation2d rotatedTranslation =
+        robotInQuestCoords.getTranslation().rotateBy(questToField.getRotation());
+
+    // 5) Build pose with the updated (rotated) translation and combined rotation
+    Pose2d robotInFieldRotated = new Pose2d(rotatedTranslation, fieldRotation);
+
+    // 6) Now apply the questToField translation
+    return new Pose2d(
+        robotInFieldRotated.getTranslation().plus(questToField.getTranslation()),
+        robotInFieldRotated.getRotation());
   }
 
   /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
@@ -103,10 +115,5 @@ public class QuestNav extends SubsystemBase {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
     float ret = -eulerAngles[1];
     return new Rotation2d(Units.degreesToRadians(ret));
-  }
-
-  /** Returns the robot pose in the Quest's FOR given the quest's reported pose in its own FOR */
-  private Pose2d robotPoseInQuestFOR(Pose2d questPoseInQuestFOR) {
-    return questPoseInQuestFOR.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
   }
 }
