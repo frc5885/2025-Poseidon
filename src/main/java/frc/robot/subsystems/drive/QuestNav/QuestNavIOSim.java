@@ -24,6 +24,6 @@ public class QuestNavIOSim implements QuestNavIO {
     Pose2d questPose = robotPose.transformBy(robotToQuestTransform);
     inputs.position = new float[] {(float) -questPose.getY(), 0, (float) questPose.getX()};
     inputs.quaternion = new float[] {0, 0, 0, 1};
-    inputs.eulerAngles = new float[] {0, (float) questPose.getRotation().getDegrees(), 0};
+    inputs.eulerAngles = new float[] {0, (float) -questPose.getRotation().getDegrees(), 0};
   }
 }
