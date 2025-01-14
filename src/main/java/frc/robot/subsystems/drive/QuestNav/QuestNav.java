@@ -51,7 +51,7 @@ public class QuestNav extends SubsystemBase {
    * @param realRobotPose The desired robot pose in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
-    // Get our “robot in quest coordinates” (raw Quest pose transformed by the inverse robot->Quest
+    // Get our "robot in quest coordinates" (raw Quest pose transformed by the inverse robot->Quest
     // transform)
     Pose2d robotInQuestCoords =
         getRawQuestPose().transformBy(QuestNavConstants.robotToQuestTransform.inverse());
