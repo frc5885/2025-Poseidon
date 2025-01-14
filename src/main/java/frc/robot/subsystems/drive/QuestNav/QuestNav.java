@@ -38,17 +38,13 @@ public class QuestNav extends SubsystemBase {
 
     questNavIO.cleanUpQuestNavMessages();
 
-    Logger.recordOutput("Odometry/Quest", getRobotPose());
-    Pose2d questWithCorrectedAngle = new Pose2d(getRawQuestPose().getTranslation(), getRawQuestRotation().plus(questToFieldAngleOffset));
     Logger.recordOutput("Odometry/QuestRaw", getRawQuestPose());
-    Logger.recordOutput("Odometry/QuestWithCorrectedAngle", questWithCorrectedAngle);
 
-    Pose2d questWithCorrectedTranslation = new Pose2d(questWithCorrectedAngle.getTranslation().rotateBy(questToFieldAngleOffset).plus(questToFieldTranslationOffset), questWithCorrectedAngle.getRotation());
-    Logger.recordOutput("Odometry/QuestWithCorectedTranslation", questWithCorrectedTranslation);
-
-    // Test
-    Pose2d robotPoseFromQuest = questWithCorrectedTranslation.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
-    Logger.recordOutput("Odometry/RobotPoseFromQuest", robotPoseFromQuest);
+    Pose2d questAdjusted = getRawQuestPose().rotateBy(questToFieldAngleOffset).plus(new Transform2d(questToFieldTranslationOffset, new Rotation2d()));
+    Pose2d robotPose = questAdjusted.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+    Logger.recordOutput("Odometry/QuestAdjusted", questAdjusted);
+    Logger.recordOutput("Odometry/RobotFromQuest", robotPose);
+    
   }
 
   /**
@@ -58,9 +54,15 @@ public class QuestNav extends SubsystemBase {
    * @param realRobotPose The desired Pose2d of the robot in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
+    // get the difference in angle between quest's coords and field coords
     Pose2d realQuestPose = realRobotPose.transformBy(QuestNavConstants.robotToQuestTransform);
     questToFieldAngleOffset = realQuestPose.getRotation().minus(getRawQuestRotation());
-    questToFieldTranslationOffset = realQuestPose.getTranslation().minus(getRawQuestPose().getTranslation());
+
+    // rotate the quest's pose by the angle offset to align their x/y axes
+    Pose2d questRotated = getRawQuestPose().rotateBy(questToFieldAngleOffset);
+
+    // get the difference in translation between quest's coords and field coords
+    questToFieldTranslationOffset = realQuestPose.minus(questRotated).getTranslation();
   }
 
   /**
