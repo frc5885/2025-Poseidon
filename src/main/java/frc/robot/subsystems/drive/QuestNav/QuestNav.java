@@ -37,7 +37,7 @@ public class QuestNav extends SubsystemBase {
     Logger.processInputs("QuestNav", questNavIOInputs);
     questNavIO.cleanUpQuestNavMessages();
 
-    Logger.recordOutput("Odometry/RobotInFieldCoordsFinal", getRobotPose());
+    Logger.recordOutput("Odometry/QuestNavRobot", getRobotPose());
   }
 
   /**
