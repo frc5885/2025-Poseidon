@@ -143,9 +143,10 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    () -> {
+                      drive.resetGyro();
+                      drive.setPose(new Pose2d(0, 0, new Rotation2d()));
+                    },
                     drive)
                 .ignoringDisable(true));
   }
