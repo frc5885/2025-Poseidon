@@ -141,4 +141,8 @@ public class Module {
   public double getFFCharacterizationVelocity() {
     return inputs.driveVelocityRadPerSec;
   }
+
+  public void setClosedLoop() {
+    io.setClosedLoop();
+  }
 }
