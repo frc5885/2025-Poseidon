@@ -33,6 +33,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.util.TunablePIDController;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
@@ -53,6 +54,7 @@ public class ModuleIOSpark implements ModuleIO {
   // Closed loop controllers
   private final SparkClosedLoopController driveController;
   private final SparkClosedLoopController turnController;
+  private final TunablePIDController turnPID;
 
   // Queue inputs from odometry thread
   private final Queue<Double> timestampQueue;
@@ -160,12 +162,6 @@ public class ModuleIOSpark implements ModuleIO {
         .positionWrappingInputRange(turnPIDMinInput, turnPIDMaxInput)
         .pidf(turnKp, 0.0, turnKd, 0.0);
     turnConfig
-        .closedLoop
-        .maxMotion
-        .allowedClosedLoopError(turnMaxErrorTolerance)
-        .maxVelocity(turnMaxVelocityRadPerSec)
-        .maxAcceleration(turnMaxAccelerationRadPerSecSq);
-    turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
         .primaryEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
@@ -196,6 +192,9 @@ public class ModuleIOSpark implements ModuleIO {
         SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
     turnPositionQueue =
         SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
+
+    // Configure turn PID
+    turnPID = new TunablePIDController(turnKp, 0.0, turnKd, turnMaxErrorTolerance, "Turn", false);
   }
 
   @Override
@@ -270,6 +269,7 @@ public class ModuleIOSpark implements ModuleIO {
     double setpoint =
         MathUtil.inputModulus(
             rotation.plus(zeroRotation).getRadians(), turnPIDMinInput, turnPIDMaxInput);
-    turnController.setReference(setpoint, ControlType.kMAXMotionPositionControl);
+    // turnController.setReference(setpoint, ControlType.kMAXMotionPositionControl);
+    turnSpark.setVoltage(turnPID.calculate(turnEncoder.getPosition(), setpoint));
   }
 }
