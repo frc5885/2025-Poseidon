@@ -18,7 +18,6 @@ import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -34,6 +33,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.util.TunablePIDController;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
@@ -45,8 +45,8 @@ public class ModuleIOSpark implements ModuleIO {
   private final Rotation2d zeroRotation;
 
   // Hardware objects
-  private final SparkBase driveSpark;
-  private final SparkBase turnSpark;
+  private final SparkMax driveSpark;
+  private final SparkMax turnSpark;
   private final RelativeEncoder driveEncoder;
   private final RelativeEncoder turnEncoder;
   private final AnalogInput turnAbsoluteEncoder;
@@ -54,6 +54,7 @@ public class ModuleIOSpark implements ModuleIO {
   // Closed loop controllers
   private final SparkClosedLoopController driveController;
   private final SparkClosedLoopController turnController;
+  private final TunablePIDController turnPID;
 
   // Queue inputs from odometry thread
   private final Queue<Double> timestampQueue;
@@ -153,6 +154,7 @@ public class ModuleIOSpark implements ModuleIO {
         .encoder
         .positionConversionFactor(turnEncoderPositionFactor)
         .velocityConversionFactor(turnEncoderVelocityFactor)
+        .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
     turnConfig
         .closedLoop
@@ -164,8 +166,8 @@ public class ModuleIOSpark implements ModuleIO {
     //     .closedLoop
     //     .maxMotion
     //     .allowedClosedLoopError(turnMaxErrorTolerance)
-    //     .maxVelocity(1000)
-    //     .maxAcceleration(10000);
+    //     .maxVelocity(turnMaxVelocityRadPerSec)
+    //     .maxAcceleration(turnMaxAccelerationRadPerSecSq);
     turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -197,6 +199,9 @@ public class ModuleIOSpark implements ModuleIO {
         SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
     turnPositionQueue =
         SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
+
+    // Configure turn PID
+    turnPID = new TunablePIDController(turnKp, 0.0, turnKd, turnMaxErrorTolerance, "Turn", false);
   }
 
   @Override
@@ -272,6 +277,30 @@ public class ModuleIOSpark implements ModuleIO {
         MathUtil.inputModulus(
             rotation.plus(zeroRotation).getRadians(), turnPIDMinInput, turnPIDMaxInput);
     // turnController.setReference(setpoint, ControlType.kMAXMotionPositionControl);
-    turnController.setReference(setpoint, ControlType.kPosition);
+    turnSpark.setVoltage(turnPID.calculate(turnEncoder.getPosition(), setpoint));
   }
+
+  //   @Override
+  //   public void setClosedLoop() {
+  //     double newDriveP = SmartDashboard.getNumber("DriveP", driveKp);
+  //     double newDriveD = SmartDashboard.getNumber("DriveD", driveKd);
+  //     double newTurnP = SmartDashboard.getNumber("TurnP", turnKp);
+  //     double newTurnD = SmartDashboard.getNumber("TurnD", turnKd);
+  //     double oldDriveP = driveSpark.configAccessor.closedLoop.getP();
+  //     double oldDriveD = driveSpark.configAccessor.closedLoop.getP();
+  //     double oldTurnP = driveSpark.configAccessor.closedLoop.getP();
+  //     double oldTurnD = driveSpark.configAccessor.closedLoop.getP();
+  //     if (newDriveP != oldDriveP || newDriveD != oldDriveD) {
+  //       driveConfig.closedLoop.p(newDriveP);
+  //       driveConfig.closedLoop.d(newDriveD);
+  //       driveSpark.configure(
+  //           driveConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+  //     }
+  //     if (newTurnP != oldTurnP || newTurnD != oldTurnD) {
+  //       turnConfig.closedLoop.p(newTurnP);
+  //       turnConfig.closedLoop.d(newTurnD);
+  //       turnSpark.configure(
+  //           turnConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+  //     }
+  //   }
 }

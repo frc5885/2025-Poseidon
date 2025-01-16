@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -29,6 +30,10 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.drive.QuestNav.QuestNav;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
+import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
 import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants;
 import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
@@ -45,6 +50,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final QuestNav questNav;
   private final SimpleManipulator m_manipulator;
 
   // Controller
@@ -65,6 +71,7 @@ public class RobotContainer {
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3));
+        questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
         m_manipulator =
             new SimpleManipulator(new ElevatorIOReal(ElevatorConstants.kElevatorSparkId));
         break;
@@ -78,6 +85,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
+        questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
         m_manipulator = new SimpleManipulator(new ElevatorIOSim());
         break;
 
@@ -90,6 +98,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         m_manipulator = new SimpleManipulator(new ElevatorIO() {});
         break;
     }
@@ -153,11 +162,17 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    () -> {
+                      drive.resetGyro();
+                      Pose2d newPose =
+                          new Pose2d(0, 0, new Rotation2d());
+                      drive.setPose(newPose);
+                      questNav.setRobotPose(newPose);
+                    },
                     drive)
                 .ignoringDisable(true));
+
+    controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
   }
 
   /**
