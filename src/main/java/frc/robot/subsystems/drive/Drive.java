@@ -137,6 +137,9 @@ public class Drive extends SubsystemBase {
                 (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+    // Reset gyro
+    resetGyro();
   }
 
   @Override
@@ -329,7 +332,6 @@ public class Drive extends SubsystemBase {
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
-    gyroIO.resetGyro();
   }
 
   /** Adds a new timestamped vision measurement. */
@@ -357,5 +359,10 @@ public class Drive extends SubsystemBase {
    */
   public double getModuleRotationVelocityRadPerSec(int moduleIndex) {
     return modules[moduleIndex].getModuleRotationVelocityRadPerSec();
+  }
+
+  /** Reset the gyro */
+  public void resetGyro() {
+    gyroIO.resetGyro();
   }
 }
