@@ -33,7 +33,7 @@ public class Elevator {
   }
 
   public void runCharacterization(double outputVolts) {
-    m_io.setElevatorOpenLoop(outputVolts);
+    runElevatorOpenLoop(outputVolts);
   }
 
   public void stop() {

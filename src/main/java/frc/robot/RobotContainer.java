@@ -37,7 +37,7 @@ import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
 import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants;
 import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOReal;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -73,7 +73,7 @@ public class RobotContainer {
                 new ModuleIOSpark(3));
         questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
         m_manipulator =
-            new SimpleManipulator(new ElevatorIOReal(ElevatorConstants.kElevatorSparkId));
+            new SimpleManipulator(new ElevatorIOSpark(ElevatorConstants.kElevatorSparkId));
         break;
 
       case SIM:
@@ -124,7 +124,7 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // TODO
+    // TODO not needed for now
     // autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Forward)",
     //     m_manipulator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));

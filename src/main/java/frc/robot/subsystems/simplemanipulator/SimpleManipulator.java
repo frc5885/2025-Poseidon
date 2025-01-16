@@ -40,6 +40,7 @@ public class SimpleManipulator extends SubsystemBase {
     m_elevator.runElevatorSetpoint(12.0);
   }
 
+  // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
     m_elevator.runCharacterization(outputVolts);
   }

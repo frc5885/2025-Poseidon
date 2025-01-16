@@ -14,27 +14,35 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.TunablePIDController;
 import java.util.function.DoubleSupplier;
 
-public class ElevatorIOReal implements ElevatorIO {
+public class ElevatorIOSpark implements ElevatorIO {
   private final SparkBase m_elevatorSpark;
   private final RelativeEncoder m_elevatorEncoder;
   private final SparkClosedLoopController m_elevatorController;
+  private TrapezoidProfile m_elevatorProfile;
+  private TrapezoidProfile.State m_goal;
   private TunablePIDController m_elevatorPIDController;
   private ElevatorFeedforward m_elevatorFeedforward;
 
-  public ElevatorIOReal(int elevatorSparkId) {
+  public ElevatorIOSpark(int elevatorSparkId) {
     m_elevatorSpark = new SparkMax(elevatorSparkId, MotorType.kBrushless);
     m_elevatorEncoder = m_elevatorSpark.getEncoder();
     m_elevatorController = m_elevatorSpark.getClosedLoopController();
+
+    m_elevatorProfile =
+        new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
+    m_goal = getCurrentState();
     // TODO remember to set the turnMode on
     m_elevatorPIDController =
         new TunablePIDController(
             elevatorKp, 0.0, elevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", false);
     m_elevatorFeedforward = new ElevatorFeedforward(elevatorKs, elevatorKg, elevatorKv);
-    m_elevatorFeedforward.calculate(elevatorSparkId);
 
     // TODO keep some of this?
     var elevatorConfig = new SparkMaxConfig();
@@ -102,15 +110,22 @@ public class ElevatorIOReal implements ElevatorIO {
   public void setElevatorPosition(double positionMeters) {
     // m_elevatorController.setReference(positionMeters, ControlType.kPosition);
 
-    // TODO not sure if this is correct
+    if (m_goal.position != positionMeters) {
+      m_goal = new TrapezoidProfile.State(positionMeters, 0.0);
+    }
+    TrapezoidProfile.State current = getCurrentState();
+    TrapezoidProfile.State setpoint = m_elevatorProfile.calculate(0.02, current, m_goal);
     m_elevatorSpark.setVoltage(
-        m_elevatorPIDController.calculate(m_elevatorEncoder.getPosition(), positionMeters)
-            + elevatorKs * Math.signum(m_elevatorEncoder.getVelocity())
-            + elevatorKg * 9.8);
+        m_elevatorPIDController.calculate(current.position, setpoint.position)
+            + m_elevatorFeedforward.calculate(setpoint.velocity));
   }
 
   @Override
   public void stop() {
     m_elevatorSpark.setVoltage(0.0);
+  }
+
+  private TrapezoidProfile.State getCurrentState() {
+    return new State(m_elevatorEncoder.getPosition(), m_elevatorEncoder.getVelocity());
   }
 }

@@ -11,6 +11,10 @@ public class ManipulatorConstants {
 
     public static final double kElevatorLowerBoundMeters = -20.0;
     public static final double kElevatorUpperBoundMeters = 20.0;
+    // In Meters/Sec
+    public static final double kElevatorMaxVelocity = 1.75;
+    // In Meters/SecSq
+    public static final double kElevatorMaxAcceleration = 0.75;
     public static final double kElevatorMotorReduction = 10.0;
     public static final double kElevatorWheelRadiusMeters = Units.inchesToMeters(2.0);
     // Motor Rotations -> Elevator Meters
@@ -29,6 +33,7 @@ public class ManipulatorConstants {
 
     public static final double elevatorSimKp = 5.0;
     public static final double elevatorSimKd = 0.0;
-    public static final double elevatorSimKg = 0.1;
+    public static final double elevatorSimKv = 0.1;
+    public static final double elevatorSimKg = 0.98;
   }
 }

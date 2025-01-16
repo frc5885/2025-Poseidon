@@ -34,8 +34,7 @@ public class ElevatorIOSim implements ElevatorIO {
       m_elevatorAppliedVolts = m_controller.calculate(m_elevatorSim.getPositionMeters());
     }
 
-    m_elevatorAppliedVolts =
-        MathUtil.clamp(m_elevatorAppliedVolts + elevatorSimKg * 9.8, -12.0, 12.0);
+    m_elevatorAppliedVolts = MathUtil.clamp(m_elevatorAppliedVolts + elevatorSimKg, -12.0, 12.0);
     m_elevatorSim.setInputVoltage(m_elevatorAppliedVolts);
     m_elevatorSim.update(0.02);
 
