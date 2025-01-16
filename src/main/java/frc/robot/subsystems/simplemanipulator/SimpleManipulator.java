@@ -4,12 +4,19 @@
 
 package frc.robot.subsystems.simplemanipulator;
 
+import static edu.wpi.first.units.Units.*;
+
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.simplemanipulator.elevator.Elevator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
 
 public class SimpleManipulator extends SubsystemBase {
   private final Elevator m_elevator;
+
+  // TODO Configure SysId
+  private SysIdRoutine sysIdRoutine;
 
   public SimpleManipulator(ElevatorIO io) {
     m_elevator = new Elevator(io);
@@ -20,5 +27,9 @@ public class SimpleManipulator extends SubsystemBase {
     m_elevator.periodic();
 
     m_elevator.runElevatorSetpoint(12.0);
+  }
+
+  public void runCharacterization(double outputVolts) {
+
   }
 }

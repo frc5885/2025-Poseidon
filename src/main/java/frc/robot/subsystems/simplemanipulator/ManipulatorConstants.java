@@ -6,6 +6,8 @@ public class ManipulatorConstants {
   // TODO temporary
   public static class ElevatorConstants {
     public static final int kElevatorSparkId = 40;
+    public static final boolean kElevatorInverted = false;
+    public static final int kElevatorMotorCurrentLimit = 40;
 
     public static final double kElevatorLowerBoundMeters = -20.0;
     public static final double kElevatorUpperBoundMeters = 20.0;
@@ -22,7 +24,6 @@ public class ManipulatorConstants {
     public static final double elevatorKv = 0.0;
     public static final double elevatorKg = 0.0;
     public static final double elevatorKp = 0.0;
-    public static final double elevatorKi = 0.0;
     public static final double elevatorKd = 0.0;
 
     public static final double elevatorSimKp = 5.0;

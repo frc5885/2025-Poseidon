@@ -11,7 +11,10 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import frc.robot.subsystems.drive.DriveConstants;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOReal implements ElevatorIO {
@@ -23,12 +26,34 @@ public class ElevatorIOReal implements ElevatorIO {
     m_elevatorSpark = new SparkMax(elevatorSparkId, MotorType.kBrushless);
     m_elevatorEncoder = m_elevatorSpark.getEncoder();
     m_elevatorController = m_elevatorSpark.getClosedLoopController();
-    // TODO add more configs
+
     var elevatorConfig = new SparkMaxConfig();
+    elevatorConfig
+        .inverted(kElevatorInverted)
+        .idleMode(IdleMode.kBrake)
+        .smartCurrentLimit(kElevatorMotorCurrentLimit)
+        .voltageCompensation(12.0);
     elevatorConfig
         .encoder
         .positionConversionFactor(kElevatorEncoderPositionFactor)
-        .velocityConversionFactor(kElevatorEncoderVelocityFactor);
+        .velocityConversionFactor(kElevatorEncoderVelocityFactor)
+        .uvwAverageDepth(2);
+    elevatorConfig
+        .closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        // PositionWrapping?
+        .pidf(elevatorKp, 0.0, elevatorKd, elevatorKv);
+    // MaxMotion?
+    elevatorConfig
+        .signals
+        .primaryEncoderPositionAlwaysOn(true)
+        .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.odometryFrequency))
+        .primaryEncoderVelocityAlwaysOn(true)
+        .primaryEncoderVelocityPeriodMs(20)
+        .appliedOutputPeriodMs(20)
+        .busVoltagePeriodMs(20)
+        .outputCurrentPeriodMs(20);
+
     tryUntilOk(
         m_elevatorSpark,
         5,
