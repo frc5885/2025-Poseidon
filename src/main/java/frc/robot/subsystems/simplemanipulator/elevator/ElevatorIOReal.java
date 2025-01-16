@@ -5,7 +5,6 @@ import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -14,19 +13,30 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.TunablePIDController;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOReal implements ElevatorIO {
   private final SparkBase m_elevatorSpark;
   private final RelativeEncoder m_elevatorEncoder;
   private final SparkClosedLoopController m_elevatorController;
+  private TunablePIDController m_elevatorPIDController;
+  private ElevatorFeedforward m_elevatorFeedforward;
 
   public ElevatorIOReal(int elevatorSparkId) {
     m_elevatorSpark = new SparkMax(elevatorSparkId, MotorType.kBrushless);
     m_elevatorEncoder = m_elevatorSpark.getEncoder();
     m_elevatorController = m_elevatorSpark.getClosedLoopController();
+    // TODO remember to set the turnMode on
+    m_elevatorPIDController =
+        new TunablePIDController(
+            elevatorKp, 0.0, elevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", false);
+    m_elevatorFeedforward = new ElevatorFeedforward(elevatorKs, elevatorKg, elevatorKv);
+    m_elevatorFeedforward.calculate(elevatorSparkId);
 
+    // TODO keep some of this?
     var elevatorConfig = new SparkMaxConfig();
     elevatorConfig
         .inverted(kElevatorInverted)
@@ -90,7 +100,13 @@ public class ElevatorIOReal implements ElevatorIO {
 
   @Override
   public void setElevatorPosition(double positionMeters) {
-    m_elevatorController.setReference(positionMeters, ControlType.kPosition);
+    // m_elevatorController.setReference(positionMeters, ControlType.kPosition);
+
+    // TODO not sure if this is correct
+    m_elevatorSpark.setVoltage(
+        m_elevatorPIDController.calculate(m_elevatorEncoder.getPosition(), positionMeters)
+            + elevatorKs * Math.signum(m_elevatorEncoder.getVelocity())
+            + elevatorKg * 9.8);
   }
 
   @Override

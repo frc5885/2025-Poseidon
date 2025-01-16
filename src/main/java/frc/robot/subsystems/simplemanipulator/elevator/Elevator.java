@@ -32,6 +32,10 @@ public class Elevator {
     m_io.setElevatorPosition(positionMetersSetpoint);
   }
 
+  public void runCharacterization(double outputVolts) {
+    m_io.setElevatorOpenLoop(outputVolts);
+  }
+
   public void stop() {
     m_io.stop();
   }

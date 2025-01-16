@@ -124,6 +124,19 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // TODO
+    // autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Forward)",
+    //     m_manipulator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Reverse)",
+    //     m_manipulator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Forward)",
+    // m_manipulator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Reverse)",
+    // m_manipulator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -164,8 +177,7 @@ public class RobotContainer {
             Commands.runOnce(
                     () -> {
                       drive.resetGyro();
-                      Pose2d newPose =
-                          new Pose2d(0, 0, new Rotation2d());
+                      Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
                       drive.setPose(newPose);
                       questNav.setRobotPose(newPose);
                     },
