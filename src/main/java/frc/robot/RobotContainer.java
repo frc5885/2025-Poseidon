@@ -154,8 +154,7 @@ public class RobotContainer {
             Commands.runOnce(
                     () -> {
                       drive.resetGyro();
-                      Pose2d newPose =
-                          new Pose2d(0, 0, new Rotation2d());
+                      Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
                       drive.setPose(newPose);
                       questNav.setRobotPose(newPose);
                     },
