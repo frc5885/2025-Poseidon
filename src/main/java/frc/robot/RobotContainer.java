@@ -30,15 +30,15 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.drive.QuestNav.QuestNav;
-import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
-import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
-import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.questnav.QuestNav;
+import frc.robot.subsystems.vision.questnav.QuestNavIO;
+import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
+import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
