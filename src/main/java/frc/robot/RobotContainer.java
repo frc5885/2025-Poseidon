@@ -30,6 +30,7 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
 import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
@@ -52,6 +53,7 @@ public class RobotContainer {
   private final Drive drive;
   private final QuestNav questNav;
   private final Vision vision;
+  private final HeimdallPoseController poseController;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -61,6 +63,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    poseController = new HeimdallPoseController();
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -70,7 +73,8 @@ public class RobotContainer {
                 new ModuleIOSpark(0),
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
-                new ModuleIOSpark(3));
+                new ModuleIOSpark(3),
+                poseController);
         questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
         vision =
             new Vision(
@@ -89,7 +93,8 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
-                new ModuleIOSim());
+                new ModuleIOSim(),
+                poseController);
         questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
         vision =
             new Vision(
@@ -108,11 +113,13 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                new ModuleIO() {});
+                new ModuleIO() {},
+                poseController);
         questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
+    poseController.registerQuestNav(questNav);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
