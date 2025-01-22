@@ -2,13 +2,15 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.drive.QuestNav;
+package frc.robot.subsystems.vision.questnav;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -17,6 +19,7 @@ public class QuestNav extends SubsystemBase {
 
   private final QuestNavIO questNavIO;
   private final QuestNavIOInputsAutoLogged questNavIOInputs = new QuestNavIOInputsAutoLogged();
+  private final Alert disconnectedAlert;
 
   // Transform to map between the quest's local coordinate system and field coordinates
   // The translation and rotation get handled separately
@@ -28,6 +31,7 @@ public class QuestNav extends SubsystemBase {
    */
   public QuestNav(QuestNavIO questNavIO, Pose2d realRobotPose) {
     this.questNavIO = questNavIO;
+    this.disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
     setRobotPose(realRobotPose);
   }
 
@@ -35,6 +39,7 @@ public class QuestNav extends SubsystemBase {
   public void periodic() {
     questNavIO.updateInputs(questNavIOInputs);
     Logger.processInputs("QuestNav", questNavIOInputs);
+    disconnectedAlert.set(!questNavIOInputs.connected);
     questNavIO.cleanUpQuestNavMessages();
 
     Logger.recordOutput("Odometry/QuestNavRobot", getRobotPose());
