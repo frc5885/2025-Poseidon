@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.subsystems.vision.questnav.QuestNav;
+import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
 public class HeimdallPoseController {
@@ -33,19 +34,40 @@ public class HeimdallPoseController {
 
   private final SwerveDrivePoseEstimator odometryPoseEstimator;
   private QuestNav questPoseEstimator;
-  private ChassisSpeeds chassisSpeeds;
+
+  // flags
+  private boolean visionMeasurementRecorded = false;
+  private boolean trustQuest = true;
+
+  // last 5 observations
+  private final Pose2d[] odometryPosesHistory = new Pose2d[5];
+  private final Pose2d[] questPosesHistory = new Pose2d[5];
+  private final ChassisSpeeds[] chassisSpeedsHistory = new ChassisSpeeds[5];
 
   public HeimdallPoseController() {
     odometryPoseEstimator =
         new SwerveDrivePoseEstimator(
             kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
-    chassisSpeeds = new ChassisSpeeds();
   }
 
   public void registerQuestNav(QuestNav questNav) {
     this.questPoseEstimator = questNav;
   }
 
+  public void periodic() {
+    addObservation(questPosesHistory, questPoseEstimator.getRobotPose());
+  }
+
+  private <T> void addObservation(T[] observations, T newObservation) {
+    System.arraycopy(observations, 0, observations, 1, observations.length - 1);
+    observations[0] = newObservation;
+  }
+
+  private <T> T getLatestObservation(T[] observations) {
+    return observations[0];
+  }
+
+  // ---------- Wrappers for SwerveDrivePoseEstimator methods ---------- //
   /**
    * Gets the estimated robot pose.
    *
@@ -53,10 +75,12 @@ public class HeimdallPoseController {
    */
   public Pose2d getEstimatedPosition() {
     // this gets called periodically
-    return odometryPoseEstimator.getEstimatedPosition();
+    periodic();
+    return questPoseEstimator.isConnected() && questPoseEstimator.isSynced() && trustQuest
+        ? getLatestObservation(questPosesHistory)
+        : odometryPoseEstimator.getEstimatedPosition();
   }
 
-  // ---------- Wrappers for SwerveDrivePoseEstimator methods ---------- //
   /**
    * Updates the pose estimator with wheel encoder and gyro information. This should be called every
    * loop.
@@ -70,8 +94,11 @@ public class HeimdallPoseController {
       Rotation2d gyroAngle,
       SwerveModulePosition[] wheelPositions,
       ChassisSpeeds chassisSpeeds) {
-    odometryPoseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
-    this.chassisSpeeds = chassisSpeeds;
+    Pose2d updatedPose =
+        odometryPoseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
+    addObservation(odometryPosesHistory, updatedPose);
+    addObservation(chassisSpeedsHistory, chassisSpeeds);
+    Logger.recordOutput("Odometry/VisionAndSensors", updatedPose);
   }
 
   /**
@@ -121,5 +148,10 @@ public class HeimdallPoseController {
       Matrix<N3, N1> visionMeasurementStdDevs) {
     odometryPoseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+
+    // Flag that a vision measurement has been recorded
+    if (!visionMeasurementRecorded) {
+      visionMeasurementRecorded = true;
+    }
   }
 }

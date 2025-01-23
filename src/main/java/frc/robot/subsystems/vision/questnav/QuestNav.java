@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 /** Subsystem to interface with a Meta Quest headset acting as a positional sensor. */
@@ -24,6 +25,8 @@ public class QuestNav extends SubsystemBase {
   // Transform to map between the quest's local coordinate system and field coordinates
   // The translation and rotation get handled separately
   private Transform2d questToField = new Transform2d();
+
+  private boolean synced = false;
 
   /**
    * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
@@ -41,8 +44,6 @@ public class QuestNav extends SubsystemBase {
     Logger.processInputs("QuestNav", questNavIOInputs);
     disconnectedAlert.set(!questNavIOInputs.connected);
     questNavIO.cleanUpQuestNavMessages();
-
-    Logger.recordOutput("Odometry/QuestNavRobot", getRobotPose());
   }
 
   /**
@@ -73,6 +74,9 @@ public class QuestNav extends SubsystemBase {
 
     // Create and store the overall transform
     questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
+
+    // Mark the Quest as synced
+    synced = true;
   }
 
   /**
@@ -84,6 +88,7 @@ public class QuestNav extends SubsystemBase {
    *
    * @return The Pose2d of the robot in field coordinates
    */
+  @AutoLogOutput(key = "Odometry/QuestNav")
   public Pose2d getRobotPose() {
     // 1) Pose of the quest in its own coordinates
     Pose2d questInQuestCoords = getRawQuestPose();
@@ -120,5 +125,15 @@ public class QuestNav extends SubsystemBase {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
     float ret = -eulerAngles[1];
     return new Rotation2d(Units.degreesToRadians(ret));
+  }
+
+  /** Get whether or not the Quest has been synced to the robot pose */
+  public boolean isSynced() {
+    return synced;
+  }
+
+  /** Get whether or not the Quest is connected */
+  public boolean isConnected() {
+    return questNavIOInputs.connected;
   }
 }
