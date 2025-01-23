@@ -55,7 +55,9 @@ public class HeimdallPoseController {
   }
 
   public void periodic() {
-    addObservation(questPosesHistory, questPoseEstimator.getRobotPose());
+    if (questPoseEstimator != null && questPoseEstimator.isConnected()) {
+      addObservation(questPosesHistory, questPoseEstimator.getRobotPose());
+    }
   }
 
   private <T> void addObservation(T[] observations, T newObservation) {
@@ -76,7 +78,10 @@ public class HeimdallPoseController {
   public Pose2d getEstimatedPosition() {
     // this gets called periodically
     periodic();
-    return questPoseEstimator.isConnected() && questPoseEstimator.isSynced() && trustQuest
+    return questPoseEstimator != null
+            && questPoseEstimator.isConnected()
+            && questPoseEstimator.isSynced()
+            && trustQuest
         ? getLatestObservation(questPosesHistory)
         : odometryPoseEstimator.getEstimatedPosition();
   }
