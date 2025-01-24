@@ -234,6 +234,7 @@ public class HeimdallPoseController {
   public void resetPosition(
       Rotation2d gyroAngle, SwerveModulePosition[] wheelPositions, Pose2d poseMeters) {
     odometryPoseEstimator.resetPosition(gyroAngle, wheelPositions, poseMeters);
+    syncQuest();
   }
 
   /**
