@@ -59,7 +59,7 @@ public class HeimdallPoseController {
   private double maxAllowablePoseDiff = 1.0;
   // how much motion/jitter is allowed from odometry in order to safely re-sync quest (in m/s +
   // rad/s)
-  private double maxAllowableOdometryVelocityDiff = 0.2;
+  private double maxAllowableOdometryVelocityDiff = 0.02;
   // how much motion is allowed from the chassis speeds for the robot to be considered stationary
   // (in m/s + rad/s)
   private double maxAllowableChassisSpeedsVelocity = 0.001;
@@ -74,6 +74,8 @@ public class HeimdallPoseController {
   private double lastQuestVelocity = 0.0;
   private double lastOdometryVelocity = 0.0;
   private double lastChassisSpeedsVelocity = 0.0;
+
+  private double lastAttemptSyncTime = 0.0;
 
   public HeimdallPoseController() {
     odometryPoseEstimator =
@@ -98,6 +100,7 @@ public class HeimdallPoseController {
     if (questNav.isConnected()) {
       questPosesHistory.addSample(Timer.getTimestamp(), questNav.getRobotPose());
     }
+    odometryPosesHistory.addSample(Timer.getTimestamp(), odometryPoseEstimator.getEstimatedPosition());
 
     lastQuestVelocity = getVelocityMagnitudeFromBuffer(questPosesHistory);
     Logger.recordOutput("Odometry/QuestNavVelocity", lastQuestVelocity);
@@ -115,21 +118,24 @@ public class HeimdallPoseController {
         Timer.getTimestamp() - lastVisionMeasurementTime < bufferLength;
     Logger.recordOutput("Odometry/RecentVisionMeasurement", recentVisionMeasurement);
 
-    if (questVelocityDiff > maxAllowableQuestVelocityDiff) {
+    if (questSynced && questVelocityDiff > maxAllowableQuestVelocityDiff) {
       // quest has fallen behind, re-sync
       questSynced = false;
     }
 
-    Pose2d lastQuestPose = questPosesHistory.getInternalBuffer().lastEntry().getValue();
-    Pose2d lastOdometryPose = odometryPosesHistory.getInternalBuffer().lastEntry().getValue();
-    double poseDiff =
-        lastQuestPose.getTranslation().getDistance(lastOdometryPose.getTranslation())
-            + normalizeAngleDelta(
-                lastQuestPose.getRotation().getRadians()
-                    - lastOdometryPose.getRotation().getRadians());
+    double poseDiff = 0.0;
+    if (questPosesHistory.getInternalBuffer().size() > 2 && odometryPosesHistory.getInternalBuffer().size() > 2) {
+      Pose2d lastQuestPose = questPosesHistory.getInternalBuffer().lastEntry().getValue();
+      Pose2d lastOdometryPose = odometryPosesHistory.getInternalBuffer().lastEntry().getValue();
+      poseDiff =
+          lastQuestPose.getTranslation().getDistance(lastOdometryPose.getTranslation())
+              + normalizeAngleDelta(
+                  lastQuestPose.getRotation().getRadians()
+                      - lastOdometryPose.getRotation().getRadians());
+    }
     Logger.recordOutput("Odometry/PoseDiff", poseDiff);
 
-    if (poseDiff > maxAllowablePoseDiff && recentVisionMeasurement) {
+    if (questSynced && poseDiff > maxAllowablePoseDiff && recentVisionMeasurement) {
       // pose has diverged, re-sync
       questSynced = false;
     }
@@ -142,15 +148,25 @@ public class HeimdallPoseController {
 
   public void syncQuest() {
     questNav.setRobotPose(odometryPoseEstimator.getEstimatedPosition());
+    System.out.println("Synced Quest to Odometry");
     questSynced = true;
   }
 
   private void attemptQuestSyncIfSafe(
       double chassisSpeedsVelocity, double odometryVelocityDiff, boolean recentVisionMeasurement) {
-    if (chassisSpeedsVelocity < maxAllowableChassisSpeedsVelocity
+    double currentTime = Timer.getTimestamp();
+    boolean conditionsMet = 
+        chassisSpeedsVelocity < maxAllowableChassisSpeedsVelocity
         && recentVisionMeasurement
-        && odometryVelocityDiff < maxAllowableOdometryVelocityDiff) {
-      syncQuest();
+        && odometryVelocityDiff < maxAllowableOdometryVelocityDiff
+        && odometryVelocityDiff != 0.0; // if it's truly zero it's not processing yet
+
+    if (conditionsMet) {
+      if (currentTime - lastAttemptSyncTime >= bufferLength) {
+        syncQuest();
+      }
+    } else {
+      lastAttemptSyncTime = currentTime;
     }
   }
 
@@ -215,7 +231,6 @@ public class HeimdallPoseController {
     Pose2d updatedPose =
         odometryPoseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
 
-    odometryPosesHistory.addSample(currentTimeSeconds, updatedPose);
     lastChassisSpeedsVelocity = chassisSpeedsToVelocityMagnitude(chassisSpeeds);
     chassisVelocityHistory.addSample(currentTimeSeconds, lastChassisSpeedsVelocity);
     Logger.recordOutput("Odometry/VisionAndSensors", updatedPose);
