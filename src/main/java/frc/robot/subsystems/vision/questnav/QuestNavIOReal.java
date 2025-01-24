@@ -6,7 +6,7 @@ import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 
 public class QuestNavIOReal implements QuestNavIO {
   // NetworkTables instance and table for Quest communication
@@ -29,8 +29,7 @@ public class QuestNavIOReal implements QuestNavIO {
 
   @Override
   public void updateInputs(QuestNavIOInputs inputs) {
-    inputs.connected =
-        ((RobotController.getFPGATime() - questBatteryPercent.getLastChange()) / 1000) < 250;
+    inputs.connected = ((Timer.getTimestamp() - questBatteryPercent.getLastChange()) / 1000) < 250;
     inputs.timestamp = questTimestamp.get();
     inputs.batteryPercent = questBatteryPercent.get();
     inputs.position = questPosition.get();

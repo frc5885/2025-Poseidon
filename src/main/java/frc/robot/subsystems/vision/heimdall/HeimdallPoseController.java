@@ -11,12 +11,20 @@ import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Timer;
+import frc.robot.Constants;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.questnav.QuestNav;
+import frc.robot.subsystems.vision.questnav.QuestNavIO;
+import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
+import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
+import java.util.NavigableMap;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
@@ -33,40 +41,148 @@ public class HeimdallPoseController {
       };
 
   private final SwerveDrivePoseEstimator odometryPoseEstimator;
-  private QuestNav questPoseEstimator;
+  private final QuestNav questNav;
+
+  private final double maxSpeedMetersPerSec = DriveConstants.maxSpeedMetersPerSec;
+  private final double maxAngularSpeedRadPerSec =
+      maxSpeedMetersPerSec
+          / (Math.hypot(DriveConstants.trackWidth / 2.0, DriveConstants.wheelBase / 2.0));
 
   // flags
-  private boolean visionMeasurementRecorded = false;
-  private boolean trustQuest = true;
+  private boolean questSynced = false;
 
-  // last 5 observations
-  private final Pose2d[] odometryPosesHistory = new Pose2d[5];
-  private final Pose2d[] questPosesHistory = new Pose2d[5];
-  private final ChassisSpeeds[] chassisSpeedsHistory = new ChassisSpeeds[5];
+  // thresholds
+  // how much faster odometry can move than quest without triggering a re-sync (in m/s + rad/s)
+  private double maxAllowableQuestVelocityDiff = 0.4;
+  // how much difference in pose between quest and odometry is allowed before re-syncing (in m +
+  // rad)
+  private double maxAllowablePoseDiff = 1.0;
+  // how much motion/jitter is allowed from odometry in order to safely re-sync quest (in m/s +
+  // rad/s)
+  private double maxAllowableOdometryVelocityDiff = 0.2;
+  // how much motion is allowed from the chassis speeds for the robot to be considered stationary
+  // (in m/s + rad/s)
+  private double maxAllowableChassisSpeedsVelocity = 0.001;
+
+  // history of observations
+  private final double bufferLength = 0.4;
+  private final TimeInterpolatableBuffer<Pose2d> odometryPosesHistory;
+  private final TimeInterpolatableBuffer<Pose2d> questPosesHistory;
+  private final TimeInterpolatableBuffer<Double> chassisVelocityHistory;
+  private double lastVisionMeasurementTime = 0.0;
+
+  private double lastQuestVelocity = 0.0;
+  private double lastOdometryVelocity = 0.0;
+  private double lastChassisSpeedsVelocity = 0.0;
 
   public HeimdallPoseController() {
     odometryPoseEstimator =
         new SwerveDrivePoseEstimator(
             kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
-  }
-
-  public void registerQuestNav(QuestNav questNav) {
-    this.questPoseEstimator = questNav;
+    switch (Constants.currentMode) {
+      case REAL:
+        questNav = new QuestNav(new QuestNavIOReal() {});
+        break;
+      case SIM:
+        questNav = new QuestNav(new QuestNavIOSim(odometryPoseEstimator::getEstimatedPosition) {});
+        break;
+      default:
+        questNav = new QuestNav(new QuestNavIO() {});
+    }
+    odometryPosesHistory = TimeInterpolatableBuffer.createBuffer(bufferLength);
+    questPosesHistory = TimeInterpolatableBuffer.createBuffer(bufferLength);
+    chassisVelocityHistory = TimeInterpolatableBuffer.createDoubleBuffer(bufferLength);
   }
 
   public void periodic() {
-    if (questPoseEstimator != null && questPoseEstimator.isConnected()) {
-      addObservation(questPosesHistory, questPoseEstimator.getRobotPose());
+    if (questNav.isConnected()) {
+      questPosesHistory.addSample(Timer.getTimestamp(), questNav.getRobotPose());
+    }
+
+    lastQuestVelocity = getVelocityMagnitudeFromBuffer(questPosesHistory);
+    Logger.recordOutput("Odometry/QuestNavVelocity", lastQuestVelocity);
+
+    lastOdometryVelocity = getVelocityMagnitudeFromBuffer(odometryPosesHistory);
+    Logger.recordOutput("Odometry/OdometryVelocity", lastOdometryVelocity);
+
+    double questVelocityDiff = Math.max(lastChassisSpeedsVelocity - lastQuestVelocity, 0);
+    Logger.recordOutput("Odometry/QuestVelocityDiff", questVelocityDiff);
+
+    double odometryVelocityDiff = Math.abs(lastChassisSpeedsVelocity - lastOdometryVelocity);
+    Logger.recordOutput("Odometry/OdometryVelocityDiff", odometryVelocityDiff);
+
+    boolean recentVisionMeasurement =
+        Timer.getTimestamp() - lastVisionMeasurementTime < bufferLength;
+    Logger.recordOutput("Odometry/RecentVisionMeasurement", recentVisionMeasurement);
+
+    if (questVelocityDiff > maxAllowableQuestVelocityDiff) {
+      // quest has fallen behind, re-sync
+      questSynced = false;
+    }
+
+    Pose2d lastQuestPose = questPosesHistory.getInternalBuffer().lastEntry().getValue();
+    Pose2d lastOdometryPose = odometryPosesHistory.getInternalBuffer().lastEntry().getValue();
+    double poseDiff =
+        lastQuestPose.getTranslation().getDistance(lastOdometryPose.getTranslation())
+            + normalizeAngleDelta(
+                lastQuestPose.getRotation().getRadians()
+                    - lastOdometryPose.getRotation().getRadians());
+    Logger.recordOutput("Odometry/PoseDiff", poseDiff);
+
+    if (poseDiff > maxAllowablePoseDiff && recentVisionMeasurement) {
+      // pose has diverged, re-sync
+      questSynced = false;
+    }
+
+    if (!questSynced) {
+      attemptQuestSyncIfSafe(
+          lastChassisSpeedsVelocity, odometryVelocityDiff, recentVisionMeasurement);
     }
   }
 
-  private <T> void addObservation(T[] observations, T newObservation) {
-    System.arraycopy(observations, 0, observations, 1, observations.length - 1);
-    observations[0] = newObservation;
+  public void syncQuest() {
+    questNav.setRobotPose(odometryPoseEstimator.getEstimatedPosition());
+    questSynced = true;
   }
 
-  private <T> T getLatestObservation(T[] observations) {
-    return observations[0];
+  private void attemptQuestSyncIfSafe(
+      double chassisSpeedsVelocity, double odometryVelocityDiff, boolean recentVisionMeasurement) {
+    if (chassisSpeedsVelocity < maxAllowableChassisSpeedsVelocity
+        && recentVisionMeasurement
+        && odometryVelocityDiff < maxAllowableOdometryVelocityDiff) {
+      syncQuest();
+    }
+  }
+
+  private double chassisSpeedsToVelocityMagnitude(ChassisSpeeds chassisSpeeds) {
+    return Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond)
+            / DriveConstants.maxSpeedMetersPerSec
+        + Math.abs(chassisSpeeds.omegaRadiansPerSecond) / maxAngularSpeedRadPerSec;
+  }
+
+  private double getVelocityMagnitudeFromBuffer(TimeInterpolatableBuffer<Pose2d> poseHistory) {
+    NavigableMap<Double, Pose2d> buffer = poseHistory.getInternalBuffer();
+    if (buffer.size() < 2) {
+      return 0.0;
+    }
+    double t1 = buffer.firstEntry().getKey();
+    double t2 = buffer.lastEntry().getKey();
+    Pose2d pose1 = buffer.firstEntry().getValue();
+    Pose2d pose2 = buffer.lastEntry().getValue();
+
+    double angleDelta = pose2.getRotation().getRadians() - pose1.getRotation().getRadians();
+    angleDelta = normalizeAngleDelta(angleDelta);
+
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            (pose2.getTranslation().getX() - pose1.getTranslation().getX()) / (t2 - t1),
+            (pose2.getTranslation().getY() - pose1.getTranslation().getY()) / (t2 - t1),
+            angleDelta / (t2 - t1));
+    return chassisSpeedsToVelocityMagnitude(speeds);
+  }
+
+  private double normalizeAngleDelta(double angleDelta) {
+    return Math.atan2(Math.sin(angleDelta), Math.cos(angleDelta)); // Normalize to [-π, π]
   }
 
   // ---------- Wrappers for SwerveDrivePoseEstimator methods ---------- //
@@ -78,12 +194,9 @@ public class HeimdallPoseController {
   public Pose2d getEstimatedPosition() {
     // this gets called periodically
     periodic();
-    return questPoseEstimator != null
-            && questPoseEstimator.isConnected()
-            && questPoseEstimator.isSynced()
-            && trustQuest
-        ? getLatestObservation(questPosesHistory)
-        : odometryPoseEstimator.getEstimatedPosition();
+    boolean useQuest = questNav.isConnected() && questSynced;
+    Logger.recordOutput("Odometry/UsingQuest", useQuest);
+    return useQuest ? questNav.getRobotPose() : odometryPoseEstimator.getEstimatedPosition();
   }
 
   /**
@@ -101,11 +214,13 @@ public class HeimdallPoseController {
       ChassisSpeeds chassisSpeeds) {
     Pose2d updatedPose =
         odometryPoseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
-    addObservation(odometryPosesHistory, updatedPose);
-    addObservation(chassisSpeedsHistory, chassisSpeeds);
-    Logger.recordOutput("Odometry/VisionAndSensors", updatedPose);
-  }
 
+    odometryPosesHistory.addSample(currentTimeSeconds, updatedPose);
+    lastChassisSpeedsVelocity = chassisSpeedsToVelocityMagnitude(chassisSpeeds);
+    chassisVelocityHistory.addSample(currentTimeSeconds, lastChassisSpeedsVelocity);
+    Logger.recordOutput("Odometry/VisionAndSensors", updatedPose);
+    Logger.recordOutput("Odometry/ChassisVelocity", lastChassisSpeedsVelocity);
+  }
   /**
    * Resets the robot's position on the field.
    *
@@ -154,9 +269,7 @@ public class HeimdallPoseController {
     odometryPoseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
 
-    // Flag that a vision measurement has been recorded
-    if (!visionMeasurementRecorded) {
-      visionMeasurementRecorded = true;
-    }
+    // Update the last vision measurement time
+    lastVisionMeasurementTime = timestampSeconds;
   }
 }

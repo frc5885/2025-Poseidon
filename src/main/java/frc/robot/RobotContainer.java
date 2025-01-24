@@ -36,10 +36,6 @@ import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.vision.questnav.QuestNav;
-import frc.robot.subsystems.vision.questnav.QuestNavIO;
-import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
-import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -51,7 +47,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final QuestNav questNav;
   private final Vision vision;
   private final HeimdallPoseController poseController;
 
@@ -75,7 +70,6 @@ public class RobotContainer {
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3),
                 poseController);
-        questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
         vision =
             new Vision(
                 drive::addVisionMeasurement,
@@ -95,7 +89,6 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 poseController);
-        questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
         vision =
             new Vision(
                 drive::addVisionMeasurement,
@@ -115,11 +108,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 poseController);
-        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
-    poseController.registerQuestNav(questNav);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -184,12 +175,11 @@ public class RobotContainer {
                       drive.resetGyro();
                       Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
                       drive.setPose(newPose);
-                      questNav.setRobotPose(newPose);
                     },
                     drive)
                 .ignoringDisable(true));
 
-    controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
+    // controller.y().onTrue(new InstantCommand(() -> poseController.syncQuest()));
   }
 
   /**

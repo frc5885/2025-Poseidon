@@ -26,16 +26,13 @@ public class QuestNav extends SubsystemBase {
   // The translation and rotation get handled separately
   private Transform2d questToField = new Transform2d();
 
-  private boolean synced = false;
-
   /**
    * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
    * transform
    */
-  public QuestNav(QuestNavIO questNavIO, Pose2d realRobotPose) {
+  public QuestNav(QuestNavIO questNavIO) {
     this.questNavIO = questNavIO;
     this.disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
-    setRobotPose(realRobotPose);
   }
 
   @Override
@@ -74,9 +71,6 @@ public class QuestNav extends SubsystemBase {
 
     // Create and store the overall transform
     questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
-
-    // Mark the Quest as synced
-    synced = true;
   }
 
   /**
@@ -125,11 +119,6 @@ public class QuestNav extends SubsystemBase {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
     float ret = -eulerAngles[1];
     return new Rotation2d(Units.degreesToRadians(ret));
-  }
-
-  /** Get whether or not the Quest has been synced to the robot pose */
-  public boolean isSynced() {
-    return synced;
   }
 
   /** Get whether or not the Quest is connected */
