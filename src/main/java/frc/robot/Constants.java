@@ -41,8 +41,8 @@ public final class Constants {
     new Pose2d(5.76, 4.19, new Rotation2d(3.14)),
     new Pose2d(5.28, 3.01, new Rotation2d(8.38)),
     new Pose2d(4.99, 2.84, new Rotation2d(8.38)),
-    new Pose2d(3.99, 2.84, new Rotation2d(8.38)),
-    new Pose2d(3.71, 3.01, new Rotation2d(8.38))
+    new Pose2d(3.99, 2.84, new Rotation2d(7.33)),
+    new Pose2d(3.71, 3.01, new Rotation2d(7.33))
   };
 
   // Red Scoring Poses
