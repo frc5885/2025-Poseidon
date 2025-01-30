@@ -157,7 +157,7 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
-  public static Command driveToPose(Drive drive, Pose2d targetPose) {
+  public static Command driveToPose(Drive drive, Supplier<Pose2d> targetPose) {
     Command cmd = drive.getDriveToPoseCommand(targetPose);
     cmd.addRequirements(drive);
     return cmd;

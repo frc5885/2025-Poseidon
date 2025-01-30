@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.MichaelCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -184,16 +185,23 @@ public class RobotContainer {
 
     // controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
 
+    // controller
+    //     .y()
+    //     .whileTrue(
+    //         DriveCommands.driveToPose(
+    //             drive,
+    //             () ->
+    //                 PoseUtil.findClosestPose(
+    //                     // DriverStation.getAlliance().get() == Alliance.Blue
+    //                     //     ? Constants.kBluePoses
+    //                     //     : Constants.kRedPoses,
+    //                     Constants.kBluePoses, drive.getPose())));
+
     controller
         .y()
         .whileTrue(
-            DriveCommands.driveToPose(
-                drive,
-                PoseUtil.findClosestPose(
-                    // DriverStation.getAlliance().get() == Alliance.Blue
-                    //     ? Constants.kBluePoses
-                    //     : Constants.kRedPoses,
-                    Constants.kBluePoses, drive.getPose())));
+            new MichaelCommand(
+                drive, () -> PoseUtil.findClosestPose(Constants.kBluePoses, drive.getPose())));
   }
 
   /**

@@ -57,8 +57,8 @@ public final class Constants {
     new Pose2d(5.76 + kReefAdditionalDistance, 4.19, new Rotation2d(3.14)),
     new Pose2d(5.28 + kReefAdditionalDistance, 3.01, new Rotation2d(8.38)),
     new Pose2d(4.99 + kReefAdditionalDistance, 2.84, new Rotation2d(8.38)),
-    new Pose2d(3.99 + kReefAdditionalDistance, 2.84, new Rotation2d(8.38)),
-    new Pose2d(3.71 + kReefAdditionalDistance, 3.01, new Rotation2d(8.38))
+    new Pose2d(3.99 + kReefAdditionalDistance, 2.84, new Rotation2d(7.33)),
+    new Pose2d(3.71 + kReefAdditionalDistance, 3.01, new Rotation2d(7.33))
   };
 
   public static enum Mode {

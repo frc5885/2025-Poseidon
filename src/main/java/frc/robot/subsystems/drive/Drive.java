@@ -51,6 +51,7 @@ import frc.robot.Constants.Mode;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -250,9 +251,10 @@ public class Drive extends SubsystemBase {
     runVelocity(new ChassisSpeeds());
   }
 
-  public Command getDriveToPoseCommand(Pose2d pose) {
+  public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
+    Logger.recordOutput("Odometry/TargetPose", pose.get());
     return AutoBuilder.pathfindToPose(
-        pose,
+        pose.get(),
         new PathConstraints(
             getMaxLinearSpeedMetersPerSec(),
             getMaxAngularSpeedRadPerSec(),
