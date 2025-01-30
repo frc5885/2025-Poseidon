@@ -9,20 +9,22 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.simplemanipulator.elevator.Elevator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class SimpleManipulator extends SubsystemBase {
   private final Elevator m_elevator;
 
-  private SysIdRoutine m_sysIdRoutine;
+  private SysIdRoutine m_elevatorSysIdRoutine;
 
   public SimpleManipulator(ElevatorIO io) {
     m_elevator = new Elevator(io);
 
     // Configure SysId
-    m_sysIdRoutine =
+    m_elevatorSysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,
@@ -30,32 +32,45 @@ public class SimpleManipulator extends SubsystemBase {
                 null,
                 (state) -> Logger.recordOutput("SimpleManipulator/Elevator", state.toString())),
             new SysIdRoutine.Mechanism(
-                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+                (voltage) -> runElevatorCharacterization(voltage.in(Volts)), null, this));
   }
 
   @Override
   public void periodic() {
     m_elevator.periodic();
+  }
 
-    m_elevator.runElevatorSetpoint(12.0);
+  @AutoLogOutput(key = "SimpleManipulator/Elevator/Level")
+  public ElevatorLevel getElevatorLevel() {
+    return m_elevator.getLevel();
+  }
+
+  public void setElevatorLevel(ElevatorLevel elevatorLevel) {
+    m_elevator.setLevel(elevatorLevel);
+  }
+
+  // used to determine if the manipulator achieved the combined([elevator, arm]) goal state
+  @AutoLogOutput(key = "SimpleManipulator/isGoalAchieved")
+  public boolean isGoalAchieved() {
+    return m_elevator.isSetpointAchieved();
   }
 
   // TODO May adjust limits to avoid damaging the mechanism
-  public void runCharacterization(double outputVolts) {
+  public void runElevatorCharacterization(double outputVolts) {
     m_elevator.runCharacterization(outputVolts);
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */
-  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return run(() -> runCharacterization(0.0))
+  public Command elevatorSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return run(() -> runElevatorCharacterization(0.0))
         .withTimeout(1.0)
-        .andThen(m_sysIdRoutine.quasistatic(direction));
+        .andThen(m_elevatorSysIdRoutine.quasistatic(direction));
   }
 
   /** Returns a command to run a dynamic test in the specified direction. */
-  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return run(() -> runCharacterization(0.0))
+  public Command elevatorSysIdDynamic(SysIdRoutine.Direction direction) {
+    return run(() -> runElevatorCharacterization(0.0))
         .withTimeout(1.0)
-        .andThen(m_sysIdRoutine.dynamic(direction));
+        .andThen(m_elevatorSysIdRoutine.dynamic(direction));
   }
 }

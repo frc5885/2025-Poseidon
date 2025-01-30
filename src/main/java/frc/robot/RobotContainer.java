@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -35,10 +36,11 @@ import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
 import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants;
+import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSim;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -127,16 +129,16 @@ public class RobotContainer {
     // TODO not needed for now
     // autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Forward)",
-    //     m_manipulator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    //     m_manipulator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
     // autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Reverse)",
-    //     m_manipulator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    //     m_manipulator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     // autoChooser.addOption(
     //     "Elevator SysId (Dynamic Forward)",
-    // m_manipulator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    //     m_manipulator.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
     // autoChooser.addOption(
     //     "Elevator SysId (Dynamic Reverse)",
-    // m_manipulator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    //     m_manipulator.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -185,6 +187,21 @@ public class RobotContainer {
                 .ignoringDisable(true));
 
     controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
+
+    // elevator testing
+    new JoystickButton(new GenericHID(1), 1)
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    m_manipulator.setElevatorLevel(
+                        switch (m_manipulator.getElevatorLevel()) {
+                          case L1 -> ElevatorLevel.L2;
+                          case L2 -> ElevatorLevel.L3;
+                          case L3 -> ElevatorLevel.L4;
+                          case L4 -> ElevatorLevel.L1;
+                          default -> ElevatorLevel.L1;
+                        }),
+                m_manipulator));
   }
 
   /**

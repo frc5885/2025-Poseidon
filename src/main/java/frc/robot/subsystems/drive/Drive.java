@@ -121,11 +121,6 @@ public class Drive extends SubsystemBase {
     previousSetpoint =
         new SwerveSetpoint(getChassisSpeeds(), getModuleStates(), DriveFeedforwards.zeros(4));
 
-    // SmartDashboard.putNumber("DriveP", driveKp);
-    // SmartDashboard.putNumber("DriveD", driveKd);
-    // SmartDashboard.putNumber("TurnP", turnKp);
-    // SmartDashboard.putNumber("TurnD", turnKd);
-
     // Configure SysId
     sysId =
         new SysIdRoutine(

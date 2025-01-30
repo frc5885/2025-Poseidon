@@ -7,6 +7,7 @@ import org.littletonrobotics.junction.Logger;
 public class Elevator {
   private final ElevatorIO m_io;
   private final ElevatorIOInputsAutoLogged m_inputs = new ElevatorIOInputsAutoLogged();
+  private ElevatorLevel m_elevatorLevel = ElevatorLevel.L1;
 
   public Elevator(ElevatorIO io) {
     m_io = io;
@@ -15,6 +16,9 @@ public class Elevator {
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SimpleManipulator/Elevator", m_inputs);
+
+    runElevatorSetpoint(
+        m_elevatorLevel != null ? m_elevatorLevel.setpointMeters : getPositionMeters());
   }
 
   public void runElevatorOpenLoop(double outputVolts) {
@@ -28,8 +32,8 @@ public class Elevator {
     }
   }
 
-  public void runElevatorSetpoint(double positionMetersSetpoint) {
-    m_io.setElevatorPosition(positionMetersSetpoint);
+  public void runElevatorSetpoint(double setpointMeters) {
+    m_io.setElevatorPosition(setpointMeters);
   }
 
   public void runCharacterization(double outputVolts) {
@@ -40,11 +44,11 @@ public class Elevator {
     m_io.stop();
   }
 
-  public boolean isWithinUpperBound(double positionMeters) {
+  private boolean isWithinUpperBound(double positionMeters) {
     return positionMeters < kElevatorUpperBoundMeters;
   }
 
-  public boolean isWithinLowerBound(double positionMeters) {
+  private boolean isWithinLowerBound(double positionMeters) {
     return positionMeters > kElevatorLowerBoundMeters;
   }
 
@@ -54,5 +58,17 @@ public class Elevator {
 
   public double getVelocityMetersPerSec() {
     return m_inputs.elevatorVelocityMetersPerSec;
+  }
+
+  public void setLevel(ElevatorLevel elevatorLevel) {
+    m_elevatorLevel = elevatorLevel;
+  }
+
+  public ElevatorLevel getLevel() {
+    return m_elevatorLevel;
+  }
+
+  public boolean isSetpointAchieved() {
+    return Math.abs(m_inputs.elevatorErrorMeters) < kElevatorErrorToleranceMeters;
   }
 }

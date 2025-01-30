@@ -4,7 +4,6 @@ import static frc.robot.subsystems.simplemanipulator.ManipulatorConstants.Elevat
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -14,6 +13,7 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
@@ -22,9 +22,11 @@ import frc.robot.util.TunablePIDController;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOSpark implements ElevatorIO {
-  private final SparkBase m_elevatorSpark;
+  private final SparkMax m_elevatorSpark;
+  private final Debouncer m_elevatorConnectedDebouncer = new Debouncer(0.5);
   private final RelativeEncoder m_elevatorEncoder;
   private final SparkClosedLoopController m_elevatorController;
+
   private TrapezoidProfile m_elevatorProfile;
   private TrapezoidProfile.State m_goal;
   private TunablePIDController m_elevatorPIDController;
@@ -38,7 +40,7 @@ public class ElevatorIOSpark implements ElevatorIO {
     m_elevatorProfile =
         new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
     m_goal = getCurrentState();
-    // TODO remember to set the turnMode on
+    // TODO remember to set the tuneMode on
     m_elevatorPIDController =
         new TunablePIDController(
             elevatorKp, 0.0, elevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", false);
@@ -83,6 +85,7 @@ public class ElevatorIOSpark implements ElevatorIO {
 
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
+    sparkStickyFault = false;
     ifOk(
         m_elevatorSpark,
         m_elevatorEncoder::getPosition,
@@ -99,6 +102,8 @@ public class ElevatorIOSpark implements ElevatorIO {
         m_elevatorSpark,
         m_elevatorSpark::getOutputCurrent,
         (current) -> inputs.elevatorCurrentAmps = current);
+    inputs.elevatorErrorMeters = m_goal.position - inputs.elevatorPositionMeters;
+    inputs.elevatorConnected = m_elevatorConnectedDebouncer.calculate(!sparkStickyFault);
   }
 
   @Override
@@ -116,16 +121,16 @@ public class ElevatorIOSpark implements ElevatorIO {
     TrapezoidProfile.State current = getCurrentState();
     TrapezoidProfile.State setpoint = m_elevatorProfile.calculate(0.02, current, m_goal);
     m_elevatorSpark.setVoltage(
-        m_elevatorPIDController.calculate(current.position, setpoint.position)
-            + m_elevatorFeedforward.calculate(setpoint.velocity));
+        m_elevatorFeedforward.calculate(setpoint.velocity)
+            + m_elevatorPIDController.calculate(current.position, setpoint.position));
+  }
+
+  private TrapezoidProfile.State getCurrentState() {
+    return new State(m_elevatorEncoder.getPosition(), m_elevatorEncoder.getVelocity());
   }
 
   @Override
   public void stop() {
     m_elevatorSpark.setVoltage(0.0);
-  }
-
-  private TrapezoidProfile.State getCurrentState() {
-    return new State(m_elevatorEncoder.getPosition(), m_elevatorEncoder.getVelocity());
   }
 }

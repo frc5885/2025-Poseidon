@@ -9,8 +9,8 @@ public class ManipulatorConstants {
     public static final boolean kElevatorInverted = false;
     public static final int kElevatorMotorCurrentLimit = 40;
 
-    public static final double kElevatorLowerBoundMeters = -20.0;
-    public static final double kElevatorUpperBoundMeters = 20.0;
+    public static final double kElevatorLowerBoundMeters = 0.0;
+    public static final double kElevatorUpperBoundMeters = 2.0;
     // In Meters/Sec
     public static final double kElevatorMaxVelocity = 1.75;
     // In Meters/SecSq
@@ -29,11 +29,26 @@ public class ManipulatorConstants {
     public static final double elevatorKg = 0.0;
     public static final double elevatorKp = 0.0;
     public static final double elevatorKd = 0.0;
-    public static final double kElevatorErrorToleranceMeters = 0.01;
 
-    public static final double elevatorSimKp = 5.0;
+    public static final double elevatorSimKp = 30.0;
     public static final double elevatorSimKd = 0.0;
-    public static final double elevatorSimKv = 0.1;
-    public static final double elevatorSimKg = 0.98;
+    public static final double elevatorSimKv = 4.0;
+    public static final double elevatorSimKg = 0.919;
+
+    public static final double kElevatorErrorToleranceMeters = 0.005;
+
+    // TODO could be modified to accept more abstract/arbitrary setpoint values?
+    public static enum ElevatorLevel {
+      L1(0.0),
+      L2(0.5),
+      L3(1.0),
+      L4(1.5);
+
+      public double setpointMeters;
+
+      private ElevatorLevel(double setpointMeters) {
+        this.setpointMeters = setpointMeters;
+      }
+    }
   }
 }
