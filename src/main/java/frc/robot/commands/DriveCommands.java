@@ -157,6 +157,12 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
+  public static Command driveToPose(Drive drive, Pose2d targetPose) {
+    Command cmd = drive.getDriveToPoseCommand(targetPose);
+    cmd.addRequirements(drive);
+    return cmd;
+  }
+
   /**
    * Measures the velocity feedforward constants for the drive motors.
    *

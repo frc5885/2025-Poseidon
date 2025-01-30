@@ -19,6 +19,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -247,6 +248,16 @@ public class Drive extends SubsystemBase {
   /** Stops the drive. */
   public void stop() {
     runVelocity(new ChassisSpeeds());
+  }
+
+  public Command getDriveToPoseCommand(Pose2d pose) {
+    return AutoBuilder.pathfindToPose(
+        pose,
+        new PathConstraints(
+            getMaxLinearSpeedMetersPerSec(),
+            getMaxAngularSpeedRadPerSec(),
+            getMaxAngularSpeedRadPerSec(),
+            100)); // TODO Figure this out
   }
 
   /**

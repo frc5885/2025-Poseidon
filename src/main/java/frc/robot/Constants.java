@@ -13,6 +13,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -23,6 +25,41 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+  // Scoring Pose Constants
+  public static final double kReefAdditionalDistance = 11.80 - 3.23;
+
+  // Blue Scoring Poses
+  public static final Pose2d[] kBluePoses = {
+    new Pose2d(3.23, 3.86, new Rotation2d(0)),
+    new Pose2d(3.23, 4.19, new Rotation2d(0)),
+    new Pose2d(3.70, 5.05, new Rotation2d(5.24)),
+    new Pose2d(3.23, 4.19, new Rotation2d(5.24)),
+    new Pose2d(4.98, 5.21, new Rotation2d(4.19)),
+    new Pose2d(5.27, 5.04, new Rotation2d(4.19)),
+    new Pose2d(5.76, 3.86, new Rotation2d(3.14)),
+    new Pose2d(5.76, 4.19, new Rotation2d(3.14)),
+    new Pose2d(5.28, 3.01, new Rotation2d(8.38)),
+    new Pose2d(4.99, 2.84, new Rotation2d(8.38)),
+    new Pose2d(3.99, 2.84, new Rotation2d(8.38)),
+    new Pose2d(3.71, 3.01, new Rotation2d(8.38))
+  };
+
+  // Red Scoring Poses
+  public static final Pose2d[] kRedPoses = {
+    new Pose2d(3.23 + kReefAdditionalDistance, 3.86, new Rotation2d(0)),
+    new Pose2d(3.23 + kReefAdditionalDistance, 4.19, new Rotation2d(0)),
+    new Pose2d(3.70 + kReefAdditionalDistance, 5.05, new Rotation2d(5.24)),
+    new Pose2d(3.23 + kReefAdditionalDistance, 4.19, new Rotation2d(5.24)),
+    new Pose2d(4.98 + kReefAdditionalDistance, 5.21, new Rotation2d(4.19)),
+    new Pose2d(5.27 + kReefAdditionalDistance, 5.04, new Rotation2d(4.19)),
+    new Pose2d(5.76 + kReefAdditionalDistance, 3.86, new Rotation2d(3.14)),
+    new Pose2d(5.76 + kReefAdditionalDistance, 4.19, new Rotation2d(3.14)),
+    new Pose2d(5.28 + kReefAdditionalDistance, 3.01, new Rotation2d(8.38)),
+    new Pose2d(4.99 + kReefAdditionalDistance, 2.84, new Rotation2d(8.38)),
+    new Pose2d(3.99 + kReefAdditionalDistance, 2.84, new Rotation2d(8.38)),
+    new Pose2d(3.71 + kReefAdditionalDistance, 3.01, new Rotation2d(8.38))
+  };
 
   public static enum Mode {
     /** Running on a real robot. */
