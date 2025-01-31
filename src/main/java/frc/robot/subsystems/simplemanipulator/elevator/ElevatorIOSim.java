@@ -10,11 +10,16 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.TunablePIDController;
 
 public class ElevatorIOSim implements ElevatorIO {
   private final ElevatorSim m_elevatorSim;
-  // TODO maybe add a mechanism2d
+  private final Mechanism2d m_elevatorMech;
+  private final MechanismRoot2d m_elevatorRoot;
 
   private TrapezoidProfile m_elevatorSimProfile;
   private TrapezoidProfile.State m_goalSim;
@@ -34,6 +39,9 @@ public class ElevatorIOSim implements ElevatorIO {
             kElevatorUpperBoundMeters,
             true,
             kElevatorLowerBoundMeters);
+    m_elevatorMech = new Mechanism2d(0.2, 2.0);
+    m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.1, 0.0);
+    m_elevatorRoot.append(new MechanismLigament2d("Elevator", 0.5, 90.0));
     m_elevatorSimProfile =
         new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
     m_goalSim = getCurrentState();
@@ -66,6 +74,9 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.elevatorErrorMeters = m_goalSim.position - inputs.elevatorPositionMeters;
     inputs.elevatorAppliedVolts = m_elevatorAppliedVolts;
     inputs.elevatorCurrentAmps = m_elevatorSim.getCurrentDrawAmps();
+
+    m_elevatorRoot.setPosition(0.1, inputs.elevatorPositionMeters);
+    SmartDashboard.putData("SimpleManipulator/Elevator", m_elevatorMech);
   }
 
   @Override
