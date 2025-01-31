@@ -14,11 +14,13 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.util.TunablePIDController;
 
 public class ElevatorIOSim implements ElevatorIO {
   private final ElevatorSim m_elevatorSim;
   private final Mechanism2d m_elevatorMech;
+  private final MechanismRoot2d m_elevatorTrack;
   private final MechanismRoot2d m_elevatorRoot;
 
   private TrapezoidProfile m_elevatorSimProfile;
@@ -40,8 +42,11 @@ public class ElevatorIOSim implements ElevatorIO {
             true,
             kElevatorLowerBoundMeters);
     m_elevatorMech = new Mechanism2d(0.2, 2.0);
-    m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.1, 0.0);
-    m_elevatorRoot.append(new MechanismLigament2d("Elevator", 0.5, 90.0));
+    m_elevatorTrack = m_elevatorMech.getRoot("ElevatorTrack", 0.07, 0.15);
+    m_elevatorTrack.append(new MechanismLigament2d("ElevatorTrack", 2.0, 90.0));
+    m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.13, 0.15);
+    m_elevatorRoot.append(
+        new MechanismLigament2d("Elevator", 0.3, 90.0, 10.0, new Color8Bit(0, 0, 255)));
     m_elevatorSimProfile =
         new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
     m_goalSim = getCurrentState();
@@ -75,7 +80,7 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.elevatorAppliedVolts = m_elevatorAppliedVolts;
     inputs.elevatorCurrentAmps = m_elevatorSim.getCurrentDrawAmps();
 
-    m_elevatorRoot.setPosition(0.1, inputs.elevatorPositionMeters);
+    m_elevatorRoot.setPosition(0.13, 0.15 + inputs.elevatorPositionMeters);
     SmartDashboard.putData("SimpleManipulator/Elevator", m_elevatorMech);
   }
 
