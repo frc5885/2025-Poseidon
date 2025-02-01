@@ -42,15 +42,15 @@ public class DriveConstants {
   public static final Rotation2d backRightZeroRotation = new Rotation2d(6.260559713965955);
 
   // Device CAN IDs
-  public static final int frontLeftDriveCanId = 23;
-  public static final int backLeftDriveCanId = 20;
-  public static final int frontRightDriveCanId = 22;
-  public static final int backRightDriveCanId = 21;
+  public static final int frontLeftDriveCanId = 13;
+  public static final int backLeftDriveCanId = 10;
+  public static final int frontRightDriveCanId = 12;
+  public static final int backRightDriveCanId = 11;
 
-  public static final int frontLeftTurnCanId = 13;
-  public static final int backLeftTurnCanId = 10;
-  public static final int frontRightTurnCanId = 12;
-  public static final int backRightTurnCanId = 11;
+  public static final int frontLeftTurnCanId = 23;
+  public static final int backLeftTurnCanId = 20;
+  public static final int frontRightTurnCanId = 22;
+  public static final int backRightTurnCanId = 21;
 
   // Absolute encoder analog ports
   public static final int frontLeftAbsoluteEncoderPort = 3;
