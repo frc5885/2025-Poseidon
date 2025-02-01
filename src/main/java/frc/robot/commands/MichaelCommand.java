@@ -5,6 +5,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
@@ -35,9 +37,11 @@ public class MichaelCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("ReefPanel");
     Command cmd =
         DriveCommands.driveToPose(
-            m_drive, () -> PoseUtil.findClosestPose(Constants.kBluePoses, m_drive.getPose()));
+            m_drive,
+            () -> Constants.kBluePoses[(int) table.getEntry("ReefTargets").getDouble(0.0)]);
     cmd.schedule(); // Make sure the returned command actually runs
   }
   // Called once the command ends or is interrupted.
