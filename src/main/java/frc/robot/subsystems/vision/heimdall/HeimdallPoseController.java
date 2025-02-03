@@ -56,7 +56,7 @@ public class HeimdallPoseController {
   private double maxAllowableQuestVelocityDiff = 0.4;
   // how much difference in pose between quest and odometry is allowed before re-syncing (in m +
   // rad)
-  private double maxAllowablePoseDiff = 1.0;
+  private double maxAllowablePoseDiff = 0.4;
   // how much motion/jitter is allowed from odometry in order to safely re-sync quest (in m/s +
   // rad/s)
   private double maxAllowableOdometryVelocityDiff = 0.02;
@@ -100,7 +100,8 @@ public class HeimdallPoseController {
     if (questNav.isConnected()) {
       questPosesHistory.addSample(Timer.getTimestamp(), questNav.getRobotPose());
     }
-    odometryPosesHistory.addSample(Timer.getTimestamp(), odometryPoseEstimator.getEstimatedPosition());
+    odometryPosesHistory.addSample(
+        Timer.getTimestamp(), odometryPoseEstimator.getEstimatedPosition());
 
     lastQuestVelocity = getVelocityMagnitudeFromBuffer(questPosesHistory);
     Logger.recordOutput("Odometry/QuestNavVelocity", lastQuestVelocity);
@@ -124,7 +125,8 @@ public class HeimdallPoseController {
     }
 
     double poseDiff = 0.0;
-    if (questPosesHistory.getInternalBuffer().size() > 2 && odometryPosesHistory.getInternalBuffer().size() > 2) {
+    if (questPosesHistory.getInternalBuffer().size() > 2
+        && odometryPosesHistory.getInternalBuffer().size() > 2) {
       Pose2d lastQuestPose = questPosesHistory.getInternalBuffer().lastEntry().getValue();
       Pose2d lastOdometryPose = odometryPosesHistory.getInternalBuffer().lastEntry().getValue();
       poseDiff =
@@ -155,11 +157,11 @@ public class HeimdallPoseController {
   private void attemptQuestSyncIfSafe(
       double chassisSpeedsVelocity, double odometryVelocityDiff, boolean recentVisionMeasurement) {
     double currentTime = Timer.getTimestamp();
-    boolean conditionsMet = 
+    boolean conditionsMet =
         chassisSpeedsVelocity < maxAllowableChassisSpeedsVelocity
-        && recentVisionMeasurement
-        && odometryVelocityDiff < maxAllowableOdometryVelocityDiff
-        && odometryVelocityDiff != 0.0; // if it's truly zero it's not processing yet
+            && recentVisionMeasurement
+            && odometryVelocityDiff < maxAllowableOdometryVelocityDiff
+            && odometryVelocityDiff != 0.0; // if it's truly zero it's not processing yet
 
     if (conditionsMet) {
       if (currentTime - lastAttemptSyncTime >= bufferLength) {
