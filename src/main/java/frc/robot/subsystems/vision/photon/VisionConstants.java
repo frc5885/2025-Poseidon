@@ -25,23 +25,23 @@ public class VisionConstants {
       AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
 
   // Camera names, must match names configured on coprocessor
-  public static String camera0Name = "tsunami";
-  public static String camera1Name = "sandstorm";
+  public static String camera0Name = "sandstorm";
+  public static String camera1Name = "tsunami";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
   public static Transform3d robotToCamera0 =
       new Transform3d(
-          -Units.inchesToMeters(14.75),
-          Units.inchesToMeters(6.25),
-          Units.inchesToMeters(3.75),
-          new Rotation3d(0.0, -Units.degreesToRadians(20), Math.PI));
+          Units.inchesToMeters(10),
+          -Units.inchesToMeters(12.25),
+          Units.inchesToMeters(8.0),
+          new Rotation3d(0.0, 0, Units.degreesToRadians(10)));
   public static Transform3d robotToCamera1 =
       new Transform3d(
-          Units.inchesToMeters(14.75),
-          -Units.inchesToMeters(6.25),
-          Units.inchesToMeters(3.75),
-          new Rotation3d(0.0, -Units.degreesToRadians(20), 0.0));
+          Units.inchesToMeters(10),
+          Units.inchesToMeters(12.25),
+          Units.inchesToMeters(8.0),
+          new Rotation3d(0.0, 0, -Units.degreesToRadians(10)));
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
