@@ -1,13 +1,13 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
+// Special shoutout to OpenAI's o3-mini-hard
 
 package frc.robot.subsystems.vision.heimdall;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleTranslations;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,15 +24,30 @@ import frc.robot.subsystems.vision.questnav.QuestNav;
 import frc.robot.subsystems.vision.questnav.QuestNavIO;
 import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
 import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
-import java.util.NavigableMap;
+import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 
-/** Add your docs here. */
 public class HeimdallPoseController {
-  // generic default values for pose estimator
+  // -------- Constants / thresholds -------------
+  private static final double BUFFER_DURATION = 0.5; // seconds for our buffers
+
+  // When Quest is synced, if its (adjusted) pose diverges too far from odometry, we unsync.
+  private static final double MAX_POSE_DIFF = 0.5; // meters+radians (after sync)
+
+  // When not synced, we wait until the offset between Quest and odometry is steady
+  // (i.e. its derivative is below this threshold) before syncing.
+  private static final double OFFSET_DERIVATIVE_THRESHOLD = 0.02; // (m + rad)/s
+
+  // We consider the robot “stationary” if the normalized chassis speed is below this.
+  private static final double STATIONARY_VELOCITY_THRESHOLD = 0.05;
+  // And we require the robot to be stationary for at least this long before re-syncing.
+  private static final double MIN_TIME_STATIONARY_FOR_SYNC = 0.2; // seconds
+
+  // -------- Odometry and vision fusion objects -------------
   private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
-  private final Rotation2d rawGyroRotation = new Rotation2d();
-  private final SwerveModulePosition[] lastModulePositions = // For delta tracking
+  // (Provide your own initial gyro and module positions)
+  private final Rotation2d initialGyro = new Rotation2d();
+  private final SwerveModulePosition[] initialModulePositions =
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
         new SwerveModulePosition(),
@@ -40,254 +55,219 @@ public class HeimdallPoseController {
         new SwerveModulePosition()
       };
 
-  private final SwerveDrivePoseEstimator odometryPoseEstimator;
+  private final SwerveDrivePoseEstimator odometryEstimator;
   private final QuestNav questNav;
 
-  private final double maxSpeedMetersPerSec = DriveConstants.maxSpeedMetersPerSec;
-  private final double maxAngularSpeedRadPerSec =
-      maxSpeedMetersPerSec
-          / (Math.hypot(DriveConstants.trackWidth / 2.0, DriveConstants.wheelBase / 2.0));
+  // -------- Buffers for recent pose history (for computing offset derivatives) -------------
+  private final TimeInterpolatableBuffer<Pose2d> odometryBuffer;
+  private final TimeInterpolatableBuffer<Pose2d> questBuffer;
 
-  // flags
+  // -------- Internal state flags -------------
+  // True if we have “synced” (i.e. applied a transformation so that Quest's output is in the field
+  // frame).
   private boolean questSynced = false;
-
-  // thresholds
-  // how much faster odometry can move than quest without triggering a re-sync (in m/s + rad/s)
-  private double maxAllowableQuestVelocityDiff = 0.4;
-  // how much difference in pose between quest and odometry is allowed before re-syncing (in m +
-  // rad)
-  private double maxAllowablePoseDiff = 0.4;
-  // how much motion/jitter is allowed from odometry in order to safely re-sync quest (in m/s +
-  // rad/s)
-  private double maxAllowableOdometryVelocityDiff = 0.02;
-  // how much motion is allowed from the chassis speeds for the robot to be considered stationary
-  // (in m/s + rad/s)
-  private double maxAllowableChassisSpeedsVelocity = 0.001;
-
-  // history of observations
-  private final double bufferLength = 0.4;
-  private final TimeInterpolatableBuffer<Pose2d> odometryPosesHistory;
-  private final TimeInterpolatableBuffer<Pose2d> questPosesHistory;
-  private final TimeInterpolatableBuffer<Double> chassisVelocityHistory;
-  private double lastVisionMeasurementTime = 0.0;
-
-  private double lastQuestVelocity = 0.0;
-  private double lastOdometryVelocity = 0.0;
-  private double lastChassisSpeedsVelocity = 0.0;
-
-  private double lastAttemptSyncTime = 0.0;
+  // Time tracking: last time the robot was moving (used for safe re-sync)
+  private double lastTimeNotStationary = Timer.getFPGATimestamp();
 
   public HeimdallPoseController() {
-    odometryPoseEstimator =
-        new SwerveDrivePoseEstimator(
-            kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+    odometryEstimator =
+        new SwerveDrivePoseEstimator(kinematics, initialGyro, initialModulePositions, new Pose2d());
+
     switch (Constants.currentMode) {
       case REAL:
-        questNav = new QuestNav(new QuestNavIOReal() {});
+        questNav = new QuestNav(new QuestNavIOReal());
         break;
       case SIM:
-        questNav = new QuestNav(new QuestNavIOSim(odometryPoseEstimator::getEstimatedPosition) {});
+        questNav = new QuestNav(new QuestNavIOSim(odometryEstimator::getEstimatedPosition));
         break;
       default:
         questNav = new QuestNav(new QuestNavIO() {});
     }
-    odometryPosesHistory = TimeInterpolatableBuffer.createBuffer(bufferLength);
-    questPosesHistory = TimeInterpolatableBuffer.createBuffer(bufferLength);
-    chassisVelocityHistory = TimeInterpolatableBuffer.createDoubleBuffer(bufferLength);
+
+    odometryBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
+    questBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
   }
 
-  public void periodic() {
-    if (questNav.isConnected()) {
-      questPosesHistory.addSample(Timer.getTimestamp(), questNav.getRobotPose());
-    }
-    odometryPosesHistory.addSample(
-        Timer.getTimestamp(), odometryPoseEstimator.getEstimatedPosition());
-
-    lastQuestVelocity = getVelocityMagnitudeFromBuffer(questPosesHistory);
-    Logger.recordOutput("Odometry/QuestNavVelocity", lastQuestVelocity);
-
-    lastOdometryVelocity = getVelocityMagnitudeFromBuffer(odometryPosesHistory);
-    Logger.recordOutput("Odometry/OdometryVelocity", lastOdometryVelocity);
-
-    double questVelocityDiff = Math.max(lastChassisSpeedsVelocity - lastQuestVelocity, 0);
-    Logger.recordOutput("Odometry/QuestVelocityDiff", questVelocityDiff);
-
-    double odometryVelocityDiff = Math.abs(lastChassisSpeedsVelocity - lastOdometryVelocity);
-    Logger.recordOutput("Odometry/OdometryVelocityDiff", odometryVelocityDiff);
-
-    boolean recentVisionMeasurement =
-        Timer.getTimestamp() - lastVisionMeasurementTime < bufferLength;
-    Logger.recordOutput("Odometry/RecentVisionMeasurement", recentVisionMeasurement);
-
-    if (questSynced && questVelocityDiff > maxAllowableQuestVelocityDiff) {
-      // quest has fallen behind, re-sync
-      questSynced = false;
-    }
-
-    double poseDiff = 0.0;
-    if (questPosesHistory.getInternalBuffer().size() > 2
-        && odometryPosesHistory.getInternalBuffer().size() > 2) {
-      Pose2d lastQuestPose = questPosesHistory.getInternalBuffer().lastEntry().getValue();
-      Pose2d lastOdometryPose = odometryPosesHistory.getInternalBuffer().lastEntry().getValue();
-      poseDiff =
-          lastQuestPose.getTranslation().getDistance(lastOdometryPose.getTranslation())
-              + normalizeAngleDelta(
-                  lastQuestPose.getRotation().getRadians()
-                      - lastOdometryPose.getRotation().getRadians());
-    }
-    Logger.recordOutput("Odometry/PoseDiff", poseDiff);
-
-    if (questSynced && poseDiff > maxAllowablePoseDiff && recentVisionMeasurement) {
-      // pose has diverged, re-sync
-      questSynced = false;
-    }
-
-    if (!questSynced) {
-      attemptQuestSyncIfSafe(
-          lastChassisSpeedsVelocity, odometryVelocityDiff, recentVisionMeasurement);
-    }
-  }
-
-  public void syncQuest() {
-    questNav.setRobotPose(odometryPoseEstimator.getEstimatedPosition());
-    System.out.println("Synced Quest to Odometry");
-    questSynced = true;
-  }
-
-  private void attemptQuestSyncIfSafe(
-      double chassisSpeedsVelocity, double odometryVelocityDiff, boolean recentVisionMeasurement) {
-    double currentTime = Timer.getTimestamp();
-    boolean conditionsMet =
-        chassisSpeedsVelocity < maxAllowableChassisSpeedsVelocity
-            && recentVisionMeasurement
-            && odometryVelocityDiff < maxAllowableOdometryVelocityDiff
-            && odometryVelocityDiff != 0.0; // if it's truly zero it's not processing yet
-
-    if (conditionsMet) {
-      if (currentTime - lastAttemptSyncTime >= bufferLength) {
-        syncQuest();
-      }
-    } else {
-      lastAttemptSyncTime = currentTime;
-    }
-  }
-
-  private double chassisSpeedsToVelocityMagnitude(ChassisSpeeds chassisSpeeds) {
-    return Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond)
-            / DriveConstants.maxSpeedMetersPerSec
-        + Math.abs(chassisSpeeds.omegaRadiansPerSecond) / maxAngularSpeedRadPerSec;
-  }
-
-  private double getVelocityMagnitudeFromBuffer(TimeInterpolatableBuffer<Pose2d> poseHistory) {
-    NavigableMap<Double, Pose2d> buffer = poseHistory.getInternalBuffer();
-    if (buffer.size() < 2) {
-      return 0.0;
-    }
-    double t1 = buffer.firstEntry().getKey();
-    double t2 = buffer.lastEntry().getKey();
-    Pose2d pose1 = buffer.firstEntry().getValue();
-    Pose2d pose2 = buffer.lastEntry().getValue();
-
-    double angleDelta = pose2.getRotation().getRadians() - pose1.getRotation().getRadians();
-    angleDelta = normalizeAngleDelta(angleDelta);
-
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            (pose2.getTranslation().getX() - pose1.getTranslation().getX()) / (t2 - t1),
-            (pose2.getTranslation().getY() - pose1.getTranslation().getY()) / (t2 - t1),
-            angleDelta / (t2 - t1));
-    return chassisSpeedsToVelocityMagnitude(speeds);
-  }
-
-  private double normalizeAngleDelta(double angleDelta) {
-    return Math.atan2(Math.sin(angleDelta), Math.cos(angleDelta)); // Normalize to [-π, π]
-  }
-
-  // ---------- Wrappers for SwerveDrivePoseEstimator methods ---------- //
-  /**
-   * Gets the estimated robot pose.
-   *
-   * @return The estimated robot pose in meters.
-   */
-  public Pose2d getEstimatedPosition() {
-    // this gets called periodically
-    periodic();
-    boolean useQuest = questNav.isConnected() && questSynced;
-    Logger.recordOutput("Odometry/UsingQuest", useQuest);
-    return useQuest ? questNav.getRobotPose() : odometryPoseEstimator.getEstimatedPosition();
-  }
-
-  /**
-   * Updates the pose estimator with wheel encoder and gyro information. This should be called every
-   * loop.
-   *
-   * @param gyroAngle The current gyro angle.
-   * @param wheelPositions The current encoder readings.
-   * @return The estimated pose of the robot in meters.
-   */
+  /** Update method that should be called each loop with fresh sensor data. */
   public void updateWithTime(
       double currentTimeSeconds,
       Rotation2d gyroAngle,
-      SwerveModulePosition[] wheelPositions,
+      SwerveModulePosition[] modulePositions,
       ChassisSpeeds chassisSpeeds) {
-    Pose2d updatedPose =
-        odometryPoseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
 
-    lastChassisSpeedsVelocity = chassisSpeedsToVelocityMagnitude(chassisSpeeds);
-    chassisVelocityHistory.addSample(currentTimeSeconds, lastChassisSpeedsVelocity);
-    Logger.recordOutput("Odometry/VisionAndSensors", updatedPose);
-    Logger.recordOutput("Odometry/ChassisVelocity", lastChassisSpeedsVelocity);
-  }
-  /**
-   * Resets the robot's position on the field.
-   *
-   * <p>The gyroscope angle does not need to be reset here on the user's robot code. The library
-   * automatically takes care of offsetting the gyro angle.
-   *
-   * @param gyroAngle The angle reported by the gyroscope.
-   * @param wheelPositions The current encoder readings.
-   * @param poseMeters The position on the field that your robot is at.
-   */
-  public void resetPosition(
-      Rotation2d gyroAngle, SwerveModulePosition[] wheelPositions, Pose2d poseMeters) {
-    odometryPoseEstimator.resetPosition(gyroAngle, wheelPositions, poseMeters);
-    syncQuest();
+    // Update odometry and record the pose in our buffer.
+    odometryEstimator.updateWithTime(currentTimeSeconds, gyroAngle, modulePositions);
+    Pose2d odometryPose = odometryEstimator.getEstimatedPosition();
+    odometryBuffer.addSample(currentTimeSeconds, odometryPose);
+
+    // If Quest is connected, record its pose.
+    if (questNav.isConnected()) {
+      Pose2d questPose = questNav.getRobotPose();
+      questBuffer.addSample(currentTimeSeconds, questPose);
+    }
+
+    // Track whether the robot is moving.
+    double normChassisSpeed = computeNormalizedChassisSpeed(chassisSpeeds);
+    if (normChassisSpeed > STATIONARY_VELOCITY_THRESHOLD) {
+      lastTimeNotStationary = currentTimeSeconds;
+    }
+    double timeStationary = currentTimeSeconds - lastTimeNotStationary;
+
+    // Evaluate whether to sync or unsync Quest.
+    evaluateSyncState(currentTimeSeconds, odometryPose, timeStationary);
+
+    // Log diagnostics.
+    Logger.recordOutput("Heimdall/OdometryPose", odometryPose);
+    Logger.recordOutput("Heimdall/QuestSynced", questSynced);
+    Logger.recordOutput("Heimdall/ChassisSpeedNorm", normChassisSpeed);
+    Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
   }
 
   /**
-   * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate
-   * while still accounting for measurement noise.
+   * Evaluates whether Quest should be synced (or unsynced) based on the offset between Quest and
+   * odometry and whether that offset is steady.
    *
-   * <p>This method can be called as infrequently as you want, as long as you are calling {@link
-   * PoseEstimator#update} every loop.
-   *
-   * <p>To promote stability of the pose estimate and make it robust to bad vision data, we
-   * recommend only adding vision measurements that are already within one meter or so of the
-   * current pose estimate.
-   *
-   * <p>Note that the vision measurement standard deviations passed into this method will continue
-   * to apply to future measurements until a subsequent call to {@link
-   * PoseEstimator#setVisionMeasurementStdDevs(Matrix)} or this method.
-   *
-   * @param visionRobotPoseMeters The pose of the robot as measured by the vision camera.
-   * @param timestampSeconds The timestamp of the vision measurement in seconds. Note that if you
-   *     don't use your own time source by calling {@link #updateWithTime}, then you must use a
-   *     timestamp with an epoch since FPGA startup (i.e., the epoch of this timestamp is the same
-   *     epoch as {@link edu.wpi.first.wpilibj.Timer#getFPGATimestamp()}). This means that you
-   *     should use {@link edu.wpi.first.wpilibj.Timer#getFPGATimestamp()} as your time source in
-   *     this case.
-   * @param visionMeasurementStdDevs Standard deviations of the vision pose measurement (x position
-   *     in meters, y position in meters, and heading in radians). Increase these numbers to trust
-   *     the vision pose measurement less.
+   * @param currentTime The current time.
+   * @param odometryPose The current odometry pose.
+   * @param timeStationary How long the robot has been stationary.
    */
+  private void evaluateSyncState(double currentTime, Pose2d odometryPose, double timeStationary) {
+    Logger.recordOutput("Heimdall/QuestConnected", questNav.isConnected());
+
+    if (questSynced) {
+      // When synced, check if Quest’s output suddenly drifts.
+      if (questNav.isConnected()) {
+        Pose2d questPose = questNav.getRobotPose();
+        double diff = computePoseDifference(questPose, odometryPose);
+        if (diff > MAX_POSE_DIFF) {
+          questSynced = false;
+          Logger.recordOutput(
+              "Heimdall/SyncEvent", "Synced Quest drift exceeded threshold; unsyncing.");
+        }
+      } else {
+        questSynced = false;
+        Logger.recordOutput("Heimdall/SyncEvent", "Quest lost connection; unsyncing.");
+      }
+    } else {
+      // When not synced, only consider syncing if Quest is connected.
+      if (questNav.isConnected()) {
+        double offsetDerivative = computeOffsetDerivative();
+        Logger.recordOutput("Heimdall/OffsetDerivative", offsetDerivative);
+        Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
+        // If the robot is stationary and the offset between Quest and odometry is stable,
+        // then re-sync Quest—even if the absolute difference is large.
+        if (timeStationary >= MIN_TIME_STATIONARY_FOR_SYNC
+            && offsetDerivative < OFFSET_DERIVATIVE_THRESHOLD) {
+          // Snap Quest into alignment.
+          questNav.setRobotPose(odometryPose);
+          questSynced = true;
+          Logger.recordOutput("Heimdall/SyncEvent", "Re-synced Quest to odometry (stable offset).");
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns the current best pose estimate. Uses Quest if it is synced, otherwise falls back to
+   * odometry.
+   */
+  public Pose2d getEstimatedPosition() {
+    if (questSynced && questNav.isConnected()) {
+      Logger.recordOutput("Heimdall/UsingPoseSource", "Quest");
+      return questNav.getRobotPose();
+    } else {
+      Logger.recordOutput("Heimdall/UsingPoseSource", "Odometry");
+      return odometryEstimator.getEstimatedPosition();
+    }
+  }
+
+  /** Injects a vision measurement (e.g. from an AprilTag) into the odometry estimator. */
   public void addVisionMeasurement(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    odometryPoseEstimator.addVisionMeasurement(
+    odometryEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+  }
 
-    // Update the last vision measurement time
-    lastVisionMeasurementTime = timestampSeconds;
+  /** Resets both odometry and Quest (forcing a sync). */
+  public void resetPosition(
+      Rotation2d gyroAngle, SwerveModulePosition[] modulePositions, Pose2d poseMeters) {
+    odometryEstimator.resetPosition(gyroAngle, modulePositions, poseMeters);
+    questNav.setRobotPose(poseMeters);
+    questSynced = true;
+    Logger.recordOutput("Heimdall/SyncEvent", "Reset both odometry and Quest to new pose.");
+  }
+
+  /**
+   * Computes a “difference” between two poses as the sum of the translational distance and the
+   * absolute rotation difference (normalized to [–π, π]). You might wish to weight these
+   * differently.
+   */
+  private double computePoseDifference(Pose2d p1, Pose2d p2) {
+    double translationDiff = p1.getTranslation().getDistance(p2.getTranslation());
+    double rotationDiff =
+        Math.abs(normalizeAngle(p1.getRotation().getRadians() - p2.getRotation().getRadians()));
+    return translationDiff + rotationDiff;
+  }
+
+  /** Normalizes an angle (in radians) to the range [–π, π]. */
+  private double normalizeAngle(double angle) {
+    return Math.atan2(Math.sin(angle), Math.cos(angle));
+  }
+
+  /**
+   * Computes a normalized speed based on the translational and rotational components of chassis
+   * speeds.
+   */
+  private double computeNormalizedChassisSpeed(ChassisSpeeds chassisSpeeds) {
+    double translationalSpeed =
+        Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+    double normalizedTranslation = translationalSpeed / DriveConstants.maxSpeedMetersPerSec;
+    double maxAngularSpeedRadPerSec =
+        DriveConstants.maxSpeedMetersPerSec
+            / Math.hypot(DriveConstants.trackWidth / 2.0, DriveConstants.wheelBase / 2.0);
+    double normalizedAngular =
+        Math.abs(chassisSpeeds.omegaRadiansPerSecond) / maxAngularSpeedRadPerSec;
+    return normalizedTranslation + normalizedAngular;
+  }
+
+  /**
+   * Computes the rate of change (derivative) of the offset between Quest and odometry poses over
+   * the buffer window. If the offset is stable, its derivative will be low.
+   */
+  private double computeOffsetDerivative() {
+    var odomMap = odometryBuffer.getInternalBuffer();
+    var questMap = questBuffer.getInternalBuffer();
+    if (odomMap.size() < 2 || questMap.size() < 2) {
+      return Double.POSITIVE_INFINITY; // not enough data
+    }
+
+    // Find an overlapping time window between the two buffers.
+    double odomStartTime = odomMap.firstEntry().getKey();
+    double odomEndTime = odomMap.lastEntry().getKey();
+    double questStartTime = questMap.firstEntry().getKey();
+    double questEndTime = questMap.lastEntry().getKey();
+    double startTime = Math.max(odomStartTime, questStartTime);
+    double endTime = Math.min(odomEndTime, questEndTime);
+    if (endTime <= startTime) {
+      return Double.POSITIVE_INFINITY;
+    }
+
+    // Interpolate poses at the start and end of this window.
+    Optional<Pose2d> odomStartPose = odometryBuffer.getSample(startTime);
+    Optional<Pose2d> odomEndPose = odometryBuffer.getSample(endTime);
+    Optional<Pose2d> questStartPose = questBuffer.getSample(startTime);
+    Optional<Pose2d> questEndPose = questBuffer.getSample(endTime);
+    if (!odomStartPose.isPresent()
+        || !odomEndPose.isPresent()
+        || !questStartPose.isPresent()
+        || !questEndPose.isPresent()) {
+      return Double.POSITIVE_INFINITY; // not enough data
+    }
+    double startOffset = computePoseDifference(questStartPose.get(), odomStartPose.get());
+    double endOffset = computePoseDifference(questEndPose.get(), odomEndPose.get());
+    double dt = endTime - startTime;
+    return Math.abs(endOffset - startOffset) / dt;
   }
 }
