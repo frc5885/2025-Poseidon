@@ -17,10 +17,10 @@ sd = NetworkTables.getTable("ReefPanel")
 
 
 # Configuration
-WINDOW_SIZE = (800, 600)
-HEX_RADIUS = 150  # Radius of the hexagon
-BUTTON_LENGTH = 40  # Length of rectangular buttons
-BUTTON_WIDTH = 15   # Width of rectangular buttons
+WINDOW_SIZE = (1024, 600)
+HEX_RADIUS = 270  # Radius of the hexagon
+BUTTON_LENGTH = 100  # Length of rectangular buttons
+BUTTON_WIDTH = 40   # Width of rectangular buttons
 ROTATION_ANGLE = 90  # Rotate hexagon by 90 degrees
 COLORS = {
     'background': (255, 255, 255),
@@ -31,7 +31,7 @@ COLORS = {
 
 # Create display window
 screen = pygame.display.set_mode(WINDOW_SIZE)
-pygame.display.set_caption("Rotated Hexagonal Button Layout")
+pygame.display.set_caption("Reef Panel")
 clock = pygame.time.Clock()
 
 class HexagonButton:
@@ -104,7 +104,7 @@ def create_buttons(center, radius, rotation=0):
         edge_angle = math.atan2(edge_vector[1], edge_vector[0])
         
         # Create three buttons per edge
-        for t in [1/3, 2/3]:
+        for t in [9/30, 21/30]:
             # Calculate button position
             x = start[0] + t * edge_vector[0]
             y = start[1] + t * edge_vector[1]

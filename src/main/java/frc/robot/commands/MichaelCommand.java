@@ -23,10 +23,17 @@ public class MichaelCommand extends Command {
 
   private static int factor = 0;
 
+  private final NetworkTable m_networkTable;
+  private final String NETWORK_ENTRY = "ReefTargets";
+
   public MichaelCommand(Drive drive, Supplier<Pose2d> targetPose) {
     // Use addRequirements() here to declare subsystem dependencies.]
     m_drive = drive;
     m_targetPose = targetPose;
+
+    m_networkTable = NetworkTableInstance.getDefault().getTable("ReefPanel");
+    m_networkTable.getDoubleTopic(NETWORK_ENTRY).publish();
+
     addRequirements(m_drive);
   }
 
@@ -37,11 +44,11 @@ public class MichaelCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("ReefPanel");
     Command cmd =
         DriveCommands.driveToPose(
             m_drive,
-            () -> Constants.kBluePoses[(int) table.getEntry("ReefTargets").getDouble(0.0)]);
+            () ->
+                Constants.kBluePoses[(int) m_networkTable.getEntry(NETWORK_ENTRY).getDouble(0.0)]);
     cmd.schedule(); // Make sure the returned command actually runs
   }
   // Called once the command ends or is interrupted.
