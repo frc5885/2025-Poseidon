@@ -25,7 +25,7 @@ pip install -r requirements.txt
 ```
 
 ## Set up VSCode to use the virtual environment
-For VSCode to know that the packages are installed in the virtual environment and not give errors, we need to change the path to the python .exe file it uses. 
+For VSCode to know that the packages are installed in the virtual environment and not give errors, we need to change the path to the python .exe file it uses.
 
  - Open main.py
  - Click the python version in the bottom right
