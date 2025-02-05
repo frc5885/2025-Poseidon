@@ -38,14 +38,13 @@ public class HeimdallPoseController {
   // (i.e. its derivative is below this threshold) before syncing.
   private static final double OFFSET_DERIVATIVE_THRESHOLD = 0.02; // (m + rad)/s
 
-  // We consider the robot “stationary” if the normalized chassis speed is below this.
+  // We consider the robot "stationary" if the normalized chassis speed is below this.
   private static final double STATIONARY_VELOCITY_THRESHOLD = 0.05;
   // And we require the robot to be stationary for at least this long before re-syncing.
   private static final double MIN_TIME_STATIONARY_FOR_SYNC = 0.2; // seconds
 
   // -------- Odometry and vision fusion objects -------------
   private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
-  // (Provide your own initial gyro and module positions)
   private final Rotation2d initialGyro = new Rotation2d();
   private final SwerveModulePosition[] initialModulePositions =
       new SwerveModulePosition[] {
@@ -63,7 +62,7 @@ public class HeimdallPoseController {
   private final TimeInterpolatableBuffer<Pose2d> questBuffer;
 
   // -------- Internal state flags -------------
-  // True if we have “synced” (i.e. applied a transformation so that Quest's output is in the field
+  // True if we have "synced" (i.e. applied a transformation so that Quest's output is in the field
   // frame).
   private boolean questSynced = false;
   // Time tracking: last time the robot was moving (used for safe re-sync)
@@ -119,23 +118,15 @@ public class HeimdallPoseController {
     // Log diagnostics.
     Logger.recordOutput("Heimdall/OdometryPose", odometryPose);
     Logger.recordOutput("Heimdall/QuestSynced", questSynced);
-    Logger.recordOutput("Heimdall/ChassisSpeedNorm", normChassisSpeed);
-    Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
+    // Logger.recordOutput("Heimdall/ChassisSpeedNorm", normChassisSpeed);
+    // Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
   }
 
-  /**
-   * Evaluates whether Quest should be synced (or unsynced) based on the offset between Quest and
-   * odometry and whether that offset is steady.
-   *
-   * @param currentTime The current time.
-   * @param odometryPose The current odometry pose.
-   * @param timeStationary How long the robot has been stationary.
-   */
+  /** Evaluates whether Quest should be synced or unsynced. */
   private void evaluateSyncState(double currentTime, Pose2d odometryPose, double timeStationary) {
-    Logger.recordOutput("Heimdall/QuestConnected", questNav.isConnected());
 
     if (questSynced) {
-      // When synced, check if Quest’s output suddenly drifts.
+      // If synced, check if the Quest pose has drifted.
       if (questNav.isConnected()) {
         Pose2d questPose = questNav.getRobotPose();
         double diff = computePoseDifference(questPose, odometryPose);
@@ -149,20 +140,19 @@ public class HeimdallPoseController {
         Logger.recordOutput("Heimdall/SyncEvent", "Quest lost connection; unsyncing.");
       }
     } else {
-      // When not synced, only consider syncing if Quest is connected.
-      if (questNav.isConnected()) {
-        double offsetDerivative = computeOffsetDerivative();
-        Logger.recordOutput("Heimdall/OffsetDerivative", offsetDerivative);
-        Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
-        // If the robot is stationary and the offset between Quest and odometry is stable,
-        // then re-sync Quest—even if the absolute difference is large.
-        if (timeStationary >= MIN_TIME_STATIONARY_FOR_SYNC
-            && offsetDerivative < OFFSET_DERIVATIVE_THRESHOLD) {
-          // Snap Quest into alignment.
-          questNav.setRobotPose(odometryPose);
-          questSynced = true;
-          Logger.recordOutput("Heimdall/SyncEvent", "Re-synced Quest to odometry (stable offset).");
-        }
+      // Only consider syncing if we've been stationary long enough.
+      if (!questNav.isConnected() || timeStationary < MIN_TIME_STATIONARY_FOR_SYNC) {
+        return;
+      }
+      // Compute offset derivative only when needed.
+      double offsetDerivative = computeOffsetDerivative();
+      Logger.recordOutput("Heimdall/OffsetDerivative", offsetDerivative);
+      Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
+      if (offsetDerivative < OFFSET_DERIVATIVE_THRESHOLD) {
+        // Snap Quest into alignment.
+        questNav.setRobotPose(odometryPose);
+        questSynced = true;
+        Logger.recordOutput("Heimdall/SyncEvent", "Re-synced Quest to odometry (stable offset).");
       }
     }
   }
@@ -200,7 +190,7 @@ public class HeimdallPoseController {
   }
 
   /**
-   * Computes a “difference” between two poses as the sum of the translational distance and the
+   * Computes a "difference" between two poses as the sum of the translational distance and the
    * absolute rotation difference (normalized to [–π, π]). You might wish to weight these
    * differently.
    */
