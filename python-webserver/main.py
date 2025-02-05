@@ -35,15 +35,17 @@ pygame.display.set_caption("Reef Panel")
 clock = pygame.time.Clock()
 
 class HexagonButton:
-    def __init__(self, center, angle):
+    def __init__(self, center, angle, width, length):
         """Initialize a hexagonal button
         Args:
             center (tuple): (x, y) position of button center
             angle (float): Rotation angle in radians
         """
+        self.width = width
+        self.length = length
         self.center = center
         self.angle = angle  # Store angle in radians
-        self.rect = pygame.Rect(0, 0, BUTTON_LENGTH, BUTTON_WIDTH)
+        self.rect = pygame.Rect(0, 0, length, width)
         self.rect.center = center
         self.is_active = False
 
@@ -109,15 +111,22 @@ def create_buttons(center, radius, rotation=0):
             x = start[0] + t * edge_vector[0]
             y = start[1] + t * edge_vector[1]
             
-            buttons.append(HexagonButton((x, y), edge_angle))
+            buttons.append(HexagonButton((x, y), edge_angle,BUTTON_WIDTH, BUTTON_LENGTH))
     
     return buttons
 
+def creatLevelButtons():
+    buttons = []
+    for i in range(1,5):
+        buttons.append(HexagonButton((850, 20 + 110*i), 0,200, 100 ))
+    return buttons
 def main():
     # Calculate initial positions with rotation
-    center = (WINDOW_SIZE[0]//2, WINDOW_SIZE[1]//2)
+    center = (WINDOW_SIZE[0]//2-180, WINDOW_SIZE[1]//2)
     buttons = create_buttons(center, HEX_RADIUS, ROTATION_ANGLE)
     active_button = None  # Track the currently active button
+
+    levelbuttons = creatLevelButtons()
     
     running = True
     while running:
@@ -149,6 +158,8 @@ def main():
         # Draw buttons
         for btn in buttons:
             btn.draw(screen)
+        for butn in levelbuttons:
+            butn.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)
