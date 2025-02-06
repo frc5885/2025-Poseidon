@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -30,6 +31,11 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSim;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
@@ -52,6 +58,7 @@ public class RobotContainer {
   private final Drive drive;
   private final QuestNav questNav;
   private final Vision vision;
+  private final SimpleManipulator m_manipulator;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -79,6 +86,7 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                 new VisionIOPhotonVision(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+        m_manipulator = new SimpleManipulator(new ElevatorIOSpark());
         break;
 
       case SIM:
@@ -98,6 +106,7 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
+        m_manipulator = new SimpleManipulator(new ElevatorIOSim());
         break;
 
       default:
@@ -111,6 +120,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        m_manipulator = new SimpleManipulator(new ElevatorIO() {});
         break;
     }
 
@@ -135,6 +145,19 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // TODO not needed for now
+    // autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Forward)",
+    //     m_manipulator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Reverse)",
+    //     m_manipulator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Forward)",
+    //     m_manipulator.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Reverse)",
+    //     m_manipulator.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -183,6 +206,21 @@ public class RobotContainer {
                 .ignoringDisable(true));
 
     controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
+
+    // elevator testing
+    new JoystickButton(new GenericHID(1), 1)
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    m_manipulator.setElevatorLevel(
+                        switch (m_manipulator.getElevatorLevel()) {
+                          case L1 -> ElevatorLevel.L2;
+                          case L2 -> ElevatorLevel.L3;
+                          case L3 -> ElevatorLevel.L4;
+                          case L4 -> ElevatorLevel.L1;
+                          default -> ElevatorLevel.L1;
+                        }),
+                m_manipulator));
   }
 
   /**
