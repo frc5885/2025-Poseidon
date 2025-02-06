@@ -12,7 +12,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 /** Subsystem to interface with a Meta Quest headset acting as a positional sensor. */
@@ -82,7 +81,6 @@ public class QuestNav extends SubsystemBase {
    *
    * @return The Pose2d of the robot in field coordinates
    */
-  @AutoLogOutput(key = "Odometry/QuestNav")
   public Pose2d getRobotPose() {
     // 1) Pose of the quest in its own coordinates
     Pose2d questInQuestCoords = getRawQuestPose();

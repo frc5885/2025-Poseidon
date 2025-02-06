@@ -68,7 +68,9 @@ public class HeimdallPoseController {
   // Time tracking: last time the robot was moving (used for safe re-sync)
   private double lastTimeNotStationary = Timer.getFPGATimestamp();
 
-  public HeimdallPoseController() {
+  private HeimdallOdometrySource mode;
+
+  public HeimdallPoseController(HeimdallOdometrySource mode) {
     odometryEstimator =
         new SwerveDrivePoseEstimator(kinematics, initialGyro, initialModulePositions, new Pose2d());
 
@@ -85,6 +87,8 @@ public class HeimdallPoseController {
 
     odometryBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
     questBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
+
+    this.mode = mode;
   }
 
   /** Update method that should be called each loop with fresh sensor data. */
@@ -103,20 +107,23 @@ public class HeimdallPoseController {
     if (questNav.isConnected()) {
       Pose2d questPose = questNav.getRobotPose();
       questBuffer.addSample(currentTimeSeconds, questPose);
+      Logger.recordOutput("Heimdall/QuestNav", questPose);
     }
 
-    // Track whether the robot is moving.
-    double normChassisSpeed = computeNormalizedChassisSpeed(chassisSpeeds);
-    if (normChassisSpeed > STATIONARY_VELOCITY_THRESHOLD) {
-      lastTimeNotStationary = currentTimeSeconds;
-    }
-    double timeStationary = currentTimeSeconds - lastTimeNotStationary;
+    if (mode == HeimdallOdometrySource.AUTO_SWITCH) {
+      // Track whether the robot is moving.
+      double normChassisSpeed = computeNormalizedChassisSpeed(chassisSpeeds);
+      if (normChassisSpeed > STATIONARY_VELOCITY_THRESHOLD) {
+        lastTimeNotStationary = currentTimeSeconds;
+      }
+      double timeStationary = currentTimeSeconds - lastTimeNotStationary;
 
-    // Evaluate whether to sync or unsync Quest.
-    evaluateSyncState(currentTimeSeconds, odometryPose, timeStationary);
+      // Evaluate whether to sync or unsync Quest.
+      evaluateSyncState(currentTimeSeconds, odometryPose, timeStationary);
+    }
 
     // Log diagnostics.
-    Logger.recordOutput("Heimdall/OdometryPose", odometryPose);
+    Logger.recordOutput("Heimdall/SwerveDrivePoseEstimator", odometryPose);
     Logger.recordOutput("Heimdall/QuestSynced", questSynced);
     // Logger.recordOutput("Heimdall/ChassisSpeedNorm", normChassisSpeed);
     // Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
@@ -162,12 +169,21 @@ public class HeimdallPoseController {
    * odometry.
    */
   public Pose2d getEstimatedPosition() {
-    if (questSynced && questNav.isConnected()) {
-      Logger.recordOutput("Heimdall/UsingPoseSource", "Quest");
-      return questNav.getRobotPose();
-    } else {
-      Logger.recordOutput("Heimdall/UsingPoseSource", "Odometry");
-      return odometryEstimator.getEstimatedPosition();
+    switch (mode) {
+      case ONLY_APRILTAG_ODOMETRY:
+        Logger.recordOutput("Heimdall/UsingPoseSource", "Odometry");
+        return odometryEstimator.getEstimatedPosition();
+      case ONLY_QUEST:
+        Logger.recordOutput("Heimdall/UsingPoseSource", "Quest");
+        return questNav.getRobotPose();
+      default:
+        if (questSynced && questNav.isConnected()) {
+          Logger.recordOutput("Heimdall/UsingPoseSource", "Quest");
+          return questNav.getRobotPose();
+        } else {
+          Logger.recordOutput("Heimdall/UsingPoseSource", "Odometry");
+          return odometryEstimator.getEstimatedPosition();
+        }
     }
   }
 
@@ -187,6 +203,18 @@ public class HeimdallPoseController {
     questNav.setRobotPose(poseMeters);
     questSynced = true;
     Logger.recordOutput("Heimdall/SyncEvent", "Reset both odometry and Quest to new pose.");
+  }
+
+  /** Allows the driver to force sync the quest */
+  public void forceSyncQuest() {
+    questSynced = true;
+    questNav.setRobotPose(odometryEstimator.getEstimatedPosition());
+    Logger.recordOutput("Heimdall/SyncEvent", "Forced sync of Quest to odometry.");
+  }
+
+  /** Update the mode / odometry source */
+  public void setMode(HeimdallOdometrySource mode) {
+    this.mode = mode;
   }
 
   /**
@@ -259,5 +287,11 @@ public class HeimdallPoseController {
     double endOffset = computePoseDifference(questEndPose.get(), odomEndPose.get());
     double dt = endTime - startTime;
     return Math.abs(endOffset - startOffset) / dt;
+  }
+
+  public static enum HeimdallOdometrySource {
+    ONLY_APRILTAG_ODOMETRY,
+    ONLY_QUEST,
+    AUTO_SWITCH
   }
 }

@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -30,6 +31,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
+import frc.robot.subsystems.vision.heimdall.HeimdallPoseController.HeimdallOdometrySource;
 import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
@@ -57,7 +59,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    poseController = new HeimdallPoseController();
+    poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -178,7 +180,7 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // controller.y().onTrue(new InstantCommand(() -> poseController.syncQuest()));
+    controller.y().onTrue(new InstantCommand(() -> poseController.forceSyncQuest()));
   }
 
   /**
