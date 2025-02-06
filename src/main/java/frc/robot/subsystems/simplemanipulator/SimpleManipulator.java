@@ -30,7 +30,8 @@ public class SimpleManipulator extends SubsystemBase {
                 null,
                 null,
                 null,
-                (state) -> Logger.recordOutput("SimpleManipulator/Elevator", state.toString())),
+                (state) ->
+                    Logger.recordOutput("SimpleManipulator/ElevatorSysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runElevatorCharacterization(voltage.in(Volts)), null, this));
   }

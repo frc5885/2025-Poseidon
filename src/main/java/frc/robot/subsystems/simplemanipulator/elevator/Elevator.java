@@ -7,15 +7,14 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.Constants;
 import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class Elevator {
   private final ElevatorIO m_io;
@@ -30,9 +29,9 @@ public class Elevator {
   private TunablePIDController m_elevatorController;
   private ElevatorFeedforward m_elevatorFeedforward;
 
-  private final Mechanism2d m_elevatorMech;
-  private final MechanismRoot2d m_elevatorTrack;
-  private final MechanismRoot2d m_elevatorRoot;
+  private final LoggedMechanism2d m_elevatorMech;
+  private final LoggedMechanismRoot2d m_elevatorTrack;
+  private final LoggedMechanismRoot2d m_elevatorRoot;
 
   private ElevatorLevel m_elevatorLevel = ElevatorLevel.L1;
 
@@ -77,13 +76,13 @@ public class Elevator {
     motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
     motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
 
-    m_elevatorMech = new Mechanism2d(0.2, 2.0);
+    m_elevatorMech = new LoggedMechanism2d(0.2, 2.0);
     m_elevatorTrack = m_elevatorMech.getRoot("ElevatorTrack", 0.07, 0.15);
     m_elevatorTrack.append(
-        new MechanismLigament2d("ElevatorTrack", kElevatorUpperBoundMeters, 90.0));
+        new LoggedMechanismLigament2d("ElevatorTrack", kElevatorUpperBoundMeters, 90.0));
     m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.13, 0.15);
     m_elevatorRoot.append(
-        new MechanismLigament2d("Elevator", 0.3, 90.0, 10.0, new Color8Bit(0, 0, 255)));
+        new LoggedMechanismLigament2d("Elevator", 0.3, 90.0, 10.0, new Color8Bit(0, 0, 255)));
   }
 
   public void periodic() {
@@ -94,7 +93,7 @@ public class Elevator {
         m_elevatorLevel != null ? m_elevatorLevel.setpointMeters : getPositionMeters());
 
     m_elevatorRoot.setPosition(0.13, 0.15 + m_inputs.elevatorPositionMeters);
-    SmartDashboard.putData("SimpleManipulator/Elevator", m_elevatorMech);
+    Logger.recordOutput("SimpleManipulator/Elevator/Mechanism2d", m_elevatorMech);
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.elevatorM1Connected);
