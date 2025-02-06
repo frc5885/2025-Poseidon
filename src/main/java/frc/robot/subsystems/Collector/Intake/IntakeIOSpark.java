@@ -1,5 +1,5 @@
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.Collector.Intake;
 
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
