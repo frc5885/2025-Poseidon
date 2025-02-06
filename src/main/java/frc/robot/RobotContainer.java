@@ -25,17 +25,17 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
+import frc.robot.subsystems.SuperStructure.elevator.ElevatorIOSim;
+import frc.robot.subsystems.SuperStructure.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSim;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
@@ -58,7 +58,7 @@ public class RobotContainer {
   private final Drive drive;
   private final QuestNav questNav;
   private final Vision vision;
-  private final SimpleManipulator m_manipulator;
+  private final SuperStructure m_superStructure;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -86,7 +86,7 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                 new VisionIOPhotonVision(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-        m_manipulator = new SimpleManipulator(new ElevatorIOSpark());
+        m_superStructure = new SuperStructure(new ElevatorIOSpark());
         break;
 
       case SIM:
@@ -106,7 +106,7 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
-        m_manipulator = new SimpleManipulator(new ElevatorIOSim());
+        m_superStructure = new SuperStructure(new ElevatorIOSim());
         break;
 
       default:
@@ -120,7 +120,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        m_manipulator = new SimpleManipulator(new ElevatorIO() {});
+        m_superStructure = new SuperStructure(new ElevatorIO() {});
         break;
     }
 
@@ -148,16 +148,16 @@ public class RobotContainer {
     // TODO not needed for now
     // autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Forward)",
-    //     m_manipulator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
     // autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Reverse)",
-    //     m_manipulator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     // autoChooser.addOption(
     //     "Elevator SysId (Dynamic Forward)",
-    //     m_manipulator.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
     // autoChooser.addOption(
     //     "Elevator SysId (Dynamic Reverse)",
-    //     m_manipulator.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -212,15 +212,15 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () ->
-                    m_manipulator.setElevatorLevel(
-                        switch (m_manipulator.getElevatorLevel()) {
+                    m_superStructure.setElevatorLevel(
+                        switch (m_superStructure.getElevatorLevel()) {
                           case L1 -> ElevatorLevel.L2;
                           case L2 -> ElevatorLevel.L3;
                           case L3 -> ElevatorLevel.L4;
                           case L4 -> ElevatorLevel.L1;
                           default -> ElevatorLevel.L1;
                         }),
-                m_manipulator));
+                m_superStructure));
   }
 
   /**
