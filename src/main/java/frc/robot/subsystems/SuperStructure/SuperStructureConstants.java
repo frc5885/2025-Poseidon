@@ -1,8 +1,8 @@
-package frc.robot.subsystems.simplemanipulator;
+package frc.robot.subsystems.SuperStructure;
 
 import edu.wpi.first.math.util.Units;
 
-public class ManipulatorConstants {
+public class SuperStructureConstants {
   // TODO temporary
   public static class ElevatorConstants {
     public static final int kElevatorSparkId1 = 40;

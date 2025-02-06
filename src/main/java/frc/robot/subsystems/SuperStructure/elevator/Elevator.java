@@ -1,6 +1,4 @@
-package frc.robot.subsystems.simplemanipulator.elevator;
-
-import static frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.*;
+package frc.robot.subsystems.SuperStructure.elevator;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -9,8 +7,11 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.Constants;
-import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
+
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -87,13 +88,13 @@ public class Elevator {
 
   public void periodic() {
     m_io.updateInputs(m_inputs);
-    Logger.processInputs("SimpleManipulator/Elevator", m_inputs);
+    Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
     runElevatorSetpoint(
         m_elevatorLevel != null ? m_elevatorLevel.setpointMeters : getPositionMeters());
 
     m_elevatorRoot.setPosition(0.13, 0.15 + m_inputs.elevatorPositionMeters);
-    Logger.recordOutput("SimpleManipulator/Elevator/Mechanism2d", m_elevatorMech);
+    Logger.recordOutput("SuperStructure/Elevator/Mechanism2d", m_elevatorMech);
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.elevatorM1Connected);

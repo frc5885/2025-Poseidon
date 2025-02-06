@@ -2,25 +2,26 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.simplemanipulator;
+package frc.robot.subsystems.SuperStructure;
 
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.simplemanipulator.elevator.Elevator;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.elevator.Elevator;
+import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class SimpleManipulator extends SubsystemBase {
+public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
 
   private SysIdRoutine m_elevatorSysIdRoutine;
 
-  public SimpleManipulator(ElevatorIO io) {
+  public SuperStructure(ElevatorIO io) {
     m_elevator = new Elevator(io);
 
     // Configure SysId
@@ -31,7 +32,7 @@ public class SimpleManipulator extends SubsystemBase {
                 null,
                 null,
                 (state) ->
-                    Logger.recordOutput("SimpleManipulator/ElevatorSysIDState", state.toString())),
+                    Logger.recordOutput("SuperStructure/ElevatorSysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runElevatorCharacterization(voltage.in(Volts)), null, this));
   }
@@ -41,7 +42,7 @@ public class SimpleManipulator extends SubsystemBase {
     m_elevator.periodic();
   }
 
-  @AutoLogOutput(key = "SimpleManipulator/Elevator/Level")
+  @AutoLogOutput(key = "SuperStructure/Elevator/Level")
   public ElevatorLevel getElevatorLevel() {
     return m_elevator.getLevel();
   }
@@ -50,8 +51,8 @@ public class SimpleManipulator extends SubsystemBase {
     m_elevator.setLevel(elevatorLevel);
   }
 
-  // used to determine if the manipulator achieved the combined([elevator, arm]) goal state
-  @AutoLogOutput(key = "SimpleManipulator/isGoalAchieved")
+  // used to determine if the superstructure achieved the combined([elevator, arm]) goal state
+  @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
     return m_elevator.isSetpointAchieved();
   }

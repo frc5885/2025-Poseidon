@@ -1,6 +1,6 @@
-package frc.robot.subsystems.simplemanipulator.elevator;
+package frc.robot.subsystems.SuperStructure.elevator;
 
-import static frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.*;
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
