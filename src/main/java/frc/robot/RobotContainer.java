@@ -35,7 +35,6 @@ import frc.robot.subsystems.drive.QuestNav.QuestNav;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
 import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
-import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants;
 import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
@@ -74,8 +73,7 @@ public class RobotContainer {
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3));
         questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
-        m_manipulator =
-            new SimpleManipulator(new ElevatorIOSpark(ElevatorConstants.kElevatorSparkId));
+        m_manipulator = new SimpleManipulator(new ElevatorIOSpark());
         break;
 
       case SIM:

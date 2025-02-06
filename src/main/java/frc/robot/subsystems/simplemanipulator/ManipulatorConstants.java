@@ -9,6 +9,8 @@ public class ManipulatorConstants {
     public static final boolean kElevatorInverted = false;
     public static final int kElevatorMotorCurrentLimit = 40;
 
+    public static final double kElevatorMassKg = 4.0;
+
     public static final double kElevatorLowerBoundMeters = 0.0;
     public static final double kElevatorUpperBoundMeters = 2.0;
     // In Meters/Sec
