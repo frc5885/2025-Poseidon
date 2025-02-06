@@ -298,41 +298,51 @@ public class DriveCommands {
 
   /** Measures the max rotation velocity of a swerve module in radians per second */
   public static Command maxModuleRotationVelocityCharacterization(Drive drive) {
-    double[] maxTurnVelocities = new double[4];
+    MaxTurnVelocityState state = new MaxTurnVelocityState();
 
-    return Commands.sequence(
-        // Reset max velocities
-        Commands.runOnce(
-            () -> {
-              for (int i = 0; i < 4; i++) {
-                maxTurnVelocities[i] = 0.0;
-              }
-            }),
-
-        // Run the modules at full open-loop output and record max velocities
+    return Commands.parallel(
+        // Turn motors control sequence: run turn motors at full voltage.
         Commands.run(
-                () -> {
-                  drive.runTurnOpenLoop(12.0);
-                  for (int i = 0; i < 4; i++) {
-                    double currentVelocity = drive.getModuleRotationVelocityRadPerSec(i);
-                    if (currentVelocity > maxTurnVelocities[i]) {
-                      maxTurnVelocities[i] = currentVelocity;
-                    }
-                  }
-                },
-                drive)
-            .withTimeout(5.0),
-
-        // Print out the maximum velocities
-        Commands.runOnce(
             () -> {
-              NumberFormat formatter = new DecimalFormat("#0.000");
-              System.out.println(
-                  "********** Max Module Rotation Velocity Characterization Results **********");
-              for (int i = 0; i < 4; i++) {
-                System.out.println(
-                    "\tModule " + i + ": " + formatter.format(maxTurnVelocities[i]) + " rad/sec");
-              }
-            }));
+              drive.runTurnOpenLoop(12.0);
+            },
+            drive),
+
+        // Measurement sequence: record maximum turn velocity for each module.
+        Commands.sequence(
+            // Wait a moment for the modules to spin up.
+            Commands.waitSeconds(1.0),
+
+            // Continuously record the maximum measured velocity.
+            Commands.run(
+                    () -> {
+                      // For each of the four modules...
+                      for (int i = 0; i < 4; i++) {
+                        double currentVelocity =
+                            Math.abs(drive.getModuleRotationVelocityRadPerSec(i));
+                        // Update if the current velocity is higher than the stored maximum.
+                        state.maxVelocities[i] = Math.max(state.maxVelocities[i], currentVelocity);
+                      }
+                    })
+                // When the command ends (e.g. when cancelled), print the results.
+                .finallyDo(
+                    interrupted -> {
+                      NumberFormat formatter = new DecimalFormat("#0.000");
+                      System.out.println(
+                          "********** Swerve Module Max Turn Velocity Results **********");
+                      for (int i = 0; i < 4; i++) {
+                        System.out.println(
+                            "\tModule "
+                                + i
+                                + ": "
+                                + formatter.format(state.maxVelocities[i])
+                                + " rad/s");
+                      }
+                    })));
+  }
+
+  private static class MaxTurnVelocityState {
+    // Array for 4 modules. Initialized to 0.
+    public double[] maxVelocities = new double[4];
   }
 }
