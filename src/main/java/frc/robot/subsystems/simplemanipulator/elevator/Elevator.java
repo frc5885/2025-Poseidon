@@ -5,6 +5,8 @@ import static frc.robot.subsystems.simplemanipulator.ManipulatorConstants.Elevat
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -18,6 +20,9 @@ import org.littletonrobotics.junction.Logger;
 public class Elevator {
   private final ElevatorIO m_io;
   private final ElevatorIOInputsAutoLogged m_inputs = new ElevatorIOInputsAutoLogged();
+
+  private final Alert motor1DisconnectedAlert;
+  private final Alert motor2DisconnectedAlert;
 
   private TrapezoidProfile m_elevatorProfile =
       new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
@@ -69,9 +74,13 @@ public class Elevator {
         break;
     }
 
+    motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
+    motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
+
     m_elevatorMech = new Mechanism2d(0.2, 2.0);
     m_elevatorTrack = m_elevatorMech.getRoot("ElevatorTrack", 0.07, 0.15);
-    m_elevatorTrack.append(new MechanismLigament2d("ElevatorTrack", 2.0, 90.0));
+    m_elevatorTrack.append(
+        new MechanismLigament2d("ElevatorTrack", kElevatorUpperBoundMeters, 90.0));
     m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.13, 0.15);
     m_elevatorRoot.append(
         new MechanismLigament2d("Elevator", 0.3, 90.0, 10.0, new Color8Bit(0, 0, 255)));
@@ -86,6 +95,10 @@ public class Elevator {
 
     m_elevatorRoot.setPosition(0.13, 0.15 + m_inputs.elevatorPositionMeters);
     SmartDashboard.putData("SimpleManipulator/Elevator", m_elevatorMech);
+
+    // Update alerts
+    motor1DisconnectedAlert.set(!m_inputs.elevatorM1Connected);
+    motor2DisconnectedAlert.set(!m_inputs.elevatorM2Connected);
   }
 
   public void runElevatorOpenLoop(double outputVolts) {

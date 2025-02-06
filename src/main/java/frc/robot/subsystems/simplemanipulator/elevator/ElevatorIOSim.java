@@ -16,25 +16,27 @@ public class ElevatorIOSim implements ElevatorIO {
     m_elevatorSim =
         new ElevatorSim(
             LinearSystemId.createElevatorSystem(
-                DCMotor.getNEO(1),
+                DCMotor.getNEO(2),
                 kElevatorMassKg,
                 kElevatorWheelRadiusMeters,
                 kElevatorMotorReduction),
-            DCMotor.getNEO(1),
+            DCMotor.getNEO(2),
             kElevatorLowerBoundMeters,
             kElevatorUpperBoundMeters,
             true,
-            kElevatorLowerBoundMeters);
+            kElevatorStartingPositionMeters);
   }
 
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
     m_elevatorSim.update(0.02);
-    inputs.elevatorConnected = true;
+    inputs.elevatorM1Connected = true;
+    inputs.elevatorM2Connected = true;
     inputs.elevatorPositionMeters = m_elevatorSim.getPositionMeters();
     inputs.elevatorVelocityMetersPerSec = m_elevatorSim.getVelocityMetersPerSecond();
     inputs.elevatorAppliedVolts = m_appliedVolts;
-    inputs.elevatorCurrentAmps = m_elevatorSim.getCurrentDrawAmps();
+    inputs.elevatorCurrentAmps =
+        new double[] {m_elevatorSim.getCurrentDrawAmps(), m_elevatorSim.getCurrentDrawAmps()};
   }
 
   @Override

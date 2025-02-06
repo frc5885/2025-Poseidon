@@ -15,26 +15,29 @@ import frc.robot.subsystems.drive.DriveConstants;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOSpark implements ElevatorIO {
-  private final SparkMax m_elevatorSpark;
-  private final Debouncer m_elevatorConnectedDebouncer = new Debouncer(0.5);
+  private final SparkMax m_elevatorSpark1;
+  private final SparkMax m_elevatorSpark2;
+  private final Debouncer m_elevatorM1ConnectedDebouncer = new Debouncer(0.5);
+  private final Debouncer m_elevatorM2ConnectedDebouncer = new Debouncer(0.5);
   private final RelativeEncoder m_elevatorEncoder;
 
   public ElevatorIOSpark() {
-    m_elevatorSpark = new SparkMax(kElevatorSparkId, MotorType.kBrushless);
-    m_elevatorEncoder = m_elevatorSpark.getEncoder();
+    m_elevatorSpark1 = new SparkMax(kElevatorSparkId1, MotorType.kBrushless);
+    m_elevatorSpark2 = new SparkMax(kElevatorSparkId2, MotorType.kBrushless);
+    m_elevatorEncoder = m_elevatorSpark1.getEncoder();
 
-    var elevatorConfig = new SparkMaxConfig();
-    elevatorConfig
+    SparkMaxConfig elevatorConfig1 = new SparkMaxConfig();
+    elevatorConfig1
         .inverted(kElevatorInverted)
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(kElevatorMotorCurrentLimit)
         .voltageCompensation(12.0);
-    elevatorConfig
+    elevatorConfig1
         .encoder
         .positionConversionFactor(kElevatorEncoderPositionFactor)
         .velocityConversionFactor(kElevatorEncoderVelocityFactor)
         .uvwAverageDepth(2);
-    elevatorConfig
+    elevatorConfig1
         .signals
         .primaryEncoderPositionAlwaysOn(true)
         .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.odometryFrequency))
@@ -44,39 +47,63 @@ public class ElevatorIOSpark implements ElevatorIO {
         .busVoltagePeriodMs(20)
         .outputCurrentPeriodMs(20);
 
+    // this might be wrong
+    SparkMaxConfig elevatorConfig2 = elevatorConfig1;
+    elevatorConfig2.follow(m_elevatorSpark1);
+
     tryUntilOk(
-        m_elevatorSpark,
+        m_elevatorSpark1,
         5,
         () ->
-            m_elevatorSpark.configure(
-                elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    tryUntilOk(m_elevatorSpark, 5, () -> m_elevatorEncoder.setPosition(0.0));
+            m_elevatorSpark1.configure(
+                elevatorConfig1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(
+        m_elevatorSpark2,
+        5,
+        () ->
+            m_elevatorSpark2.configure(
+                elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+    // elevator start position
+    tryUntilOk(
+        m_elevatorSpark1, 5, () -> m_elevatorEncoder.setPosition(kElevatorStartingPositionMeters));
   }
 
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
+    double[] currentAmps = {0.0, 0.0};
     sparkStickyFault = false;
     ifOk(
-        m_elevatorSpark,
+        m_elevatorSpark1,
         m_elevatorEncoder::getPosition,
         (positionMeters) -> inputs.elevatorPositionMeters = positionMeters);
     ifOk(
-        m_elevatorSpark,
+        m_elevatorSpark1,
         m_elevatorEncoder::getVelocity,
         (velocityMetersPerSec) -> inputs.elevatorVelocityMetersPerSec = velocityMetersPerSec);
     ifOk(
-        m_elevatorSpark,
-        new DoubleSupplier[] {m_elevatorSpark::getAppliedOutput, m_elevatorSpark::getBusVoltage},
+        m_elevatorSpark1,
+        new DoubleSupplier[] {m_elevatorSpark1::getAppliedOutput, m_elevatorSpark1::getBusVoltage},
         (appliedVoltage) -> inputs.elevatorAppliedVolts = appliedVoltage[0] * appliedVoltage[1]);
     ifOk(
-        m_elevatorSpark,
-        m_elevatorSpark::getOutputCurrent,
-        (current) -> inputs.elevatorCurrentAmps = current);
-    inputs.elevatorConnected = m_elevatorConnectedDebouncer.calculate(!sparkStickyFault);
+        m_elevatorSpark1,
+        m_elevatorSpark1::getOutputCurrent,
+        (current) -> currentAmps[0] = current);
+    inputs.elevatorM1Connected = m_elevatorM1ConnectedDebouncer.calculate(!sparkStickyFault);
+
+    sparkStickyFault = false;
+    ifOk(
+        m_elevatorSpark2,
+        m_elevatorSpark2::getOutputCurrent,
+        (current) -> currentAmps[1] = current);
+    inputs.elevatorM2Connected = m_elevatorM2ConnectedDebouncer.calculate(!sparkStickyFault);
+
+    // update the current for both motors
+    inputs.elevatorCurrentAmps = currentAmps;
   }
 
   @Override
   public void setVoltage(double outputVolts) {
-    m_elevatorSpark.setVoltage(outputVolts);
+    m_elevatorSpark1.setVoltage(outputVolts);
   }
 }

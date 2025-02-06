@@ -31,6 +31,11 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSim;
+import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
@@ -40,11 +45,6 @@ import frc.robot.subsystems.vision.questnav.QuestNav;
 import frc.robot.subsystems.vision.questnav.QuestNavIO;
 import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
 import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
-import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSim;
-import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**

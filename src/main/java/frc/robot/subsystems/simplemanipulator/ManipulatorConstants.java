@@ -5,11 +5,13 @@ import edu.wpi.first.math.util.Units;
 public class ManipulatorConstants {
   // TODO temporary
   public static class ElevatorConstants {
-    public static final int kElevatorSparkId = 40;
+    public static final int kElevatorSparkId1 = 40;
+    public static final int kElevatorSparkId2 = 41;
     public static final boolean kElevatorInverted = false;
     public static final int kElevatorMotorCurrentLimit = 40;
 
     public static final double kElevatorMassKg = 4.0;
+    public static final double kElevatorStartingPositionMeters = 0.0;
 
     public static final double kElevatorLowerBoundMeters = 0.0;
     public static final double kElevatorUpperBoundMeters = 2.0;
