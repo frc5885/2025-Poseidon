@@ -279,28 +279,4 @@ public class ModuleIOSpark implements ModuleIO {
     // turnController.setReference(setpoint, ControlType.kMAXMotionPositionControl);
     turnSpark.setVoltage(turnPID.calculate(turnEncoder.getPosition(), setpoint));
   }
-
-  //   @Override
-  //   public void setClosedLoop() {
-  //     double newDriveP = SmartDashboard.getNumber("DriveP", driveKp);
-  //     double newDriveD = SmartDashboard.getNumber("DriveD", driveKd);
-  //     double newTurnP = SmartDashboard.getNumber("TurnP", turnKp);
-  //     double newTurnD = SmartDashboard.getNumber("TurnD", turnKd);
-  //     double oldDriveP = driveSpark.configAccessor.closedLoop.getP();
-  //     double oldDriveD = driveSpark.configAccessor.closedLoop.getP();
-  //     double oldTurnP = driveSpark.configAccessor.closedLoop.getP();
-  //     double oldTurnD = driveSpark.configAccessor.closedLoop.getP();
-  //     if (newDriveP != oldDriveP || newDriveD != oldDriveD) {
-  //       driveConfig.closedLoop.p(newDriveP);
-  //       driveConfig.closedLoop.d(newDriveD);
-  //       driveSpark.configure(
-  //           driveConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-  //     }
-  //     if (newTurnP != oldTurnP || newTurnD != oldTurnD) {
-  //       turnConfig.closedLoop.p(newTurnP);
-  //       turnConfig.closedLoop.d(newTurnD);
-  //       turnSpark.configure(
-  //           turnConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-  //     }
-  //   }
 }
