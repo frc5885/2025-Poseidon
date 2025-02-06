@@ -1,5 +1,3 @@
 package frc.robot.subsystems.Collector;
 
-public class CollectorConstants {
-    
-}
+public class CollectorConstants {}

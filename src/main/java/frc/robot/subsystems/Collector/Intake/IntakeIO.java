@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.Collector.Intake;
+package frc.robot.subsystems.Collector.intake;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -14,15 +14,13 @@ public interface IntakeIO {
     public double appliedVolts = 0.0;
     public double current1Amps = 0.0;
     public double current2Amps = 0.0;
-    public boolean driveConnected = false;
+    public boolean intake1Connected = false;
+    public boolean intake2Connected = false;
   }
-
 
   /** Updates the set of loggable inputs. */
   public default void updateInputs(IntakeIOInputs inputs) {}
 
   /** Run open loop at the specified voltage. */
   public default void setVoltage(double volts) {}
-
-
 }
