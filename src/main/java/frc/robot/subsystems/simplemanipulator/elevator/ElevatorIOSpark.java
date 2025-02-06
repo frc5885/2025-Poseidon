@@ -28,7 +28,7 @@ public class ElevatorIOSpark implements ElevatorIO {
 
     SparkMaxConfig elevatorConfig1 = new SparkMaxConfig();
     elevatorConfig1
-        .inverted(kElevatorInverted)
+        .inverted(kElevatorM1Inverted)
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(kElevatorMotorCurrentLimit)
         .voltageCompensation(12.0);
@@ -49,6 +49,7 @@ public class ElevatorIOSpark implements ElevatorIO {
 
     // this might be wrong
     SparkMaxConfig elevatorConfig2 = elevatorConfig1;
+    elevatorConfig2.inverted(kElevatorM2Inverted);
     elevatorConfig2.follow(m_elevatorSpark1);
 
     tryUntilOk(

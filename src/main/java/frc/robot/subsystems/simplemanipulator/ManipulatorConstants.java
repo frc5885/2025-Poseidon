@@ -7,7 +7,8 @@ public class ManipulatorConstants {
   public static class ElevatorConstants {
     public static final int kElevatorSparkId1 = 40;
     public static final int kElevatorSparkId2 = 41;
-    public static final boolean kElevatorInverted = false;
+    public static final boolean kElevatorM1Inverted = false;
+    public static final boolean kElevatorM2Inverted = !kElevatorM1Inverted;
     public static final int kElevatorMotorCurrentLimit = 40;
 
     public static final double kElevatorMassKg = 4.0;
@@ -34,10 +35,10 @@ public class ManipulatorConstants {
     public static final double elevatorKp = 0.0;
     public static final double elevatorKd = 0.0;
 
-    public static final double elevatorSimKp = 30.0;
+    public static final double elevatorSimKp = 0.0;
     public static final double elevatorSimKd = 0.0;
-    public static final double elevatorSimKv = 4.0;
-    public static final double elevatorSimKg = 0.919;
+    public static final double elevatorSimKv = 5.0;
+    public static final double elevatorSimKg = 0.45;
 
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
