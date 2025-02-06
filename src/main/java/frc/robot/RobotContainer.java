@@ -31,10 +31,15 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.drive.QuestNav.QuestNav;
-import frc.robot.subsystems.drive.QuestNav.QuestNavIO;
-import frc.robot.subsystems.drive.QuestNav.QuestNavIOReal;
-import frc.robot.subsystems.drive.QuestNav.QuestNavIOSim;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.questnav.QuestNav;
+import frc.robot.subsystems.vision.questnav.QuestNavIO;
+import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
+import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
 import frc.robot.subsystems.simplemanipulator.ManipulatorConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.simplemanipulator.SimpleManipulator;
 import frc.robot.subsystems.simplemanipulator.elevator.ElevatorIO;
@@ -52,6 +57,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final QuestNav questNav;
+  private final Vision vision;
   private final SimpleManipulator m_manipulator;
 
   // Controller
@@ -73,6 +79,13 @@ public class RobotContainer {
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3));
         questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVision(
+                    VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+                new VisionIOPhotonVision(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         m_manipulator = new SimpleManipulator(new ElevatorIOSpark());
         break;
 
@@ -86,6 +99,13 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim());
         questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         m_manipulator = new SimpleManipulator(new ElevatorIOSim());
         break;
 
@@ -99,6 +119,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_manipulator = new SimpleManipulator(new ElevatorIO() {});
         break;
     }

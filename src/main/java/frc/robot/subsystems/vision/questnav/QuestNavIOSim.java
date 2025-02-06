@@ -1,6 +1,6 @@
-package frc.robot.subsystems.drive.QuestNav;
+package frc.robot.subsystems.vision.questnav;
 
-import static frc.robot.subsystems.drive.QuestNav.QuestNavConstants.robotToQuestTransform;
+import static frc.robot.subsystems.vision.questnav.QuestNavConstants.robotToQuestTransform;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Timer;
