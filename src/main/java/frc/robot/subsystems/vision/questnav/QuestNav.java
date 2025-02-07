@@ -29,10 +29,9 @@ public class QuestNav extends SubsystemBase {
    * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
    * transform
    */
-  public QuestNav(QuestNavIO questNavIO, Pose2d realRobotPose) {
+  public QuestNav(QuestNavIO questNavIO) {
     this.questNavIO = questNavIO;
     this.disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
-    setRobotPose(realRobotPose);
   }
 
   @Override
@@ -41,8 +40,6 @@ public class QuestNav extends SubsystemBase {
     Logger.processInputs("QuestNav", questNavIOInputs);
     disconnectedAlert.set(!questNavIOInputs.connected);
     questNavIO.cleanUpQuestNavMessages();
-
-    Logger.recordOutput("Odometry/QuestNavRobot", getRobotPose());
   }
 
   /**
@@ -120,5 +117,10 @@ public class QuestNav extends SubsystemBase {
     float[] eulerAngles = questNavIOInputs.eulerAngles;
     float ret = -eulerAngles[1];
     return new Rotation2d(Units.degreesToRadians(ret));
+  }
+
+  /** Get whether or not the Quest is connected */
+  public boolean isConnected() {
+    return questNavIOInputs.connected;
   }
 }

@@ -44,15 +44,13 @@ import frc.robot.subsystems.drive.GyroIONavX;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.vision.questnav.QuestNav;
-import frc.robot.subsystems.vision.questnav.QuestNavIO;
-import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
-import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
+import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
+import frc.robot.subsystems.vision.heimdall.HeimdallPoseController.HeimdallOdometrySource;
+import frc.robot.subsystems.vision.photon.Vision;
+import frc.robot.subsystems.vision.photon.VisionConstants;
+import frc.robot.subsystems.vision.photon.VisionIO;
+import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -64,8 +62,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final QuestNav questNav;
   private final Vision vision;
+  private final HeimdallPoseController poseController;
   private final SuperStructure m_superStructure;
   private final Collector m_collector;
 
@@ -77,6 +75,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -86,8 +85,8 @@ public class RobotContainer {
                 new ModuleIOSpark(0),
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
-                new ModuleIOSpark(3));
-        questNav = new QuestNav(new QuestNavIOReal(), drive.getPose());
+                new ModuleIOSpark(3),
+                poseController);
         vision =
             new Vision(
                 drive::addVisionMeasurement,
@@ -107,8 +106,8 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
-                new ModuleIOSim());
-        questNav = new QuestNav(new QuestNavIOSim(drive::getPose) {}, drive.getPose());
+                new ModuleIOSim(),
+                poseController);
         vision =
             new Vision(
                 drive::addVisionMeasurement,
@@ -116,6 +115,8 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
+        // the sim lags really badly if you use auto switch
+        poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure = new SuperStructure(new ElevatorIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         break;
@@ -128,8 +129,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                new ModuleIO() {});
-        questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
+                new ModuleIO() {},
+                poseController);
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
@@ -212,12 +213,11 @@ public class RobotContainer {
                       drive.resetGyro();
                       Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
                       drive.setPose(newPose);
-                      questNav.setRobotPose(newPose);
                     },
                     drive)
                 .ignoringDisable(true));
 
-    controller.y().onTrue(new InstantCommand(() -> questNav.setRobotPose(drive.getPose())));
+    controller.y().onTrue(new InstantCommand(() -> poseController.forceSyncQuest()));
 
     // elevator testing
     new JoystickButton(new GenericHID(1), 1)
