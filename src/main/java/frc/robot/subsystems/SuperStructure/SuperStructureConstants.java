@@ -1,0 +1,59 @@
+package frc.robot.subsystems.SuperStructure;
+
+import edu.wpi.first.math.util.Units;
+
+public class SuperStructureConstants {
+  // TODO temporary
+  public static class ElevatorConstants {
+    public static final int kElevatorSparkId1 = 40;
+    public static final int kElevatorSparkId2 = 41;
+    public static final boolean kElevatorM1Inverted = false;
+    public static final boolean kElevatorM2Inverted = !kElevatorM1Inverted;
+    public static final int kElevatorMotorCurrentLimit = 40;
+
+    public static final double kElevatorMassKg = 4.0;
+    public static final double kElevatorStartingPositionMeters = 0.0;
+
+    public static final double kElevatorLowerBoundMeters = 0.0;
+    public static final double kElevatorUpperBoundMeters = 2.0;
+    // In Meters/Sec
+    public static final double kElevatorMaxVelocity = 1.54;
+    // In Meters/SecSq
+    public static final double kElevatorMaxAcceleration = 29;
+    public static final double kElevatorMotorReduction = 10.0;
+    public static final double kElevatorWheelRadiusMeters = Units.inchesToMeters(2.0);
+    // Motor Rotations -> Elevator Meters
+    public static final double kElevatorEncoderPositionFactor =
+        Math.PI * 2 * kElevatorWheelRadiusMeters / kElevatorMotorReduction;
+    // Motor RPM -> Elevator Meters/Sec
+    public static final double kElevatorEncoderVelocityFactor =
+        (Math.PI * 2 * kElevatorWheelRadiusMeters) / 60 / kElevatorMotorReduction;
+
+    public static final double elevatorKs = 0.0;
+    public static final double elevatorKv = 0.0;
+    public static final double elevatorKg = 0.0;
+    public static final double elevatorKp = 0.0;
+    public static final double elevatorKd = 0.0;
+
+    public static final double elevatorSimKp = 0.0;
+    public static final double elevatorSimKd = 0.0;
+    public static final double elevatorSimKv = 3.9;
+    public static final double elevatorSimKg = 0.46;
+
+    public static final double kElevatorErrorToleranceMeters = 0.005;
+
+    // TODO could be modified to accept more abstract/arbitrary setpoint values?
+    public static enum ElevatorLevel {
+      L1(0.0),
+      L2(0.5),
+      L3(1.0),
+      L4(1.5);
+
+      public double setpointMeters;
+
+      private ElevatorLevel(double setpointMeters) {
+        this.setpointMeters = setpointMeters;
+      }
+    }
+  }
+}
