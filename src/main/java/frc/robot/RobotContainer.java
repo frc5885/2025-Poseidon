@@ -115,6 +115,8 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
+        // the sim lags really badly if you use auto switch
+        poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure = new SuperStructure(new ElevatorIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         break;
