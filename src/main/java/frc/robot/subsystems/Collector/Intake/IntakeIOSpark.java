@@ -1,6 +1,5 @@
-package frc.robot.subsystems.Collector.intake;
+package frc.robot.subsystems.Collector.Intake;
 
-import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
@@ -30,6 +29,7 @@ public class IntakeIOSpark implements IntakeIO {
 
     SparkMaxConfig intake1Config = new SparkMaxConfig();
     intake1Config
+        .inverted(IntakeConstants.intakeMotor1Inverted)
         .idleMode(IdleMode.kCoast)
         .smartCurrentLimit(IntakeConstants.intakeMotorCurrentLimit)
         .voltageCompensation(12.0);

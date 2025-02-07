@@ -1,6 +1,13 @@
 package frc.robot.subsystems.Collector;
 
 public class CollectorConstants {
+  public static class FeederConstants {
+    public static final int feederId = 9;
+    public static final boolean feederMotorInverted = false;
+    public static final int feederMotorCurrentLimit = 40;
+    public static final double feederGearRatio = 1.0;
+  }
+
   public static class IntakeConstants {
     public static final int intakeId1 = 7;
     public static final int intakeId2 = 8;

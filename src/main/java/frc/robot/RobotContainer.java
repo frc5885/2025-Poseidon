@@ -27,9 +27,12 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.Collector.Collector;
-import frc.robot.subsystems.Collector.intake.IntakeIO;
-import frc.robot.subsystems.Collector.intake.IntakeIOSim;
-import frc.robot.subsystems.Collector.intake.IntakeIOSpark;
+import frc.robot.subsystems.Collector.Feeder.FeederIO;
+import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
+import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
+import frc.robot.subsystems.Collector.Intake.IntakeIO;
+import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
+import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
@@ -93,7 +96,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         m_superStructure = new SuperStructure(new ElevatorIOSpark());
-        m_collector = new Collector(new IntakeIOSpark());
+        m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
         break;
 
       case SIM:
@@ -114,7 +117,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         m_superStructure = new SuperStructure(new ElevatorIOSim());
-        m_collector = new Collector(new IntakeIOSim());
+        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         break;
 
       default:
@@ -129,7 +132,7 @@ public class RobotContainer {
         questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {});
-        m_collector = new Collector(new IntakeIO() {});
+        m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
         break;
     }
 
@@ -235,6 +238,11 @@ public class RobotContainer {
         .whileTrue(
             new StartEndCommand(
                 () -> m_collector.runIntake(12), () -> m_collector.stopIntake(), m_collector));
+
+    new JoystickButton(new GenericHID(1), 3)
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

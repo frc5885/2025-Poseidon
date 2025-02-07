@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Collector.intake;
+package frc.robot.subsystems.Collector.Intake;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -14,8 +14,8 @@ public class IntakeIOSim implements IntakeIO {
     m_FlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getNEO(1), 0.001, IntakeConstants.intakeGearRatio),
-            DCMotor.getNEO(1),
+                DCMotor.getNEO(2), 0.001, IntakeConstants.intakeGearRatio),
+            DCMotor.getNEO(2),
             0.0);
   }
 
