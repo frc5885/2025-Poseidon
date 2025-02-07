@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Collector.intake;
+package frc.robot.subsystems.Collector.Intake;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;

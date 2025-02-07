@@ -1,6 +1,5 @@
-package frc.robot.subsystems.Collector.intake;
+package frc.robot.subsystems.Collector.Intake;
 
-import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;

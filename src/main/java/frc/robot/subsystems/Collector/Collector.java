@@ -5,8 +5,8 @@
 package frc.robot.subsystems.Collector;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Collector.intake.Intake;
-import frc.robot.subsystems.Collector.intake.IntakeIO;
+import frc.robot.subsystems.Collector.Intake.Intake;
+import frc.robot.subsystems.Collector.Intake.IntakeIO;
 
 public class Collector extends SubsystemBase {
   private final Intake m_intake;
