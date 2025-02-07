@@ -11,37 +11,34 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.wpilibj.Alert;
 import frc.robot.Constants;
 import java.util.function.DoubleSupplier;
+import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;;
 
 public class IntakeIOSpark implements IntakeIO {
   private SparkMax intakeMotor1;
   private SparkMax intakeMotor2;
   private RelativeEncoder intake1Encoder;
-  private RelativeEncoder intake2Encoder;
 
-
-  private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
+  private final Debouncer intakeConnectedDebounce1 = new Debouncer(0.5);
+  private final Debouncer intakeConnectedDebounce2 = new Debouncer(0.5);
 
   public IntakeIOSpark() {
-    intakeMotor1 = new SparkMax(Constants.IntakeId1, MotorType.kBrushed);
-    intakeMotor2 = new SparkMax(Constants.IntakeId2, MotorType.kBrushed);
-
+    intakeMotor1 = new SparkMax(IntakeConstants.intakeId1, MotorType.kBrushless);
+    intakeMotor2 = new SparkMax(IntakeConstants.intakeId2, MotorType.kBrushless);
 
     intake1Encoder = intakeMotor1.getEncoder();
-    intake2Encoder = intakeMotor2.getEncoder();
 
     SparkMaxConfig intake1Config = new SparkMaxConfig();
     intake1Config
-        .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit(driveMotorCurrentLimit)
+        .idleMode(IdleMode.kCoast)
+        .smartCurrentLimit(IntakeConstants.intakeMotorCurrentLimit)
         .voltageCompensation(12.0);
     intake1Config.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);
     intake1Config
         .signals
         .primaryEncoderPositionAlwaysOn(true)
-        .primaryEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
+        .primaryEncoderPositionPeriodMs(20)
         .primaryEncoderVelocityAlwaysOn(true)
         .primaryEncoderVelocityPeriodMs(20)
         .appliedOutputPeriodMs(20)
@@ -53,33 +50,33 @@ public class IntakeIOSpark implements IntakeIO {
         () ->
             intakeMotor1.configure(
                 intake1Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    // Reset neo relative encoder using absolute encoder position
 
     SparkMaxConfig intake2Config = intake1Config;
+    intake2Config.follow(intakeMotor1, IntakeConstants.intakeMotor2Inverted);
 
-    intake2Config.follow(intakeMotor1);
+    tryUntilOk(
+        intakeMotor2,
+        5,
+        () ->
+            intakeMotor2.configure(
+                intake2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
   }
 
   public void updateInputs(IntakeIOInputs inputs) {
+    double[] current = {0.0, 0.0};
     sparkStickyFault = false;
-    ifOk(intakeMotor1, intake1Encoder::getPosition, (value) -> inputs.positionRotation = value);
+    ifOk(intakeMotor1, intake1Encoder::getPosition, (value) -> inputs.positionRotations = value);
     ifOk(intakeMotor1, intake1Encoder::getVelocity, (value) -> inputs.velocityRPM = value);
     ifOk(
         intakeMotor1,
         new DoubleSupplier[] {intakeMotor1::getAppliedOutput, intakeMotor1::getBusVoltage},
         (values) -> inputs.appliedVolts = values[0] * values[1]);
-    ifOk(intakeMotor1, intakeMotor1::getOutputCurrent, (value) -> inputs.current1Amps = value);
-    inputs.intake1Connected = driveConnectedDebounce.calculate(!sparkStickyFault);
+    ifOk(intakeMotor1, intakeMotor1::getOutputCurrent, (value) -> current[0] = value);
+    inputs.intake1Connected = intakeConnectedDebounce1.calculate(!sparkStickyFault);
 
     sparkStickyFault = false;
-    ifOk(intakeMotor2, intake2Encoder::getPosition, (value) -> inputs.positionRotation = value);
-    ifOk(intakeMotor2, intake2Encoder::getVelocity, (value) -> inputs.velocityRPM = value);
-    ifOk(
-        intakeMotor2,
-        new DoubleSupplier[] {intakeMotor2::getAppliedOutput, intakeMotor2::getBusVoltage},
-        (values) -> inputs.appliedVolts = values[0] * values[1]);
-    ifOk(intakeMotor2, intakeMotor2::getOutputCurrent, (value) -> inputs.current2Amps = value);
-    inputs.intake2Connected = driveConnectedDebounce.calculate(!sparkStickyFault);
+    ifOk(intakeMotor2, intakeMotor2::getOutputCurrent, (value) -> current[1] = value);
+    inputs.intake2Connected = intakeConnectedDebounce2.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */

@@ -40,7 +40,7 @@ public class ElevatorIOSpark implements ElevatorIO {
     elevatorConfig1
         .signals
         .primaryEncoderPositionAlwaysOn(true)
-        .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.odometryFrequency))
+        .primaryEncoderPositionPeriodMs(20)
         .primaryEncoderVelocityAlwaysOn(true)
         .primaryEncoderVelocityPeriodMs(20)
         .appliedOutputPeriodMs(20)

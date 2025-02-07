@@ -9,11 +9,10 @@ import org.littletonrobotics.junction.AutoLog;
 public interface IntakeIO {
   @AutoLog
   public static class IntakeIOInputs {
-    public double positionRotation = 0.0;
+    public double positionRotations = 0.0;
     public double velocityRPM = 0.0;
     public double appliedVolts = 0.0;
-    public double current1Amps = 0.0;
-    public double current2Amps = 0.0;
+    public double[] currentAmps = {0.0, 0.0};
     public boolean intake1Connected = false;
     public boolean intake2Connected = false;
   }

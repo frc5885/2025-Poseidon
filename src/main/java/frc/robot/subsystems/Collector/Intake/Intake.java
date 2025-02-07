@@ -13,17 +13,21 @@ public class Intake {
   public Intake(IntakeIO io) {
     this.intakeIO = io;
 
-    motor1disconnectedAlert = new Alert("intake motor1 disconnected!", AlertType.kError);
-    motor2disconnectedAlert = new Alert("intake motor2 disconnected!", AlertType.kError);
+    motor1disconnectedAlert = new Alert("Intake motor1 disconnected!", AlertType.kError);
+    motor2disconnectedAlert = new Alert("Intake motor2 disconnected!", AlertType.kError);
   }
 
   public void periodic() {
     intakeIO.updateInputs(m_inputs);
-    Logger.processInputs("intake", m_inputs);
+    Logger.processInputs("Collector/Intake", m_inputs);
 
     // Update alerts
     motor1disconnectedAlert.set(!m_inputs.intake1Connected);
     motor2disconnectedAlert.set(!m_inputs.intake2Connected);
+  }
+
+  public void runIntake(double volts) {
+    intakeIO.setVoltage(volts);
   }
 
   public void stop() {
