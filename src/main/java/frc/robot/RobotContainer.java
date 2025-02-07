@@ -31,7 +31,7 @@ import frc.robot.subsystems.Collector.Feeder.FeederIO;
 import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
 import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
 import frc.robot.subsystems.Collector.Intake.IntakeIO;
-import frc.robot.subsystems.Collector.Intake.IntakeIOSimtemp;
+import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
@@ -117,7 +117,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         m_superStructure = new SuperStructure(new ElevatorIOSim());
-        m_collector = new Collector(new IntakeIOSimtemp(), new FeederIOSim());
+        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         break;
 
       default:

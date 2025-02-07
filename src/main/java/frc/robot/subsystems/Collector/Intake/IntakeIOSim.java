@@ -5,12 +5,12 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 
-public class IntakeIOSimtemp implements IntakeIO {
+public class IntakeIOSim implements IntakeIO {
 
   private double m_appliedVolts;
   private FlywheelSim m_FlywheelSim;
 
-  public IntakeIOSimtemp() {
+  public IntakeIOSim() {
     m_FlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
