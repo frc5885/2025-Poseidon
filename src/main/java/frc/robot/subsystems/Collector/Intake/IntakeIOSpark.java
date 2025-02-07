@@ -29,6 +29,7 @@ public class IntakeIOSpark implements IntakeIO {
 
     SparkMaxConfig intake1Config = new SparkMaxConfig();
     intake1Config
+        .inverted(IntakeConstants.intakeMotor1Inverted)
         .idleMode(IdleMode.kCoast)
         .smartCurrentLimit(IntakeConstants.intakeMotorCurrentLimit)
         .voltageCompensation(12.0);
