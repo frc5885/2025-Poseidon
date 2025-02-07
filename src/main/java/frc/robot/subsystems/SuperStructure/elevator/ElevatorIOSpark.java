@@ -11,7 +11,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.drive.DriveConstants;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOSpark implements ElevatorIO {
@@ -40,7 +39,7 @@ public class ElevatorIOSpark implements ElevatorIO {
     elevatorConfig1
         .signals
         .primaryEncoderPositionAlwaysOn(true)
-        .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.odometryFrequency))
+        .primaryEncoderPositionPeriodMs(20)
         .primaryEncoderVelocityAlwaysOn(true)
         .primaryEncoderVelocityPeriodMs(20)
         .appliedOutputPeriodMs(20)

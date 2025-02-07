@@ -21,10 +21,15 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.subsystems.Collector.Collector;
+import frc.robot.subsystems.Collector.intake.IntakeIO;
+import frc.robot.subsystems.Collector.intake.IntakeIOSim;
+import frc.robot.subsystems.Collector.intake.IntakeIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
@@ -59,6 +64,7 @@ public class RobotContainer {
   private final QuestNav questNav;
   private final Vision vision;
   private final SuperStructure m_superStructure;
+  private final Collector m_collector;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -87,6 +93,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         m_superStructure = new SuperStructure(new ElevatorIOSpark());
+        m_collector = new Collector(new IntakeIOSpark());
         break;
 
       case SIM:
@@ -107,6 +114,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         m_superStructure = new SuperStructure(new ElevatorIOSim());
+        m_collector = new Collector(new IntakeIOSim());
         break;
 
       default:
@@ -121,6 +129,7 @@ public class RobotContainer {
         questNav = new QuestNav(new QuestNavIO() {}, drive.getPose());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {});
+        m_collector = new Collector(new IntakeIO() {});
         break;
     }
 
@@ -221,8 +230,12 @@ public class RobotContainer {
                           default -> ElevatorLevel.L1;
                         }),
                 m_superStructure));
-  }
 
+    new JoystickButton(new GenericHID(1), 2)
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_collector.runIntake(12), () -> m_collector.stopIntake(), m_collector));
+  }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
