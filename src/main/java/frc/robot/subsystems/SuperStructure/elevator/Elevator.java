@@ -1,5 +1,7 @@
 package frc.robot.subsystems.SuperStructure.elevator;
 
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
+
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -9,9 +11,6 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
-
-import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;

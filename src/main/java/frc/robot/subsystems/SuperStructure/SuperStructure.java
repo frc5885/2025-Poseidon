@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.elevator.Elevator;
 import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 

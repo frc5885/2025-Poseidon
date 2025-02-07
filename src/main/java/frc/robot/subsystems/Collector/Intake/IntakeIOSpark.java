@@ -11,9 +11,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.Constants;
+import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 import java.util.function.DoubleSupplier;
-import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;;
 
 public class IntakeIOSpark implements IntakeIO {
   private SparkMax intakeMotor1;

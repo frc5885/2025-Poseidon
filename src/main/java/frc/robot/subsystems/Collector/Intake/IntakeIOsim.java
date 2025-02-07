@@ -13,7 +13,8 @@ public class IntakeIOSim implements IntakeIO {
   public IntakeIOSim() {
     m_FlywheelSim =
         new FlywheelSim(
-            LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 1.0, IntakeConstants.intakeGearRatio),
+            LinearSystemId.createFlywheelSystem(
+                DCMotor.getNEO(1), 0.001, IntakeConstants.intakeGearRatio),
             DCMotor.getNEO(1),
             0.0);
   }
@@ -25,7 +26,8 @@ public class IntakeIOSim implements IntakeIO {
     inputs.positionRotations = 0.0;
     inputs.velocityRPM = m_FlywheelSim.getAngularVelocityRPM();
     inputs.appliedVolts = m_appliedVolts;
-    inputs.currentAmps = new double[] {m_FlywheelSim.getCurrentDrawAmps(), m_FlywheelSim.getCurrentDrawAmps()};
+    inputs.currentAmps =
+        new double[] {m_FlywheelSim.getCurrentDrawAmps(), m_FlywheelSim.getCurrentDrawAmps()};
   }
 
   public void setVoltage(double volts) {
