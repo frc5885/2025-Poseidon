@@ -26,6 +26,7 @@ public class FeederIOSim implements FeederIO {
     inputs.velocityRPM = m_FlywheelSim.getAngularVelocityRPM();
     inputs.appliedVolts = m_appliedVolts;
     inputs.currentAmps = m_FlywheelSim.getCurrentDrawAmps();
+    inputs.feederConnected = true;
   }
 
   public void setVoltage(double volts) {

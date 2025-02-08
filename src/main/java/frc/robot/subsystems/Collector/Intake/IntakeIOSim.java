@@ -27,6 +27,8 @@ public class IntakeIOSim implements IntakeIO {
     inputs.appliedVolts = m_appliedVolts;
     inputs.currentAmps =
         new double[] {m_FlywheelSim.getCurrentDrawAmps(), m_FlywheelSim.getCurrentDrawAmps()};
+    inputs.intake1Connected = true;
+    inputs.intake2Connected = true;
   }
 
   public void setVoltage(double volts) {

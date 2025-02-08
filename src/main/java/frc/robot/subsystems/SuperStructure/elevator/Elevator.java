@@ -83,8 +83,8 @@ public class Elevator {
         m_elevatorLevel != null ? m_elevatorLevel.setpointMeters : getPositionMeters());
 
     // Update alerts
-    motor1DisconnectedAlert.set(!m_inputs.elevatorM1Connected);
-    motor2DisconnectedAlert.set(!m_inputs.elevatorM2Connected);
+    motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
+    motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
   }
 
   public void runElevatorOpenLoop(double outputVolts) {
@@ -127,11 +127,11 @@ public class Elevator {
   }
 
   public double getPositionMeters() {
-    return m_inputs.elevatorPositionMeters;
+    return m_inputs.positionMeters;
   }
 
   public double getVelocityMetersPerSec() {
-    return m_inputs.elevatorVelocityMetersPerSec;
+    return m_inputs.velocityMetersPerSec;
   }
 
   public TrapezoidProfile.State getCurrentState() {
