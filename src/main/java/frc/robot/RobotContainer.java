@@ -33,6 +33,13 @@ import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
 import frc.robot.subsystems.Collector.Intake.IntakeIO;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
+import frc.robot.subsystems.EndAffecter.AlgaeClaw.AlgaeClawIO;
+import frc.robot.subsystems.EndAffecter.AlgaeClaw.AlgaeClawIOSim;
+import frc.robot.subsystems.EndAffecter.AlgaeClaw.AlgaeClawIOSpark;
+import frc.robot.subsystems.EndAffecter.CoralEjecter.CoralEjecterIO;
+import frc.robot.subsystems.EndAffecter.CoralEjecter.CoralEjecterIOSpark;
+import frc.robot.subsystems.EndAffecter.CoralEjecter.coralEjecterIOSim;
+import frc.robot.subsystems.EndAffecter.EndAffecter;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
@@ -66,6 +73,7 @@ public class RobotContainer {
   private final HeimdallPoseController poseController;
   private final SuperStructure m_superStructure;
   private final Collector m_collector;
+  private final EndAffecter m_endAffecter;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -96,6 +104,8 @@ public class RobotContainer {
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         m_superStructure = new SuperStructure(new ElevatorIOSpark());
         m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
+        m_endAffecter = new EndAffecter(new AlgaeClawIOSpark(), new CoralEjecterIOSpark());
+
         break;
 
       case SIM:
@@ -119,6 +129,7 @@ public class RobotContainer {
         poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure = new SuperStructure(new ElevatorIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
+        m_endAffecter = new EndAffecter(new AlgaeClawIOSim(), new coralEjecterIOSim());
         break;
 
       default:
@@ -134,6 +145,8 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
+
+        m_endAffecter = new EndAffecter(new AlgaeClawIO() {}, new CoralEjecterIO() {});
         break;
     }
 
@@ -243,6 +256,20 @@ public class RobotContainer {
         .whileTrue(
             new StartEndCommand(
                 () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
+
+    new JoystickButton(new GenericHID(1), 4)
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_endAffecter.runCoralEjecter(12),
+                () -> m_endAffecter.stopCoralEjecter(),
+                m_collector));
+
+    new JoystickButton(new GenericHID(1), 5)
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_endAffecter.runAlgaeClaw(12),
+                () -> m_endAffecter.stopAlgaeClaw(),
+                m_collector));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
