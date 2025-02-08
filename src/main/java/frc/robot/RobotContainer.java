@@ -33,11 +33,15 @@ import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
 import frc.robot.subsystems.Collector.Intake.IntakeIO;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
+import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
+import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
+import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
-import frc.robot.subsystems.SuperStructure.elevator.ElevatorIOSim;
-import frc.robot.subsystems.SuperStructure.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -94,7 +98,7 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                 new VisionIOPhotonVision(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-        m_superStructure = new SuperStructure(new ElevatorIOSpark());
+        m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark());
         m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
         break;
 
@@ -117,7 +121,7 @@ public class RobotContainer {
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         // the sim lags really badly if you use auto switch
         poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
-        m_superStructure = new SuperStructure(new ElevatorIOSim());
+        m_superStructure = new SuperStructure(new ElevatorIOSim(), new ArmIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         break;
 
@@ -132,7 +136,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 poseController);
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        m_superStructure = new SuperStructure(new ElevatorIO() {});
+        m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
         break;
     }
@@ -231,6 +235,20 @@ public class RobotContainer {
                           case L3 -> ElevatorLevel.L4;
                           case L4 -> ElevatorLevel.L1;
                           default -> ElevatorLevel.L1;
+                        }),
+                m_superStructure));
+
+    // arm testing
+    new JoystickButton(new GenericHID(1), 4)
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    m_superStructure.setArmGoal(
+                        switch (m_superStructure.getArmGoal()) {
+                          case STOW -> ArmGoals.RAISED;
+                          case RAISED -> ArmGoals.SETPOINT;
+                          case SETPOINT -> ArmGoals.STOW;
+                          default -> ArmGoals.STOW;
                         }),
                 m_superStructure));
 

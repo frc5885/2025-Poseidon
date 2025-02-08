@@ -1,4 +1,4 @@
-package frc.robot.subsystems.SuperStructure.elevator;
+package frc.robot.subsystems.SuperStructure.Elevator;
 
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
@@ -79,7 +79,7 @@ public class Elevator {
     m_elevatorMech = new LoggedMechanism2d(0.2, 2.0);
     m_elevatorTrack = m_elevatorMech.getRoot("ElevatorTrack", 0.07, 0.15);
     m_elevatorTrack.append(
-        new LoggedMechanismLigament2d("ElevatorTrack", kElevatorUpperBoundMeters, 90.0));
+        new LoggedMechanismLigament2d("ElevatorTrack", kElevatorMaxHeightMeters, 90.0));
     m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.13, 0.15);
     m_elevatorRoot.append(
         new LoggedMechanismLigament2d("Elevator", 0.3, 90.0, 10.0, new Color8Bit(0, 0, 255)));
@@ -103,9 +103,9 @@ public class Elevator {
   public void runElevatorOpenLoop(double outputVolts) {
     // TODO MUST match the real implementation!
     if (outputVolts > 0) {
-      m_io.setVoltage(isWithinUpperBound(getPositionMeters()) ? outputVolts : 0.0);
+      m_io.setVoltage(isWithinMaximum(getPositionMeters()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {
-      m_io.setVoltage(isWithinLowerBound(getPositionMeters()) ? outputVolts : 0.0);
+      m_io.setVoltage(isWithinMinimum(getPositionMeters()) ? outputVolts : 0.0);
     } else {
       m_io.setVoltage(outputVolts);
     }
@@ -130,12 +130,12 @@ public class Elevator {
     m_io.setVoltage(0.0);
   }
 
-  private boolean isWithinUpperBound(double positionMeters) {
-    return positionMeters < kElevatorUpperBoundMeters;
+  private boolean isWithinMaximum(double positionMeters) {
+    return positionMeters < kElevatorMaxHeightMeters;
   }
 
-  private boolean isWithinLowerBound(double positionMeters) {
-    return positionMeters > kElevatorLowerBoundMeters;
+  private boolean isWithinMinimum(double positionMeters) {
+    return positionMeters > kElevatorMinHeightMeters;
   }
 
   public double getPositionMeters() {
@@ -159,6 +159,6 @@ public class Elevator {
   }
 
   public boolean isSetpointAchieved() {
-    return m_elevatorController.atSetpoint();
+    return Math.abs(m_goal.position - getPositionMeters()) < kElevatorErrorToleranceMeters;
   }
 }
