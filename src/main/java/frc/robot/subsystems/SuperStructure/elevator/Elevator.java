@@ -1,5 +1,6 @@
-package frc.robot.subsystems.SuperStructure.elevator;
+package frc.robot.subsystems.SuperStructure.Elevator;
 
+import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -7,14 +8,14 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class Elevator {
   private final ElevatorIO m_io;
@@ -28,10 +29,7 @@ public class Elevator {
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
   private TunablePIDController m_elevatorController;
   private ElevatorFeedforward m_elevatorFeedforward;
-
-  private final LoggedMechanism2d m_elevatorMech;
-  private final LoggedMechanismRoot2d m_elevatorTrack;
-  private final LoggedMechanismRoot2d m_elevatorRoot;
+  private SysIdRoutine m_sysIdRoutine;
 
   private ElevatorLevel m_elevatorLevel = ElevatorLevel.L1;
 
@@ -75,14 +73,6 @@ public class Elevator {
 
     motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
     motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
-
-    m_elevatorMech = new LoggedMechanism2d(0.2, 2.0);
-    m_elevatorTrack = m_elevatorMech.getRoot("ElevatorTrack", 0.07, 0.15);
-    m_elevatorTrack.append(
-        new LoggedMechanismLigament2d("ElevatorTrack", kElevatorUpperBoundMeters, 90.0));
-    m_elevatorRoot = m_elevatorMech.getRoot("ElevatorRoot", 0.13, 0.15);
-    m_elevatorRoot.append(
-        new LoggedMechanismLigament2d("Elevator", 0.3, 90.0, 10.0, new Color8Bit(0, 0, 255)));
   }
 
   public void periodic() {
@@ -92,9 +82,6 @@ public class Elevator {
     runElevatorSetpoint(
         m_elevatorLevel != null ? m_elevatorLevel.setpointMeters : getPositionMeters());
 
-    m_elevatorRoot.setPosition(0.13, 0.15 + m_inputs.positionMeters);
-    Logger.recordOutput("SuperStructure/Elevator/Mechanism2d", m_elevatorMech);
-
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
     motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
@@ -103,9 +90,9 @@ public class Elevator {
   public void runElevatorOpenLoop(double outputVolts) {
     // TODO MUST match the real implementation!
     if (outputVolts > 0) {
-      m_io.setVoltage(isWithinUpperBound(getPositionMeters()) ? outputVolts : 0.0);
+      m_io.setVoltage(isWithinMaximum(getPositionMeters()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {
-      m_io.setVoltage(isWithinLowerBound(getPositionMeters()) ? outputVolts : 0.0);
+      m_io.setVoltage(isWithinMinimum(getPositionMeters()) ? outputVolts : 0.0);
     } else {
       m_io.setVoltage(outputVolts);
     }
@@ -122,6 +109,7 @@ public class Elevator {
             + m_elevatorController.calculate(current.position, setpoint.position));
   }
 
+  // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
     runElevatorOpenLoop(outputVolts);
   }
@@ -130,12 +118,12 @@ public class Elevator {
     m_io.setVoltage(0.0);
   }
 
-  private boolean isWithinUpperBound(double positionMeters) {
-    return positionMeters < kElevatorUpperBoundMeters;
+  private boolean isWithinMaximum(double positionMeters) {
+    return positionMeters < kElevatorMaxHeightMeters;
   }
 
-  private boolean isWithinLowerBound(double positionMeters) {
-    return positionMeters > kElevatorLowerBoundMeters;
+  private boolean isWithinMinimum(double positionMeters) {
+    return positionMeters > kElevatorMinHeightMeters;
   }
 
   public double getPositionMeters() {
@@ -159,6 +147,32 @@ public class Elevator {
   }
 
   public boolean isSetpointAchieved() {
-    return m_elevatorController.atSetpoint();
+    return Math.abs(m_goal.position - getPositionMeters()) < kElevatorErrorToleranceMeters;
+  }
+
+  // Configure SysId
+  public void sysIdSetup(SuperStructure superStructure) {
+    m_sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) ->
+                    Logger.recordOutput("SuperStructure/ElevatorSysIDState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runCharacterization(voltage.in(Volts)), null, superStructure));
+  }
+
+  public Command getSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return Commands.run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_sysIdRoutine.quasistatic(direction));
+  }
+
+  public Command getSysIdDynamic(SysIdRoutine.Direction direction) {
+    return Commands.run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_sysIdRoutine.dynamic(direction));
   }
 }

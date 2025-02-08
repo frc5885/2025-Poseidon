@@ -13,9 +13,9 @@ public class SuperStructureConstants {
 
     public static final double kElevatorMassKg = 4.0;
     public static final double kElevatorStartingPositionMeters = 0.0;
+    public static final double kElevatorMinHeightMeters = 0.0;
+    public static final double kElevatorMaxHeightMeters = 2.0;
 
-    public static final double kElevatorLowerBoundMeters = 0.0;
-    public static final double kElevatorUpperBoundMeters = 2.0;
     // In Meters/Sec
     public static final double kElevatorMaxVelocity = 1.54;
     // In Meters/SecSq
@@ -35,14 +35,13 @@ public class SuperStructureConstants {
     public static final double elevatorKp = 0.0;
     public static final double elevatorKd = 0.0;
 
-    public static final double elevatorSimKp = 0.0;
-    public static final double elevatorSimKd = 0.0;
     public static final double elevatorSimKv = 3.9;
     public static final double elevatorSimKg = 0.46;
+    public static final double elevatorSimKp = 0.0;
+    public static final double elevatorSimKd = 0.0;
 
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
-    // TODO could be modified to accept more abstract/arbitrary setpoint values?
     public static enum ElevatorLevel {
       L1(0.0),
       L2(0.5),
@@ -53,6 +52,52 @@ public class SuperStructureConstants {
 
       private ElevatorLevel(double setpointMeters) {
         this.setpointMeters = setpointMeters;
+      }
+    }
+  }
+
+  public static class ArmConstants {
+    public static final int kArmSparkId = 42;
+    public static final boolean kArmInverted = false;
+    public static final int kArmMotorCurrentLimit = 40;
+
+    public static final double kArmLengthMeters = 0.3;
+    public static final double kArmStartingPositionRadians = Units.degreesToRadians(-60.0);
+    public static final double kArmMinAngleRads = Units.degreesToRadians(-60.0);
+    public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
+
+    // In Rad/Sec
+    public static final double kArmMaxVelocity = Units.degreesToRadians(2500.0);
+    // In Rad/SecSq
+    public static final double kArmMaxAcceleration = Units.degreesToRadians(5000.0);
+    public static final double kArmMotorReduction = 30.0;
+    // Motor Rotations -> Arm Radians
+    public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
+    // Motor RPM -> Arm Rad/Sec
+    public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
+
+    public static final double armKs = 0.0;
+    public static final double armKv = 0.0;
+    public static final double armKg = 0.0;
+    public static final double armKp = 0.0;
+    public static final double armKd = 0.0;
+
+    public static final double armSimKv = 0.5;
+    public static final double armSimKg = 3.01;
+    public static final double armSimKp = 0.0;
+    public static final double armSimKd = 0.0;
+
+    public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
+
+    public static enum ArmGoals {
+      STOW(kArmMinAngleRads),
+      RAISED(kArmMaxAngleRads),
+      SETPOINT(Units.degreesToRadians(45.0));
+
+      public double setpointRadians;
+
+      private ArmGoals(double setpointRads) {
+        setpointRadians = setpointRads;
       }
     }
   }

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.SuperStructure.elevator;
+package frc.robot.subsystems.SuperStructure.Elevator;
 
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
@@ -21,8 +21,8 @@ public class ElevatorIOSim implements ElevatorIO {
                 kElevatorWheelRadiusMeters,
                 kElevatorMotorReduction),
             DCMotor.getNEO(2),
-            kElevatorLowerBoundMeters,
-            kElevatorUpperBoundMeters,
+            kElevatorMinHeightMeters,
+            kElevatorMaxHeightMeters,
             true,
             kElevatorStartingPositionMeters);
   }

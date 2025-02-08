@@ -33,6 +33,12 @@ import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
 import frc.robot.subsystems.Collector.Intake.IntakeIO;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
+import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
+import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
+import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIO;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSim;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSpark;
@@ -41,10 +47,8 @@ import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
-import frc.robot.subsystems.SuperStructure.elevator.ElevatorIOSim;
-import frc.robot.subsystems.SuperStructure.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -102,7 +106,7 @@ public class RobotContainer {
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                 new VisionIOPhotonVision(
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-        m_superStructure = new SuperStructure(new ElevatorIOSpark());
+        m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark());
         m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
         m_endAffecter = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
 
@@ -127,7 +131,7 @@ public class RobotContainer {
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         // the sim lags really badly if you use auto switch
         poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
-        m_superStructure = new SuperStructure(new ElevatorIOSim());
+        m_superStructure = new SuperStructure(new ElevatorIOSim(), new ArmIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         m_endAffecter = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
         break;
@@ -143,7 +147,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 poseController);
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        m_superStructure = new SuperStructure(new ElevatorIO() {});
+        m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
 
         m_endAffecter = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
@@ -184,6 +188,18 @@ public class RobotContainer {
     // autoChooser.addOption(
     //     "Elevator SysId (Dynamic Reverse)",
     //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Forward)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Reverse)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Arm SysId (Dynamic Forward)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Arm SysId (Dynamic Reverse)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -247,6 +263,20 @@ public class RobotContainer {
                         }),
                 m_superStructure));
 
+    // arm testing
+    new JoystickButton(new GenericHID(1), 4)
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    m_superStructure.setArmGoal(
+                        switch (m_superStructure.getArmGoal()) {
+                          case STOW -> ArmGoals.RAISED;
+                          case RAISED -> ArmGoals.SETPOINT;
+                          case SETPOINT -> ArmGoals.STOW;
+                          default -> ArmGoals.STOW;
+                        }),
+                m_superStructure));
+
     new JoystickButton(new GenericHID(1), 2)
         .whileTrue(
             new StartEndCommand(
@@ -270,6 +300,11 @@ public class RobotContainer {
                 () -> m_endAffecter.runAlgaeClaw(12),
                 () -> m_endAffecter.stopAlgaeClaw(),
                 m_collector));
+
+    // controller.a().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // controller.b().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // controller.x().whileTrue(m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // controller.y().whileTrue(m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
