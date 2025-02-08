@@ -1,4 +1,4 @@
-package frc.robot.subsystems.SuperStructure.elevator;
+package frc.robot.subsystems.SuperStructure.Elevator;
 
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 import static frc.robot.util.SparkUtil.*;
