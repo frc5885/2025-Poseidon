@@ -1,5 +1,6 @@
 package frc.robot.subsystems.SuperStructure.Arm;
 
+import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -7,7 +8,11 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.Logger;
@@ -22,6 +27,7 @@ public class Arm {
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
   private TunablePIDController m_armController;
   private ArmFeedforward m_armFeedforward;
+  private SysIdRoutine m_sysIdRoutine;
 
   private ArmGoals m_armGoal = ArmGoals.STOW;
 
@@ -125,5 +131,30 @@ public class Arm {
 
   public boolean isSetpointAchieved() {
     return Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads;
+  }
+
+  // Configure SysId
+  public void sysIdSetup(SuperStructure superStructure) {
+    m_sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> Logger.recordOutput("SuperStructure/ArmSysIDState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runCharacterization(voltage.in(Volts)), null, superStructure));
+  }
+
+  public Command getSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return Commands.run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_sysIdRoutine.quasistatic(direction));
+  }
+
+  public Command getSysIdDynamic(SysIdRoutine.Direction direction) {
+    return Commands.run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_sysIdRoutine.dynamic(direction));
   }
 }

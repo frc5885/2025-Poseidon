@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.SuperStructure;
 
-import static edu.wpi.first.units.Units.*;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -16,29 +14,17 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 
 public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
 
-  private SysIdRoutine m_elevatorSysIdRoutine;
-
   public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
 
-    // Configure SysId
-    m_elevatorSysIdRoutine =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                (state) ->
-                    Logger.recordOutput("SuperStructure/ElevatorSysIDState", state.toString())),
-            new SysIdRoutine.Mechanism(
-                (voltage) -> runElevatorCharacterization(voltage.in(Volts)), null, this));
+    m_elevator.sysIdSetup(this);
+    m_arm.sysIdSetup(this);
   }
 
   @Override
@@ -71,22 +57,23 @@ public class SuperStructure extends SubsystemBase {
     return m_elevator.isSetpointAchieved() && m_arm.isSetpointAchieved();
   }
 
-  // TODO May adjust limits to avoid damaging the mechanism
-  public void runElevatorCharacterization(double outputVolts) {
-    m_elevator.runCharacterization(outputVolts);
-  }
-
-  /** Returns a command to run a quasistatic test in the specified direction. */
+  /** Returns a command to run a elevator quasistatic test in the specified direction. */
   public Command elevatorSysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return run(() -> runElevatorCharacterization(0.0))
-        .withTimeout(1.0)
-        .andThen(m_elevatorSysIdRoutine.quasistatic(direction));
+    return m_elevator.getSysIdQuasistatic(direction);
   }
 
-  /** Returns a command to run a dynamic test in the specified direction. */
+  /** Returns a command to run a elevator dynamic test in the specified direction. */
   public Command elevatorSysIdDynamic(SysIdRoutine.Direction direction) {
-    return run(() -> runElevatorCharacterization(0.0))
-        .withTimeout(1.0)
-        .andThen(m_elevatorSysIdRoutine.dynamic(direction));
+    return m_elevator.getSysIdDynamic(direction);
+  }
+
+  /** Returns a command to run a arm quasistatic test in the specified direction. */
+  public Command armSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_arm.getSysIdQuasistatic(direction);
+  }
+
+  /** Returns a command to run a arm dynamic test in the specified direction. */
+  public Command armSysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_arm.getSysIdDynamic(direction);
   }
 }
