@@ -273,6 +273,11 @@ public class RobotContainer {
         .whileTrue(
             new StartEndCommand(
                 () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
+
+    // controller.a().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // controller.b().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // controller.x().whileTrue(m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // controller.y().whileTrue(m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

@@ -62,6 +62,7 @@ public class SuperStructureConstants {
     public static final int kArmMotorCurrentLimit = 40;
 
     public static final double kArmLengthMeters = 0.3;
+    public static final double kArmStartingPositionRadians = Units.degreesToRadians(-60.0);
     public static final double kArmMinAngleRads = Units.degreesToRadians(-60.0);
     public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
 
@@ -69,7 +70,7 @@ public class SuperStructureConstants {
     public static final double kArmMaxVelocity = Units.degreesToRadians(2500.0);
     // In Rad/SecSq
     public static final double kArmMaxAcceleration = Units.degreesToRadians(5000.0);
-    public static final double kArmMotorReduction = 10.0;
+    public static final double kArmMotorReduction = 30.0;
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec

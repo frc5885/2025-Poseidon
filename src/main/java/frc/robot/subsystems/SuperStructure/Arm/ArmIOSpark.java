@@ -4,7 +4,6 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmCon
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -17,13 +16,12 @@ import java.util.function.DoubleSupplier;
 public class ArmIOSpark implements ArmIO {
   private final SparkMax m_armSpark;
   private final Debouncer m_armConnectedDebouncer = new Debouncer(0.5);
-  private final SparkAbsoluteEncoder m_absoluteEncoder;
+  //   private final SparkAbsoluteEncoder m_absoluteEncoder;
   private final RelativeEncoder m_armEncoder;
 
   public ArmIOSpark() {
     m_armSpark = new SparkMax(kArmSparkId, MotorType.kBrushless);
-    // TODO may need seperate conversion?
-    m_absoluteEncoder = m_armSpark.getAbsoluteEncoder();
+    // m_absoluteEncoder = m_armSpark.getAbsoluteEncoder();
     m_armEncoder = m_armSpark.getEncoder();
 
     SparkMaxConfig armConfig = new SparkMaxConfig();
@@ -53,16 +51,16 @@ public class ArmIOSpark implements ArmIO {
         () ->
             m_armSpark.configure(
                 armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    tryUntilOk(m_armSpark, 5, () -> m_armEncoder.setPosition(m_absoluteEncoder.getPosition()));
+    tryUntilOk(m_armSpark, 5, () -> m_armEncoder.setPosition(kArmStartingPositionRadians));
   }
 
   @Override
   public void updateInputs(ArmIOInputs inputs) {
     sparkStickyFault = false;
-    ifOk(
-        m_armSpark,
-        m_absoluteEncoder::getPosition,
-        (absolutePositionRads) -> inputs.absolutePositionRads = absolutePositionRads);
+    // ifOk(
+    //     m_armSpark,
+    //     m_absoluteEncoder::getPosition,
+    //     (absolutePositionRads) -> inputs.absolutePositionRads = absolutePositionRads);
     ifOk(
         m_armSpark,
         m_armEncoder::getPosition,

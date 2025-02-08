@@ -21,14 +21,14 @@ public class ArmIOSim implements ArmIO {
             kArmMinAngleRads,
             kArmMaxAngleRads,
             true,
-            kArmMinAngleRads);
+            kArmStartingPositionRadians);
   }
 
   @Override
   public void updateInputs(ArmIOInputs inputs) {
     m_armSim.update(0.02);
     inputs.armConnected = true;
-    inputs.absolutePositionRads = m_armSim.getAngleRads();
+    // inputs.absolutePositionRads = m_armSim.getAngleRads();
     inputs.positionRads = m_armSim.getAngleRads();
     inputs.armVelocityRadPerSec = m_armSim.getVelocityRadPerSec();
     inputs.armAppliedVolts = m_appliedVolts;
