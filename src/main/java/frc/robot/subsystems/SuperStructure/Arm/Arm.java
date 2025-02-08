@@ -6,10 +6,8 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmCon
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -18,7 +16,6 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.*;
 
 public class Arm {
   private final ArmIO m_io;
@@ -31,10 +28,6 @@ public class Arm {
   private TunablePIDController m_armController;
   private ArmFeedforward m_armFeedforward;
   private SysIdRoutine m_sysIdRoutine;
-
-  private final LoggedMechanism2d m_armMech;
-  private final LoggedMechanismRoot2d m_armRoot;
-  private final LoggedMechanismLigament2d m_arm;
 
   private ArmGoals m_armGoal = ArmGoals.STOW;
 
@@ -66,27 +59,14 @@ public class Arm {
     }
 
     motorDisconnectedAlert = new Alert("Arm disconnected", AlertType.kError);
-
-    m_armMech = new LoggedMechanism2d(1.0, 1.0);
-    m_armRoot = m_armMech.getRoot("ArmRoot", 0.5, 0.5);
-    m_arm =
-        m_armRoot.append(
-            new LoggedMechanismLigament2d(
-                "Arm",
-                kArmLengthMeters,
-                Units.radiansToDegrees(kArmStartingPositionRadians),
-                10.0,
-                new Color8Bit(0, 255, 0)));
   }
 
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
-    // runArmSetpoint(m_armGoal != null ? m_armGoal.setpointRadians : getPositionRadians());
-
-    m_arm.setAngle(Units.radiansToDegrees(getPositionRadians()));
-    Logger.recordOutput("SuperStructure/Arm/Mechanism2d", m_armMech);
+    // TODO comment this out for SysId
+    runArmSetpoint(m_armGoal != null ? m_armGoal.setpointRadians : getPositionRadians());
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);

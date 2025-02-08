@@ -4,6 +4,11 @@
 
 package frc.robot.subsystems.SuperStructure;
 
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
+
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -14,14 +19,39 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
 
+  private final LoggedMechanism2d m_canvas;
+  private final LoggedMechanismRoot2d m_elevatorRoot;
+  private final LoggedMechanismRoot2d m_carriageRoot;
+  private final LoggedMechanismLigament2d m_armMech;
+
   public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
+
+    m_canvas = new LoggedMechanism2d(3.0, 3.0);
+    m_elevatorRoot = m_canvas.getRoot("ElevatorRoot", 1.47, 0.15);
+    m_elevatorRoot.append(
+        new LoggedMechanismLigament2d("Elevator", kElevatorMaxHeightMeters, 90.0));
+    m_carriageRoot = m_canvas.getRoot("CarriageRoot", 1.53, 0.15);
+    m_carriageRoot.append(
+        new LoggedMechanismLigament2d("Carriage", 0.3, 90.0, 10.0, new Color8Bit(255, 0, 0)));
+    m_armMech =
+        m_carriageRoot.append(
+            new LoggedMechanismLigament2d(
+                "Arm",
+                kArmLengthMeters,
+                Units.radiansToDegrees(kArmStartingPositionRadians),
+                10.0,
+                new Color8Bit(0, 255, 0)));
 
     m_elevator.sysIdSetup(this);
     m_arm.sysIdSetup(this);
@@ -31,6 +61,10 @@ public class SuperStructure extends SubsystemBase {
   public void periodic() {
     m_elevator.periodic();
     m_arm.periodic();
+
+    m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
+    m_carriageRoot.setPosition(1.53, 0.15 + m_elevator.getPositionMeters());
+    Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/Level")

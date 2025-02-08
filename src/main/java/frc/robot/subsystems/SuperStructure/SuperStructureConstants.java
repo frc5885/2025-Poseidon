@@ -82,10 +82,10 @@ public class SuperStructureConstants {
     public static final double armKp = 0.0;
     public static final double armKd = 0.0;
 
-    public static final double armSimKv = 0.14;
-    public static final double armSimKg = 8.895;
-    public static final double armSimKp = 18.0;
-    public static final double armSimKd = 9.0;
+    public static final double armSimKv = 0.5;
+    public static final double armSimKg = 3.01;
+    public static final double armSimKp = 0.0;
+    public static final double armSimKd = 0.0;
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
 
