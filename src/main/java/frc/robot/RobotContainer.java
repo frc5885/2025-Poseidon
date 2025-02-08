@@ -175,6 +175,18 @@ public class RobotContainer {
     // autoChooser.addOption(
     //     "Elevator SysId (Dynamic Reverse)",
     //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Forward)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Reverse)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Arm SysId (Dynamic Forward)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Arm SysId (Dynamic Reverse)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
