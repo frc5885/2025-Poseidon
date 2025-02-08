@@ -1,16 +1,16 @@
-package frc.robot.subsystems.EndAffecter;
+package frc.robot.subsystems.EndEffecter;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.EndAffecter.AlgaeClaw.AlgaeClaw;
-import frc.robot.subsystems.EndAffecter.AlgaeClaw.AlgaeClawIO;
-import frc.robot.subsystems.EndAffecter.CoralEjecter.CoralEjecter;
-import frc.robot.subsystems.EndAffecter.CoralEjecter.CoralEjecterIO;
+import frc.robot.subsystems.EndEffecter.AlgaeClaw.AlgaeClaw;
+import frc.robot.subsystems.EndEffecter.AlgaeClaw.AlgaeClawIO;
+import frc.robot.subsystems.EndEffecter.CoralEjecter.CoralEjecter;
+import frc.robot.subsystems.EndEffecter.CoralEjecter.CoralEjecterIO;
 
-public class EndAffecter extends SubsystemBase {
+public class EndEffecter extends SubsystemBase {
   private AlgaeClaw m_algaeClaw;
   private CoralEjecter m_coralEjecter;
 
-  public EndAffecter(AlgaeClawIO algaeClawIO, CoralEjecterIO coralEjecterIO) {
+  public EndEffecter(AlgaeClawIO algaeClawIO, CoralEjecterIO coralEjecterIO) {
     m_algaeClaw = new AlgaeClaw(algaeClawIO);
     m_coralEjecter = new CoralEjecter(coralEjecterIO);
   }

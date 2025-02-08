@@ -1,4 +1,4 @@
-package frc.robot.subsystems.EndAffecter.AlgaeClaw;
+package frc.robot.subsystems.EndEffecter.AlgaeClaw;
 
 import org.littletonrobotics.junction.AutoLog;
 

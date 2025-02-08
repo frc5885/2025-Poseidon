@@ -1,6 +1,6 @@
-package frc.robot.subsystems.EndAffecter;
+package frc.robot.subsystems.EndEffecter;
 
-public class EndAffecterConstant {
+public class EndEffecterConstant {
 
   public static class CoralEjecterConstants {
     public static final int CoralEjecterId = 11;

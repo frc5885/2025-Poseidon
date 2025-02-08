@@ -1,10 +1,10 @@
-package frc.robot.subsystems.EndAffecter.CoralEjecter;
+package frc.robot.subsystems.EndEffecter.CoralEjecter;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.EndAffecter.CoralEjecter.CoralEjecterIO.CoralEjecterInputs;
-import frc.robot.subsystems.EndAffecter.EndAffecterConstant.CoralEjecterConstants;
+import frc.robot.subsystems.EndEffecter.CoralEjecter.CoralEjecterIO.CoralEjecterInputs;
+import frc.robot.subsystems.EndEffecter.EndEffecterConstant.CoralEjecterConstants;
 
 public class coralEjecterIOSim implements CoralEjecterIO {
 

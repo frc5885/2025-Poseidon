@@ -1,4 +1,4 @@
-package frc.robot.subsystems.EndAffecter.CoralEjecter;
+package frc.robot.subsystems.EndEffecter.CoralEjecter;
 
 import static frc.robot.util.SparkUtil.*;
 
@@ -10,7 +10,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.EndAffecter.EndAffecterConstant.CoralEjecterConstants;
+import frc.robot.subsystems.EndEffecter.EndEffecterConstant.CoralEjecterConstants;
 import java.util.function.DoubleSupplier;
 
 public class CoralEjecterIOSpark implements CoralEjecterIO {

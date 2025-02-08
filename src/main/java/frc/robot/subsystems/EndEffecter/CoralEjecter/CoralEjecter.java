@@ -1,4 +1,4 @@
-package frc.robot.subsystems.EndAffecter.CoralEjecter;
+package frc.robot.subsystems.EndEffecter.CoralEjecter;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
