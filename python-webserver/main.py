@@ -22,6 +22,7 @@ HEX_RADIUS = 270  # Radius of the hexagon
 BUTTON_LENGTH = 100  # Length of rectangular buttons
 BUTTON_WIDTH = 40   # Width of rectangular buttons
 ROTATION_ANGLE = 90  # Rotate hexagon by 90 degrees
+BUTTON_ANGLE = 30
 COLORS = {
     'background': (255, 255, 255),
     'hexagon': (0, 0, 0),
@@ -123,7 +124,7 @@ def creatLevelButtons():
 def main():
     # Calculate initial positions with rotation
     center = (WINDOW_SIZE[0]//2-180, WINDOW_SIZE[1]//2)
-    buttons = create_buttons(center, HEX_RADIUS, ROTATION_ANGLE)
+    buttons = create_buttons(center, HEX_RADIUS, BUTTON_ANGLE)
     active_button = None  # Track the currently active button
 
     levelbuttons = creatLevelButtons()
@@ -144,7 +145,13 @@ def main():
                         active_button = btn  # Update active button
                 for btn in buttons:
                     if btn.is_active:
-                        sd.putNumber("ReefTargets", buttons.index(btn))
+                        index = buttons.index(btn)
+                        if index == 6:
+                            sd.putNumber("ReefTargets", 7)
+                        elif index == 7:
+                            sd.putNumber("ReefTargets", 6)
+                        else:
+                            sd.putNumber("ReefTargets", index)
                         
                 
         
