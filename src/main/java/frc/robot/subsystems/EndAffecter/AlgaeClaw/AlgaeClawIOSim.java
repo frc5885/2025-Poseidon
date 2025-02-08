@@ -3,7 +3,7 @@ package frc.robot.subsystems.EndAffecter.AlgaeClaw;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.Collector.CollectorConstants.AlgaeClawConstants;
+import frc.robot.subsystems.EndAffecter.EndAffecterConstant.AlgaeClawConstants;
 
 public class AlgaeClawIOSim implements AlgaeClawIO {
   private FlywheelSim m_algaeClaFlywheelSim;

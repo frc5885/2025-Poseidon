@@ -10,8 +10,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.Collector.CollectorConstants.AlgaeClawConstants;
 import frc.robot.subsystems.EndAffecter.CoralEjecter.CoralEjecterIO.CoralEjecterInputs;
+import frc.robot.subsystems.EndAffecter.EndAffecterConstant.AlgaeClawConstants;
 import java.util.function.DoubleSupplier;
 
 public class AlgaeClawIOSpark implements AlgaeClawIO {
