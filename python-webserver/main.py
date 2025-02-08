@@ -158,7 +158,7 @@ def main():
                         sd.putNumber("ReefTargetsLevel",0)
                 for btnl in levelbuttons:
                     if btnl.is_active:
-                        sd.putNumber("ReefTargetsLevel", levelbuttons.index(btnl))
+                        sd.putNumber("ReefTargetsLevel", 4 - levelbuttons.index(btnl))
   
         # Draw elements
         screen.fill(COLORS['background'])
