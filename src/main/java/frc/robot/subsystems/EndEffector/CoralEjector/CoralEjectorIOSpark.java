@@ -1,4 +1,4 @@
-package frc.robot.subsystems.EndEffecter.CoralEjecter;
+package frc.robot.subsystems.EndEffector.CoralEjector;
 
 import static frc.robot.util.SparkUtil.*;
 
@@ -10,27 +10,27 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.EndEffecter.EndEffecterConstant.CoralEjecterConstants;
+import frc.robot.subsystems.EndEffector.EndEffectorConstants.CoralEjectorConstants;
 import java.util.function.DoubleSupplier;
 
-public class CoralEjecterIOSpark implements CoralEjecterIO {
+public class CoralEjectorIOSpark implements CoralEjectorIO {
 
-  private SparkMax m_coralEjecterMoter;
+  private SparkMax m_coralEjectorMotor;
   private RelativeEncoder m_coralEjectEncoder;
   private SparkMaxConfig m_coralEjectConfig;
-  private final Debouncer intakeConnectedDebounce1 = new Debouncer(0.5);
+  private final Debouncer coralEjectorConnectedDebounce = new Debouncer(0.5);
 
-  public CoralEjecterIOSpark() {
-    m_coralEjecterMoter = new SparkMax(CoralEjecterConstants.CoralEjecterId, MotorType.kBrushless);
+  public CoralEjectorIOSpark() {
+    m_coralEjectorMotor = new SparkMax(CoralEjectorConstants.CoralEjectorId, MotorType.kBrushless);
 
-    m_coralEjectEncoder = m_coralEjecterMoter.getEncoder();
+    m_coralEjectEncoder = m_coralEjectorMotor.getEncoder();
 
     m_coralEjectConfig = new SparkMaxConfig();
 
     m_coralEjectConfig
-        .inverted(CoralEjecterConstants.CoralEjecterInverted)
+        .inverted(CoralEjectorConstants.CoralEjectorInverted)
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(CoralEjecterConstants.CoralEjecterCurrentLimit)
+        .smartCurrentLimit(CoralEjectorConstants.CoralEjectorCurrentLimit)
         .voltageCompensation(12.0);
     m_coralEjectConfig.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);
     m_coralEjectConfig
@@ -44,47 +44,40 @@ public class CoralEjecterIOSpark implements CoralEjecterIO {
         .outputCurrentPeriodMs(20);
 
     tryUntilOk(
-        m_coralEjecterMoter,
+        m_coralEjectorMotor,
         5,
         () ->
-            m_coralEjecterMoter.configure(
-                m_coralEjectConfig,
-                ResetMode.kResetSafeParameters,
-                PersistMode.kPersistParameters));
-
-    tryUntilOk(
-        m_coralEjecterMoter,
-        5,
-        () ->
-            m_coralEjecterMoter.configure(
+            m_coralEjectorMotor.configure(
                 m_coralEjectConfig,
                 ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters));
   }
 
-  public void updateInputs(CoralEjecterInputs inputs) {
-    double[] current = {0.0, 0.0};
+  public void updateInputs(CoralEjectorInputs inputs) {
     sparkStickyFault = false;
     ifOk(
-        m_coralEjecterMoter,
+        m_coralEjectorMotor,
         m_coralEjectEncoder::getPosition,
         (value) -> inputs.positionRotations = value);
     ifOk(
-        m_coralEjecterMoter,
+        m_coralEjectorMotor,
         m_coralEjectEncoder::getVelocity,
         (value) -> inputs.velocityRPM = value);
     ifOk(
-        m_coralEjecterMoter,
+        m_coralEjectorMotor,
         new DoubleSupplier[] {
-          m_coralEjecterMoter::getAppliedOutput, m_coralEjecterMoter::getBusVoltage
+          m_coralEjectorMotor::getAppliedOutput, m_coralEjectorMotor::getBusVoltage
         },
         (values) -> inputs.appliedVolts = values[0] * values[1]);
-    ifOk(m_coralEjecterMoter, m_coralEjecterMoter::getOutputCurrent, (value) -> current[0] = value);
-    inputs.CoralEjecterConnected = intakeConnectedDebounce1.calculate(!sparkStickyFault);
+    ifOk(
+        m_coralEjectorMotor,
+        m_coralEjectorMotor::getOutputCurrent,
+        (value) -> inputs.currentAmps = value);
+    inputs.coralEjectorConnected = coralEjectorConnectedDebounce.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */
   public void setVoltage(double volts) {
-    m_coralEjecterMoter.setVoltage(volts);
+    m_coralEjectorMotor.setVoltage(volts);
   }
 }

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.EndEffecter.AlgaeClaw;
+package frc.robot.subsystems.EndEffector.AlgaeClaw;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -9,7 +9,7 @@ public interface AlgaeClawIO {
     public double velocityRPM = 0.0;
     public double appliedVolts = 0.0;
     public double currentAmps = 0.0;
-    public boolean AlfeaClawConnected = false;
+    public boolean algaeClawConnected = false;
   }
 
   /** Updates the set of loggable inputs. */

@@ -76,30 +76,30 @@ public class ElevatorIOSpark implements ElevatorIO {
     ifOk(
         m_elevatorSpark1,
         m_elevatorEncoder::getPosition,
-        (positionMeters) -> inputs.elevatorPositionMeters = positionMeters);
+        (positionMeters) -> inputs.positionMeters = positionMeters);
     ifOk(
         m_elevatorSpark1,
         m_elevatorEncoder::getVelocity,
-        (velocityMetersPerSec) -> inputs.elevatorVelocityMetersPerSec = velocityMetersPerSec);
+        (velocityMetersPerSec) -> inputs.velocityMetersPerSec = velocityMetersPerSec);
     ifOk(
         m_elevatorSpark1,
         new DoubleSupplier[] {m_elevatorSpark1::getAppliedOutput, m_elevatorSpark1::getBusVoltage},
-        (appliedVoltage) -> inputs.elevatorAppliedVolts = appliedVoltage[0] * appliedVoltage[1]);
+        (appliedVoltage) -> inputs.appliedVolts = appliedVoltage[0] * appliedVoltage[1]);
     ifOk(
         m_elevatorSpark1,
         m_elevatorSpark1::getOutputCurrent,
         (current) -> currentAmps[0] = current);
-    inputs.elevatorM1Connected = m_elevatorM1ConnectedDebouncer.calculate(!sparkStickyFault);
+    inputs.motor1Connected = m_elevatorM1ConnectedDebouncer.calculate(!sparkStickyFault);
 
     sparkStickyFault = false;
     ifOk(
         m_elevatorSpark2,
         m_elevatorSpark2::getOutputCurrent,
         (current) -> currentAmps[1] = current);
-    inputs.elevatorM2Connected = m_elevatorM2ConnectedDebouncer.calculate(!sparkStickyFault);
+    inputs.motor2Connected = m_elevatorM2ConnectedDebouncer.calculate(!sparkStickyFault);
 
     // update the current for both motors
-    inputs.elevatorCurrentAmps = currentAmps;
+    inputs.currentAmps = currentAmps;
   }
 
   @Override

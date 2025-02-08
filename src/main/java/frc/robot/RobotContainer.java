@@ -33,13 +33,13 @@ import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
 import frc.robot.subsystems.Collector.Intake.IntakeIO;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
 import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
-import frc.robot.subsystems.EndEffecter.AlgaeClaw.AlgaeClawIO;
-import frc.robot.subsystems.EndEffecter.AlgaeClaw.AlgaeClawIOSim;
-import frc.robot.subsystems.EndEffecter.AlgaeClaw.AlgaeClawIOSpark;
-import frc.robot.subsystems.EndEffecter.CoralEjecter.CoralEjecterIO;
-import frc.robot.subsystems.EndEffecter.CoralEjecter.CoralEjecterIOSpark;
-import frc.robot.subsystems.EndEffecter.CoralEjecter.coralEjecterIOSim;
-import frc.robot.subsystems.EndEffecter.EndEffecter;
+import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIO;
+import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSim;
+import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSpark;
+import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIO;
+import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
+import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
+import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.elevator.ElevatorIO;
@@ -73,7 +73,7 @@ public class RobotContainer {
   private final HeimdallPoseController poseController;
   private final SuperStructure m_superStructure;
   private final Collector m_collector;
-  private final EndEffecter m_endAffecter;
+  private final EndEffector m_endAffecter;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -104,7 +104,7 @@ public class RobotContainer {
                     VisionConstants.camera1Name, VisionConstants.robotToCamera1));
         m_superStructure = new SuperStructure(new ElevatorIOSpark());
         m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
-        m_endAffecter = new EndEffecter(new AlgaeClawIOSpark(), new CoralEjecterIOSpark());
+        m_endAffecter = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
 
         break;
 
@@ -129,7 +129,7 @@ public class RobotContainer {
         poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure = new SuperStructure(new ElevatorIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
-        m_endAffecter = new EndEffecter(new AlgaeClawIOSim(), new coralEjecterIOSim());
+        m_endAffecter = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
         break;
 
       default:
@@ -146,7 +146,7 @@ public class RobotContainer {
         m_superStructure = new SuperStructure(new ElevatorIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
 
-        m_endAffecter = new EndEffecter(new AlgaeClawIO() {}, new CoralEjecterIO() {});
+        m_endAffecter = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
         break;
     }
 
@@ -260,8 +260,8 @@ public class RobotContainer {
     new JoystickButton(new GenericHID(1), 4)
         .whileTrue(
             new StartEndCommand(
-                () -> m_endAffecter.runCoralEjecter(12),
-                () -> m_endAffecter.stopCoralEjecter(),
+                () -> m_endAffecter.runCoralEjector(12),
+                () -> m_endAffecter.stopCoralEjector(),
                 m_collector));
 
     new JoystickButton(new GenericHID(1), 5)

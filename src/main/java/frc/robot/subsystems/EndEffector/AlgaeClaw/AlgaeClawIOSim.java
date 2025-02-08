@@ -1,17 +1,17 @@
-package frc.robot.subsystems.EndEffecter.AlgaeClaw;
+package frc.robot.subsystems.EndEffector.AlgaeClaw;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.EndEffecter.EndEffecterConstant.AlgaeClawConstants;
+import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
 
 public class AlgaeClawIOSim implements AlgaeClawIO {
-  private FlywheelSim m_algaeClaFlywheelSim;
-  private double m_algaeAppliedVolts;
+  private FlywheelSim m_algaeClawFlywheelSim;
+  private double m_appliedVolts;
 
   public AlgaeClawIOSim() {
 
-    m_algaeClaFlywheelSim =
+    m_algaeClawFlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
                 DCMotor.getNEO(1), 0.001, AlgaeClawConstants.AlgaeClawGearRatio),
@@ -20,16 +20,17 @@ public class AlgaeClawIOSim implements AlgaeClawIO {
   }
 
   public void updateInputs(AlgaeClawIOIntputs m_inputs) {
-    m_algaeClaFlywheelSim.update(0.020);
+    m_algaeClawFlywheelSim.update(0.020);
 
-    m_inputs.appliedVolts = m_algaeAppliedVolts;
-    m_inputs.currentAmps = m_algaeClaFlywheelSim.getCurrentDrawAmps();
-    m_inputs.velocityRPM = m_algaeClaFlywheelSim.getAngularVelocityRPM();
+    m_inputs.appliedVolts = m_appliedVolts;
+    m_inputs.currentAmps = m_algaeClawFlywheelSim.getCurrentDrawAmps();
+    m_inputs.velocityRPM = m_algaeClawFlywheelSim.getAngularVelocityRPM();
     m_inputs.positionRotations = 0.0;
+    m_inputs.algaeClawConnected = true;
   }
 
   public void setVoltage(double volts) {
-    m_algaeAppliedVolts = volts;
-    m_algaeClaFlywheelSim.setInput(volts);
+    m_appliedVolts = volts;
+    m_algaeClawFlywheelSim.setInput(volts);
   }
 }
