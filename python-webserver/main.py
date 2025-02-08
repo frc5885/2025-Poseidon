@@ -127,6 +127,7 @@ def main():
     active_button = None  # Track the currently active button
 
     levelbuttons = creatLevelButtons()
+    active_buttonLevel = levelbuttons[0]
     
     running = True
     while running:
@@ -136,18 +137,28 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
+                for btnl in levelbuttons:
+                    if btnl.check_click(mouse_pos):
+                        if active_buttonLevel:
+                            active_buttonLevel.is_active = False
+                        btnl.is_active = True  # Activate new button
+                        active_buttonLevel = btnl  # Update active button
                 for btn in buttons:
                     if btn.check_click(mouse_pos):
                         if active_button:
                             active_button.is_active = False  # Deactivate previous button
+                            active_buttonLevel.is_active = False
                         btn.is_active = True  # Activate new button
                         active_button = btn  # Update active button
+
                 for btn in buttons:
                     if btn.is_active:
                         sd.putNumber("ReefTargets", buttons.index(btn))
-                        
-                
-        
+                        sd.putNumber("ReefTargetsLevel",0)
+                for btnl in levelbuttons:
+                    if btnl.is_active:
+                        sd.putNumber("ReefTargetsLevel", 4-levelbuttons.index(btnl))
+  
         # Draw elements
         screen.fill(COLORS['background'])
         

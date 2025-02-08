@@ -25,6 +25,7 @@ public class MichaelCommand extends Command {
 
   private final NetworkTable m_networkTable;
   private final String NETWORK_ENTRY = "ReefTargets";
+  private final String NETWORK_ENTRY_level = "ReefTargetsLevel";
 
   public MichaelCommand(Drive drive, Supplier<Pose2d> targetPose) {
     // Use addRequirements() here to declare subsystem dependencies.]
@@ -33,6 +34,7 @@ public class MichaelCommand extends Command {
 
     m_networkTable = NetworkTableInstance.getDefault().getTable("ReefPanel");
     m_networkTable.getDoubleTopic(NETWORK_ENTRY).publish();
+    m_networkTable.getDoubleTopic(NETWORK_ENTRY_level).publish();
 
     addRequirements(m_drive);
   }
