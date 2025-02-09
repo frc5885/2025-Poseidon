@@ -40,30 +40,30 @@ public class Elevator {
       case REAL:
         m_elevatorController =
             new TunablePIDController(
-                elevatorKp, 0.0, elevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", true);
-        m_elevatorFeedforward = new ElevatorFeedforward(elevatorKs, elevatorKg, elevatorKv);
+                kElevatorKp, 0.0, kElevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", true);
+        m_elevatorFeedforward = new ElevatorFeedforward(kElevatorKs, kElevatorKg, kElevatorKv);
         break;
       case SIM:
         m_elevatorController =
             new TunablePIDController(
-                elevatorSimKp,
+                kElevatorSimKp,
                 0.0,
-                elevatorSimKd,
+                kElevatorSimKd,
                 kElevatorErrorToleranceMeters,
                 "ElevatorSimPID",
                 true);
-        m_elevatorFeedforward = new ElevatorFeedforward(0.0, elevatorSimKg, elevatorSimKv);
+        m_elevatorFeedforward = new ElevatorFeedforward(0.0, kElevatorSimKg, kElevatorSimKv);
         break;
       case REPLAY:
         m_elevatorController =
             new TunablePIDController(
-                elevatorSimKp,
+                kElevatorSimKp,
                 0.0,
-                elevatorSimKd,
+                kElevatorSimKd,
                 kElevatorErrorToleranceMeters,
                 "ElevatorReplayPID",
                 true);
-        m_elevatorFeedforward = new ElevatorFeedforward(0.0, elevatorSimKg, elevatorSimKv);
+        m_elevatorFeedforward = new ElevatorFeedforward(0.0, kElevatorSimKg, kElevatorSimKv);
         break;
       default:
         m_elevatorController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);

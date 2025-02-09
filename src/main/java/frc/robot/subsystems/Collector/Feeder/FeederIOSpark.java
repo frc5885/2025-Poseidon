@@ -14,20 +14,19 @@ import frc.robot.subsystems.Collector.CollectorConstants.FeederConstants;
 import java.util.function.DoubleSupplier;
 
 public class FeederIOSpark implements FeederIO {
-  private SparkMax feederMotor;
-  private RelativeEncoder feederEncoder;
-
-  private final Debouncer feederConnectedDebounce = new Debouncer(0.5);
+  private SparkMax m_feederMotor;
+  private RelativeEncoder m_feederEncoder;
+  private final Debouncer m_feederConnectedDebounce = new Debouncer(0.5);
 
   public FeederIOSpark() {
-    feederMotor = new SparkMax(FeederConstants.feederId, MotorType.kBrushless);
-    feederEncoder = feederMotor.getEncoder();
+    m_feederMotor = new SparkMax(FeederConstants.kMotorId, MotorType.kBrushless);
+    m_feederEncoder = m_feederMotor.getEncoder();
 
     SparkMaxConfig feederConfig = new SparkMaxConfig();
     feederConfig
-        .inverted(FeederConstants.feederMotorInverted)
+        .inverted(FeederConstants.kInverted)
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(FeederConstants.feederMotorCurrentLimit)
+        .smartCurrentLimit(FeederConstants.kCurrentLimit)
         .voltageCompensation(12.0);
     feederConfig.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);
     feederConfig
@@ -40,27 +39,27 @@ public class FeederIOSpark implements FeederIO {
         .busVoltagePeriodMs(20)
         .outputCurrentPeriodMs(20);
     tryUntilOk(
-        feederMotor,
+        m_feederMotor,
         5,
         () ->
-            feederMotor.configure(
+            m_feederMotor.configure(
                 feederConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
   }
 
   public void updateInputs(FeederIOInputs inputs) {
     sparkStickyFault = false;
-    ifOk(feederMotor, feederEncoder::getPosition, (value) -> inputs.positionRotations = value);
-    ifOk(feederMotor, feederEncoder::getVelocity, (value) -> inputs.velocityRPM = value);
+    ifOk(m_feederMotor, m_feederEncoder::getPosition, (value) -> inputs.positionRotations = value);
+    ifOk(m_feederMotor, m_feederEncoder::getVelocity, (value) -> inputs.velocityRPM = value);
     ifOk(
-        feederMotor,
-        new DoubleSupplier[] {feederMotor::getAppliedOutput, feederMotor::getBusVoltage},
+        m_feederMotor,
+        new DoubleSupplier[] {m_feederMotor::getAppliedOutput, m_feederMotor::getBusVoltage},
         (values) -> inputs.appliedVolts = values[0] * values[1]);
-    ifOk(feederMotor, feederMotor::getOutputCurrent, (value) -> inputs.currentAmps = value);
-    inputs.feederConnected = feederConnectedDebounce.calculate(!sparkStickyFault);
+    ifOk(m_feederMotor, m_feederMotor::getOutputCurrent, (value) -> inputs.currentAmps = value);
+    inputs.feederConnected = m_feederConnectedDebounce.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */
   public void setVoltage(double volts) {
-    feederMotor.setVoltage(volts);
+    m_feederMotor.setVoltage(volts);
   }
 }

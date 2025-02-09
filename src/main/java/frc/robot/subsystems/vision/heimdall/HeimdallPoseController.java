@@ -5,8 +5,6 @@
 
 package frc.robot.subsystems.vision.heimdall;
 
-import static frc.robot.subsystems.drive.DriveConstants.moduleTranslations;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -44,7 +42,8 @@ public class HeimdallPoseController {
   private static final double MIN_TIME_STATIONARY_FOR_SYNC = 0.2; // seconds
 
   // -------- Odometry and vision fusion objects -------------
-  private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(DriveConstants.kModuleTranslations);
   private final Rotation2d initialGyro = new Rotation2d();
   private final SwerveModulePosition[] initialModulePositions =
       new SwerveModulePosition[] {
@@ -241,10 +240,10 @@ public class HeimdallPoseController {
   private double computeNormalizedChassisSpeed(ChassisSpeeds chassisSpeeds) {
     double translationalSpeed =
         Math.hypot(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
-    double normalizedTranslation = translationalSpeed / DriveConstants.maxSpeedMetersPerSec;
+    double normalizedTranslation = translationalSpeed / DriveConstants.kMaxSpeedMetersPerSec;
     double maxAngularSpeedRadPerSec =
-        DriveConstants.maxSpeedMetersPerSec
-            / Math.hypot(DriveConstants.trackWidth / 2.0, DriveConstants.wheelBase / 2.0);
+        DriveConstants.kMaxSpeedMetersPerSec
+            / Math.hypot(DriveConstants.kTrackWidth / 2.0, DriveConstants.kWheelBase / 2.0);
     double normalizedAngular =
         Math.abs(chassisSpeeds.omegaRadiansPerSecond) / maxAngularSpeedRadPerSec;
     return normalizedTranslation + normalizedAngular;

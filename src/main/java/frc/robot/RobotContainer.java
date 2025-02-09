@@ -72,40 +72,40 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
-  private final Vision vision;
-  private final HeimdallPoseController poseController;
+  private final Drive m_drive;
+  private final Vision m_vision;
+  private final HeimdallPoseController m_poseController;
   private final SuperStructure m_superStructure;
   private final Collector m_collector;
   private final EndEffector m_endAffecter;
 
   // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController m_driverController = new CommandXboxController(0);
 
   // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+  private final LoggedDashboardChooser<Command> m_autoChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
+    m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drive =
+        m_drive =
             new Drive(
                 new GyroIONavX(),
                 new ModuleIOSpark(0),
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3),
-                poseController);
-        vision =
+                m_poseController);
+        m_vision =
             new Vision(
-                drive::addVisionMeasurement,
+                m_drive::addVisionMeasurement,
                 new VisionIOPhotonVision(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+                    VisionConstants.kCamera0Name, VisionConstants.kRobotToCamera0),
                 new VisionIOPhotonVision(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+                    VisionConstants.kCamera1Name, VisionConstants.kRobotToCamera1));
         m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark());
         m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
         m_endAffecter = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
@@ -114,23 +114,27 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drive =
+        m_drive =
             new Drive(
                 new GyroIO() {},
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
-                poseController);
-        vision =
+                m_poseController);
+        m_vision =
             new Vision(
-                drive::addVisionMeasurement,
+                m_drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+                    VisionConstants.kCamera0Name,
+                    VisionConstants.kRobotToCamera0,
+                    m_drive::getPose),
                 new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
+                    VisionConstants.kCamera1Name,
+                    VisionConstants.kRobotToCamera1,
+                    m_drive::getPose));
         // the sim lags really badly if you use auto switch
-        poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
+        m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure = new SuperStructure(new ElevatorIOSim(), new ArmIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         m_endAffecter = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
@@ -138,15 +142,15 @@ public class RobotContainer {
 
       default:
         // Replayed robot, disable IO implementations
-        drive =
+        m_drive =
             new Drive(
                 new GyroIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                poseController);
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+                m_poseController);
+        m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
 
@@ -155,49 +159,49 @@ public class RobotContainer {
     }
 
     // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
+    m_autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(m_drive));
+    m_autoChooser.addOption(
         "Module Turn Speed Characterization",
-        DriveCommands.maxModuleRotationVelocityCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption(
+        DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
+    m_autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
+    m_autoChooser.addOption(
         "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
+        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
         "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     // TODO not needed for now
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Forward)",
     //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Reverse)",
     //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Elevator SysId (Dynamic Forward)",
     //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Elevator SysId (Dynamic Reverse)",
     //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Arm SysId (Quasistatic Forward)",
     //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Arm SysId (Quasistatic Reverse)",
     //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Arm SysId (Dynamic Forward)",
     //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
+    // m_autoChooser.addOption(
     //     "Arm SysId (Dynamic Reverse)",
     //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
@@ -213,40 +217,40 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    drive.setDefaultCommand(
+    m_drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            m_drive,
+            () -> -m_driverController.getLeftY(),
+            () -> -m_driverController.getLeftX(),
+            () -> -m_driverController.getRightX()));
 
     // Lock to 0° when A button is held
-    controller
+    m_driverController
         .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
+                m_drive,
+                () -> -m_driverController.getLeftY(),
+                () -> -m_driverController.getLeftX(),
                 () -> new Rotation2d()));
 
     // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    m_driverController.x().onTrue(Commands.runOnce(m_drive::stopWithX, m_drive));
 
     // Reset gyro to 0° when B button is pressed
-    controller
+    m_driverController
         .b()
         .onTrue(
             Commands.runOnce(
                     () -> {
-                      drive.resetGyro();
+                      m_drive.resetGyro();
                       Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
-                      drive.setPose(newPose);
+                      m_drive.setPose(newPose);
                     },
-                    drive)
+                    m_drive)
                 .ignoringDisable(true));
 
-    controller.y().onTrue(new InstantCommand(() -> poseController.forceSyncQuest()));
+    m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
     // elevator testing
     new JoystickButton(new GenericHID(1), 1)
@@ -312,6 +316,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return m_autoChooser.get();
   }
 }

@@ -1,6 +1,6 @@
 package frc.robot.subsystems.vision.questnav;
 
-import static frc.robot.subsystems.vision.questnav.QuestNavConstants.robotToQuestTransform;
+import static frc.robot.subsystems.vision.questnav.QuestNavConstants.kRobotToQuestTransform;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Timer;
@@ -21,7 +21,7 @@ public class QuestNavIOSim implements QuestNavIO {
     inputs.batteryPercent = 58.85;
 
     Pose2d robotPose = robotPoseSupplier.get();
-    Pose2d questPose = robotPose.transformBy(robotToQuestTransform);
+    Pose2d questPose = robotPose.transformBy(kRobotToQuestTransform);
     inputs.position = new float[] {(float) -questPose.getY(), 0, (float) questPose.getX()};
     inputs.quaternion = new float[] {0, 0, 0, 1};
     inputs.eulerAngles = new float[] {0, (float) -questPose.getRotation().getDegrees(), 0};

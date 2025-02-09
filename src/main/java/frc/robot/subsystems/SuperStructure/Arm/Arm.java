@@ -37,20 +37,20 @@ public class Arm {
     switch (Constants.currentMode) {
       case REAL:
         m_armController =
-            new TunablePIDController(armKp, 0.0, armKd, kArmErrorToleranceRads, "ArmPID", true);
-        m_armFeedforward = new ArmFeedforward(armKs, armKg, armKv);
+            new TunablePIDController(kArmKp, 0.0, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
+        m_armFeedforward = new ArmFeedforward(kArmKs, kArmKg, kArmKv);
         break;
       case SIM:
         m_armController =
             new TunablePIDController(
-                armSimKp, 0.0, armSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
-        m_armFeedforward = new ArmFeedforward(0.0, armSimKg, armSimKv);
+                kArmSimKp, 0.0, kArmSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
+        m_armFeedforward = new ArmFeedforward(0.0, kArmSimKg, kArmSimKv);
         break;
       case REPLAY:
         m_armController =
             new TunablePIDController(
-                armSimKp, 0.0, armSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
-        m_armFeedforward = new ArmFeedforward(0.0, armSimKg, armSimKv);
+                kArmSimKp, 0.0, kArmSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
+        m_armFeedforward = new ArmFeedforward(0.0, kArmSimKg, kArmSimKv);
         break;
       default:
         m_armController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);

@@ -15,21 +15,19 @@ import java.util.function.DoubleSupplier;
 
 public class AlgaeClawIOSpark implements AlgaeClawIO {
   private SparkMax m_algaeClawMotor;
-  private RelativeEncoder m_algeaClawEncoder;
+  private RelativeEncoder m_algaeClawEncoder;
   private SparkMaxConfig m_algaeClawConfig;
-  private Debouncer m_algeaClawConnectedDebounce = new Debouncer(0.5);
+  private Debouncer m_algaeClawConnectedDebounce = new Debouncer(0.5);
 
   public AlgaeClawIOSpark() {
-
-    m_algaeClawMotor = new SparkMax(AlgaeClawConstants.AlgaeClawMotorId, MotorType.kBrushless);
-
-    m_algeaClawEncoder = m_algaeClawMotor.getEncoder();
+    m_algaeClawMotor = new SparkMax(AlgaeClawConstants.kMotorId, MotorType.kBrushless);
+    m_algaeClawEncoder = m_algaeClawMotor.getEncoder();
 
     m_algaeClawConfig = new SparkMaxConfig();
     m_algaeClawConfig
-        .inverted(AlgaeClawConstants.AlgaeClawInverted)
+        .inverted(AlgaeClawConstants.kInverted)
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(AlgaeClawConstants.AlgaeClawCurrentLimit)
+        .smartCurrentLimit(AlgaeClawConstants.kCurrentLimit)
         .voltageCompensation(12.0);
     m_algaeClawConfig.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);
     m_algaeClawConfig
@@ -50,13 +48,13 @@ public class AlgaeClawIOSpark implements AlgaeClawIO {
                 m_algaeClawConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
   }
 
-  public void updateInputs(AlgaeClawIOIntputs inputs) {
+  public void updateInputs(AlgaeClawIOInputs inputs) {
     sparkStickyFault = false;
     ifOk(
         m_algaeClawMotor,
-        m_algeaClawEncoder::getPosition,
+        m_algaeClawEncoder::getPosition,
         (value) -> inputs.positionRotations = value);
-    ifOk(m_algaeClawMotor, m_algeaClawEncoder::getVelocity, (value) -> inputs.velocityRPM = value);
+    ifOk(m_algaeClawMotor, m_algaeClawEncoder::getVelocity, (value) -> inputs.velocityRPM = value);
     ifOk(
         m_algaeClawMotor,
         new DoubleSupplier[] {m_algaeClawMotor::getAppliedOutput, m_algaeClawMotor::getBusVoltage},
@@ -65,7 +63,7 @@ public class AlgaeClawIOSpark implements AlgaeClawIO {
         m_algaeClawMotor,
         m_algaeClawMotor::getOutputCurrent,
         (value) -> inputs.currentAmps = value);
-    inputs.algaeClawConnected = m_algeaClawConnectedDebounce.calculate(!sparkStickyFault);
+    inputs.algaeClawConnected = m_algaeClawConnectedDebounce.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */

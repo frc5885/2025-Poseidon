@@ -21,22 +21,22 @@ import edu.wpi.first.math.util.Units;
 
 public class VisionConstants {
   // AprilTag layout
-  public static AprilTagFieldLayout aprilTagLayout =
+  public static AprilTagFieldLayout kAprilTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
 
   // Camera names, must match names configured on coprocessor
-  public static String camera0Name = "sandstorm";
-  public static String camera1Name = "tsunami";
+  public static String kCamera0Name = "sandstorm";
+  public static String kCamera1Name = "tsunami";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
-  public static Transform3d robotToCamera0 =
+  public static Transform3d kRobotToCamera0 =
       new Transform3d(
           Units.inchesToMeters(10),
           -Units.inchesToMeters(12.25),
           Units.inchesToMeters(8.0),
           new Rotation3d(0.0, 0, Units.degreesToRadians(10)));
-  public static Transform3d robotToCamera1 =
+  public static Transform3d kRobotToCamera1 =
       new Transform3d(
           Units.inchesToMeters(10),
           Units.inchesToMeters(12.25),
@@ -44,24 +44,24 @@ public class VisionConstants {
           new Rotation3d(0.0, 0, -Units.degreesToRadians(10)));
 
   // Basic filtering thresholds
-  public static double maxAmbiguity = 0.3;
-  public static double maxZError = 0.75;
+  public static double kMaxAmbiguity = 0.3;
+  public static double kMaxZError = 0.75;
 
   // Standard deviation baselines, for 1 meter distance and 1 tag
   // (Adjusted automatically based on distance and # of tags)
-  public static double linearStdDevBaseline = 0.02; // Meters
-  public static double angularStdDevBaseline = 0.06; // Radians
+  public static double kLinearStdDevBaseline = 0.02; // Meters
+  public static double kAngularStdDevBaseline = 0.06; // Radians
 
   // Standard deviation multipliers for each camera
   // (Adjust to trust some cameras more than others)
-  public static double[] cameraStdDevFactors =
+  public static double[] kCameraStdDevFactors =
       new double[] {
         1.0, // Camera 0
         1.0 // Camera 1
       };
 
   // Multipliers to apply for MegaTag 2 observations
-  public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-  public static double angularStdDevMegatag2Factor =
+  public static double kLinearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
+  public static double kAngularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
 }

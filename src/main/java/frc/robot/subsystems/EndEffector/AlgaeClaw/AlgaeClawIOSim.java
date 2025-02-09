@@ -10,23 +10,22 @@ public class AlgaeClawIOSim implements AlgaeClawIO {
   private double m_appliedVolts;
 
   public AlgaeClawIOSim() {
-
     m_algaeClawFlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getNEO(1), 0.001, AlgaeClawConstants.AlgaeClawGearRatio),
+                DCMotor.getNEO(1), 0.001, AlgaeClawConstants.kGearRatio),
             DCMotor.getNEO(1),
             0.0);
   }
 
-  public void updateInputs(AlgaeClawIOIntputs m_inputs) {
+  public void updateInputs(AlgaeClawIOInputs inputs) {
     m_algaeClawFlywheelSim.update(0.020);
 
-    m_inputs.appliedVolts = m_appliedVolts;
-    m_inputs.currentAmps = m_algaeClawFlywheelSim.getCurrentDrawAmps();
-    m_inputs.velocityRPM = m_algaeClawFlywheelSim.getAngularVelocityRPM();
-    m_inputs.positionRotations = 0.0;
-    m_inputs.algaeClawConnected = true;
+    inputs.appliedVolts = m_appliedVolts;
+    inputs.currentAmps = m_algaeClawFlywheelSim.getCurrentDrawAmps();
+    inputs.velocityRPM = m_algaeClawFlywheelSim.getAngularVelocityRPM();
+    inputs.positionRotations = 0.0;
+    inputs.algaeClawConnected = true;
   }
 
   public void setVoltage(double volts) {

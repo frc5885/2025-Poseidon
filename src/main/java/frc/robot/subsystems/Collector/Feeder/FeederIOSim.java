@@ -14,7 +14,7 @@ public class FeederIOSim implements FeederIO {
     m_FlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getNEO(1), 0.001, FeederConstants.feederGearRatio),
+                DCMotor.getNEO(1), 0.001, FeederConstants.kGearRatio),
             DCMotor.getNEO(1));
   }
 
