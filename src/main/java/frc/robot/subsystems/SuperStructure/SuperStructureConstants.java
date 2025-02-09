@@ -29,16 +29,16 @@ public class SuperStructureConstants {
     public static final double kElevatorEncoderVelocityFactor =
         (Math.PI * 2 * kElevatorWheelRadiusMeters) / 60 / kElevatorMotorReduction;
 
-    public static final double elevatorKs = 0.0;
-    public static final double elevatorKv = 0.0;
-    public static final double elevatorKg = 0.0;
-    public static final double elevatorKp = 0.0;
-    public static final double elevatorKd = 0.0;
+    public static final double kElevatorKs = 0.0;
+    public static final double kElevatorKv = 0.0;
+    public static final double kElevatorKg = 0.0;
+    public static final double kElevatorKp = 0.0;
+    public static final double kElevatorKd = 0.0;
 
-    public static final double elevatorSimKv = 3.9;
-    public static final double elevatorSimKg = 0.46;
-    public static final double elevatorSimKp = 0.0;
-    public static final double elevatorSimKd = 0.0;
+    public static final double kElevatorSimKv = 3.9;
+    public static final double kElevatorSimKg = 0.46;
+    public static final double kElevatorSimKp = 0.0;
+    public static final double kElevatorSimKd = 0.0;
 
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
@@ -76,16 +76,16 @@ public class SuperStructureConstants {
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
 
-    public static final double armKs = 0.0;
-    public static final double armKv = 0.0;
-    public static final double armKg = 0.0;
-    public static final double armKp = 0.0;
-    public static final double armKd = 0.0;
+    public static final double kArmKs = 0.0;
+    public static final double kArmKv = 0.0;
+    public static final double kArmKg = 0.0;
+    public static final double kArmKp = 0.0;
+    public static final double kArmKd = 0.0;
 
-    public static final double armSimKv = 0.5;
-    public static final double armSimKg = 3.01;
-    public static final double armSimKp = 0.0;
-    public static final double armSimKd = 0.0;
+    public static final double kArmSimKv = 0.5;
+    public static final double kArmSimKg = 3.01;
+    public static final double kArmSimKp = 0.0;
+    public static final double kArmSimKd = 0.0;
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
 

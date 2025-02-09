@@ -31,8 +31,8 @@ import org.littletonrobotics.urcl.URCL;
  * project.
  */
 public class Robot extends LoggedRobot {
-  private Command autonomousCommand;
-  private RobotContainer robotContainer;
+  private Command m_autonomousCommand;
+  private RobotContainer m_robotContainer;
 
   public Robot() {
     // Record metadata
@@ -46,7 +46,7 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("GitDirty", "All changes committed");
         break;
       case 1:
-        Logger.recordMetadata("GitDirty", "Uncomitted changes");
+        Logger.recordMetadata("GitDirty", "Uncommitted changes");
         break;
       default:
         Logger.recordMetadata("GitDirty", "Unknown");
@@ -54,7 +54,7 @@ public class Robot extends LoggedRobot {
     }
 
     // Set up data receivers & replay source
-    switch (Constants.currentMode) {
+    switch (Constants.kCurrentMode) {
       case REAL:
         // Running on a real robot, log to a USB stick ("/U/logs")
         Logger.addDataReceiver(new WPILOGWriter());
@@ -84,7 +84,7 @@ public class Robot extends LoggedRobot {
 
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
-    robotContainer = new RobotContainer();
+    m_robotContainer = new RobotContainer();
   }
 
   /** This function is called periodically during all modes. */
@@ -115,11 +115,11 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    autonomousCommand = robotContainer.getAutonomousCommand();
+    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
-    if (autonomousCommand != null) {
-      autonomousCommand.schedule();
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.schedule();
     }
   }
 
@@ -134,8 +134,8 @@ public class Robot extends LoggedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    if (autonomousCommand != null) {
-      autonomousCommand.cancel();
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
     }
   }
 

@@ -8,18 +8,15 @@ public class AlgaeClaw {
 
   private AlgaeClawIO m_algaeClawIO;
   private Alert m_algaeClawDisconnectedAlert;
-  private AlgaeClawIOIntputsAutoLogged m_algaeInputs;
+  private AlgaeClawIOInputsAutoLogged m_algaeInputs;
 
   public AlgaeClaw(AlgaeClawIO io) {
-
-    this.m_algaeClawIO = io;
-
-    m_algaeClawDisconnectedAlert = new Alert("Algae claw motor disconected!", AlertType.kError);
-    m_algaeInputs = new AlgaeClawIOIntputsAutoLogged();
+    m_algaeClawIO = io;
+    m_algaeClawDisconnectedAlert = new Alert("Algae claw motor disconnected!", AlertType.kError);
+    m_algaeInputs = new AlgaeClawIOInputsAutoLogged();
   }
 
   public void periodic() {
-
     m_algaeClawIO.updateInputs(m_algaeInputs);
     Logger.processInputs("EndEffector/AlgaeClaw", m_algaeInputs);
 

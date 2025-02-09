@@ -9,12 +9,12 @@ import org.littletonrobotics.junction.AutoLog;
 public interface IntakeIO {
   @AutoLog
   public static class IntakeIOInputs {
+    public boolean motor1Connected = false;
+    public boolean motor2Connected = false;
     public double positionRotations = 0.0;
     public double velocityRPM = 0.0;
     public double appliedVolts = 0.0;
     public double[] currentAmps = {0.0, 0.0};
-    public boolean intake1Connected = false;
-    public boolean intake2Connected = false;
   }
 
   /** Updates the set of loggable inputs. */

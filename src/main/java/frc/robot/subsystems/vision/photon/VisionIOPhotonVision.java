@@ -26,8 +26,8 @@ import org.photonvision.PhotonCamera;
 
 /** IO implementation for real PhotonVision hardware. */
 public class VisionIOPhotonVision implements VisionIO {
-  protected final PhotonCamera camera;
-  protected final Transform3d robotToCamera;
+  protected final PhotonCamera m_camera;
+  protected final Transform3d m_robotToCamera;
 
   /**
    * Creates a new VisionIOPhotonVision.
@@ -36,18 +36,18 @@ public class VisionIOPhotonVision implements VisionIO {
    * @param rotationSupplier The 3D position of the camera relative to the robot.
    */
   public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
-    camera = new PhotonCamera(name);
-    this.robotToCamera = robotToCamera;
+    m_camera = new PhotonCamera(name);
+    m_robotToCamera = robotToCamera;
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    inputs.connected = camera.isConnected();
+    inputs.connected = m_camera.isConnected();
 
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
-    for (var result : camera.getAllUnreadResults()) {
+    for (var result : m_camera.getAllUnreadResults()) {
       // Update latest target observation
       if (result.hasTargets()) {
         inputs.latestTargetObservation =
@@ -64,7 +64,7 @@ public class VisionIOPhotonVision implements VisionIO {
 
         // Calculate robot pose
         Transform3d fieldToCamera = multitagResult.estimatedPose.best;
-        Transform3d fieldToRobot = fieldToCamera.plus(robotToCamera.inverse());
+        Transform3d fieldToRobot = fieldToCamera.plus(m_robotToCamera.inverse());
         Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
 
         // Calculate average tag distance
@@ -90,13 +90,13 @@ public class VisionIOPhotonVision implements VisionIO {
         var target = result.targets.get(0);
 
         // Calculate robot pose
-        var tagPose = aprilTagLayout.getTagPose(target.fiducialId);
+        var tagPose = kAprilTagLayout.getTagPose(target.fiducialId);
         if (tagPose.isPresent()) {
           Transform3d fieldToTarget =
               new Transform3d(tagPose.get().getTranslation(), tagPose.get().getRotation());
           Transform3d cameraToTarget = target.bestCameraToTarget;
           Transform3d fieldToCamera = fieldToTarget.plus(cameraToTarget.inverse());
-          Transform3d fieldToRobot = fieldToCamera.plus(robotToCamera.inverse());
+          Transform3d fieldToRobot = fieldToCamera.plus(m_robotToCamera.inverse());
           Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
 
           // Add tag ID

@@ -16,24 +16,24 @@ import java.util.function.DoubleSupplier;
 public class CoralEjectorIOSpark implements CoralEjectorIO {
 
   private SparkMax m_coralEjectorMotor;
-  private RelativeEncoder m_coralEjectEncoder;
-  private SparkMaxConfig m_coralEjectConfig;
-  private final Debouncer coralEjectorConnectedDebounce = new Debouncer(0.5);
+  private RelativeEncoder m_coralEjectorEncoder;
+  private SparkMaxConfig m_coralEjectorConfig;
+  private final Debouncer m_coralEjectorConnectedDebounce = new Debouncer(0.5);
 
   public CoralEjectorIOSpark() {
-    m_coralEjectorMotor = new SparkMax(CoralEjectorConstants.CoralEjectorId, MotorType.kBrushless);
+    m_coralEjectorMotor = new SparkMax(CoralEjectorConstants.kMotorId, MotorType.kBrushless);
 
-    m_coralEjectEncoder = m_coralEjectorMotor.getEncoder();
+    m_coralEjectorEncoder = m_coralEjectorMotor.getEncoder();
 
-    m_coralEjectConfig = new SparkMaxConfig();
+    m_coralEjectorConfig = new SparkMaxConfig();
 
-    m_coralEjectConfig
-        .inverted(CoralEjectorConstants.CoralEjectorInverted)
+    m_coralEjectorConfig
+        .inverted(CoralEjectorConstants.kInverted)
         .idleMode(IdleMode.kCoast)
-        .smartCurrentLimit(CoralEjectorConstants.CoralEjectorCurrentLimit)
+        .smartCurrentLimit(CoralEjectorConstants.kCurrentLimit)
         .voltageCompensation(12.0);
-    m_coralEjectConfig.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);
-    m_coralEjectConfig
+    m_coralEjectorConfig.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);
+    m_coralEjectorConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
         .primaryEncoderPositionPeriodMs(20)
@@ -48,20 +48,20 @@ public class CoralEjectorIOSpark implements CoralEjectorIO {
         5,
         () ->
             m_coralEjectorMotor.configure(
-                m_coralEjectConfig,
+                m_coralEjectorConfig,
                 ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters));
   }
 
-  public void updateInputs(CoralEjectorInputs inputs) {
+  public void updateInputs(CoralEjectorIOInputs inputs) {
     sparkStickyFault = false;
     ifOk(
         m_coralEjectorMotor,
-        m_coralEjectEncoder::getPosition,
+        m_coralEjectorEncoder::getPosition,
         (value) -> inputs.positionRotations = value);
     ifOk(
         m_coralEjectorMotor,
-        m_coralEjectEncoder::getVelocity,
+        m_coralEjectorEncoder::getVelocity,
         (value) -> inputs.velocityRPM = value);
     ifOk(
         m_coralEjectorMotor,
@@ -73,7 +73,7 @@ public class CoralEjectorIOSpark implements CoralEjectorIO {
         m_coralEjectorMotor,
         m_coralEjectorMotor::getOutputCurrent,
         (value) -> inputs.currentAmps = value);
-    inputs.coralEjectorConnected = coralEjectorConnectedDebounce.calculate(!sparkStickyFault);
+    inputs.coralEjectorConnected = m_coralEjectorConnectedDebounce.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */

@@ -6,29 +6,28 @@ import org.littletonrobotics.junction.Logger;
 
 public class CoralEjector {
 
-  private Alert m_coralEjectordisconnectedAlert;
-  private CoralEjectorIO m_CoralEjectorIO;
-  private CoralEjectorInputsAutoLogged m_inputs = new CoralEjectorInputsAutoLogged();
+  private Alert m_coralEjectorDisconnectedAlert;
+  private CoralEjectorIO m_coralEjectorIO;
+  private CoralEjectorIOInputsAutoLogged m_inputs = new CoralEjectorIOInputsAutoLogged();
 
   public CoralEjector(CoralEjectorIO io) {
-
-    this.m_CoralEjectorIO = io;
-    m_coralEjectordisconnectedAlert = new Alert("Coral ejector disconnected!", AlertType.kError);
+    m_coralEjectorIO = io;
+    m_coralEjectorDisconnectedAlert = new Alert("Coral ejector disconnected!", AlertType.kError);
   }
 
   public void periodic() {
-    m_CoralEjectorIO.updateInputs(m_inputs);
+    m_coralEjectorIO.updateInputs(m_inputs);
     Logger.processInputs("EndEffector/CoralEjector", m_inputs);
 
     // Update alerts
-    m_coralEjectordisconnectedAlert.set(!m_inputs.coralEjectorConnected);
+    m_coralEjectorDisconnectedAlert.set(!m_inputs.coralEjectorConnected);
   }
 
   public void runCoralEjector(double volts) {
-    m_CoralEjectorIO.setVoltage(volts);
+    m_coralEjectorIO.setVoltage(volts);
   }
 
   public void stop() {
-    m_CoralEjectorIO.setVoltage(0.0);
+    m_coralEjectorIO.setVoltage(0.0);
   }
 }

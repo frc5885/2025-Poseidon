@@ -8,7 +8,7 @@ import org.littletonrobotics.junction.AutoLog;
 
 public interface CoralEjectorIO {
   @AutoLog
-  public class CoralEjectorInputs {
+  public class CoralEjectorIOInputs {
     public double positionRotations = 0.0;
     public double velocityRPM = 0.0;
     public double appliedVolts = 0.0;
@@ -17,7 +17,7 @@ public interface CoralEjectorIO {
   }
 
   /** Updates the set of loggable inputs. */
-  public default void updateInputs(CoralEjectorInputs inputs) {}
+  public default void updateInputs(CoralEjectorIOInputs inputs) {}
 
   /** Run open loop at the specified voltage. */
   public default void setVoltage(double volts) {}

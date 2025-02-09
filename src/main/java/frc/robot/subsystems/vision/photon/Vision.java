@@ -25,50 +25,51 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.vision.photon.VisionIO.PoseObservation;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservationType;
+import frc.robot.subsystems.vision.photon.VisionIO.VisionIOInputs;
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
-  private final VisionConsumer consumer;
-  private final VisionIO[] io;
-  private final VisionIOInputsAutoLogged[] inputs;
-  private final Alert[] disconnectedAlerts;
+  private final VisionConsumer m_consumer;
+  private final VisionIO[] m_io;
+  private final VisionIOInputs[] m_inputs;
+  private final Alert[] m_disconnectedAlerts;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
-    this.consumer = consumer;
-    this.io = io;
+    m_consumer = consumer;
+    m_io = io;
 
     // Initialize inputs
-    this.inputs = new VisionIOInputsAutoLogged[io.length];
-    for (int i = 0; i < inputs.length; i++) {
-      inputs[i] = new VisionIOInputsAutoLogged();
+    m_inputs = new VisionIOInputs[io.length];
+    for (int i = 0; i < m_inputs.length; i++) {
+      m_inputs[i] = new VisionIOInputs();
     }
 
     // Initialize disconnected alerts
-    this.disconnectedAlerts = new Alert[io.length];
-    for (int i = 0; i < inputs.length; i++) {
-      disconnectedAlerts[i] =
+    m_disconnectedAlerts = new Alert[io.length];
+    for (int i = 0; i < m_inputs.length; i++) {
+      m_disconnectedAlerts[i] =
           new Alert(
               "Vision camera " + Integer.toString(i) + " is disconnected.", AlertType.kWarning);
     }
   }
 
   /**
-   * Returns the X angle to the best target, which can be used for simple servoing with vision.
+   * Returns the X angle to the best target, which can be used for simple aiming with vision.
    *
    * @param cameraIndex The index of the camera to use.
    */
   public Rotation2d getTargetX(int cameraIndex) {
-    return inputs[cameraIndex].latestTargetObservation.tx();
+    return m_inputs[cameraIndex].latestTargetObservation.tx();
   }
 
   @Override
   public void periodic() {
-    for (int i = 0; i < io.length; i++) {
-      io[i].updateInputs(inputs[i]);
-      Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
+    for (int i = 0; i < m_io.length; i++) {
+      m_io[i].updateInputs(m_inputs[i]);
     }
 
     // Initialize logging values
@@ -78,9 +79,9 @@ public class Vision extends SubsystemBase {
     List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
     // Loop over cameras
-    for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
+    for (int cameraIndex = 0; cameraIndex < m_io.length; cameraIndex++) {
       // Update disconnected alert
-      disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].connected);
+      m_disconnectedAlerts[cameraIndex].set(!m_inputs[cameraIndex].connected);
 
       // Initialize logging values
       List<Pose3d> tagPoses = new LinkedList<>();
@@ -89,28 +90,28 @@ public class Vision extends SubsystemBase {
       List<Pose3d> robotPosesRejected = new LinkedList<>();
 
       // Add tag poses
-      for (int tagId : inputs[cameraIndex].tagIds) {
-        var tagPose = aprilTagLayout.getTagPose(tagId);
+      for (int tagId : m_inputs[cameraIndex].tagIds) {
+        var tagPose = kAprilTagLayout.getTagPose(tagId);
         if (tagPose.isPresent()) {
           tagPoses.add(tagPose.get());
         }
       }
 
       // Loop over pose observations
-      for (var observation : inputs[cameraIndex].poseObservations) {
+      for (PoseObservation observation : m_inputs[cameraIndex].poseObservations) {
         // Check whether to reject pose
         boolean rejectPose =
             observation.tagCount() == 0 // Must have at least one tag
                 || (observation.tagCount() == 1
-                    && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
+                    && observation.ambiguity() > kMaxAmbiguity) // Cannot be high ambiguity
                 || Math.abs(observation.pose().getZ())
-                    > maxZError // Must have realistic Z coordinate
+                    > kMaxZError // Must have realistic Z coordinate
 
                 // Must be within the field boundaries
                 || observation.pose().getX() < 0.0
-                || observation.pose().getX() > aprilTagLayout.getFieldLength()
+                || observation.pose().getX() > kAprilTagLayout.getFieldLength()
                 || observation.pose().getY() < 0.0
-                || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+                || observation.pose().getY() > kAprilTagLayout.getFieldWidth();
 
         // Add pose to log
         robotPoses.add(observation.pose());
@@ -128,19 +129,19 @@ public class Vision extends SubsystemBase {
         // Calculate standard deviations
         double stdDevFactor =
             Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-        double linearStdDev = linearStdDevBaseline * stdDevFactor;
-        double angularStdDev = angularStdDevBaseline * stdDevFactor;
+        double linearStdDev = kLinearStdDevBaseline * stdDevFactor;
+        double angularStdDev = kAngularStdDevBaseline * stdDevFactor;
         if (observation.type() == PoseObservationType.MEGATAG_2) {
-          linearStdDev *= linearStdDevMegatag2Factor;
-          angularStdDev *= angularStdDevMegatag2Factor;
+          linearStdDev *= kLinearStdDevMegatag2Factor;
+          angularStdDev *= kAngularStdDevMegatag2Factor;
         }
-        if (cameraIndex < cameraStdDevFactors.length) {
-          linearStdDev *= cameraStdDevFactors[cameraIndex];
-          angularStdDev *= cameraStdDevFactors[cameraIndex];
+        if (cameraIndex < kCameraStdDevFactors.length) {
+          linearStdDev *= kCameraStdDevFactors[cameraIndex];
+          angularStdDev *= kCameraStdDevFactors[cameraIndex];
         }
 
         // Send vision observation
-        consumer.accept(
+        m_consumer.accept(
             observation.pose().toPose2d(),
             observation.timestamp(),
             VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
