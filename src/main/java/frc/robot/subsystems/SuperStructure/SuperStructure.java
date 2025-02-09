@@ -7,6 +7,8 @@ package frc.robot.subsystems.SuperStructure;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,21 +33,34 @@ public class SuperStructure extends SubsystemBase {
   private final LoggedMechanism2d m_canvas;
   private final LoggedMechanismRoot2d m_elevatorRoot;
   private final LoggedMechanismRoot2d m_carriageRoot;
+  private final LoggedMechanismRoot2d m_armRoot;
   private final LoggedMechanismLigament2d m_armMech;
+
+  private double m_canvasWidth = 3.0;
 
   public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
 
-    m_canvas = new LoggedMechanism2d(3.0, 3.0);
-    m_elevatorRoot = m_canvas.getRoot("ElevatorRoot", 1.47, 0.15);
+    m_canvas = new LoggedMechanism2d(m_canvasWidth, 3.0);
+    m_elevatorRoot =
+        m_canvas.getRoot("ElevatorRoot", m_canvasWidth / 2 + kElevatorTranslation.getX(), 0.15);
     m_elevatorRoot.append(
-        new LoggedMechanismLigament2d("Elevator", kElevatorMaxHeightMeters, 90.0));
-    m_carriageRoot = m_canvas.getRoot("CarriageRoot", 1.53, 0.15);
+        new LoggedMechanismLigament2d(
+            "Elevator", kElevatorMaxHeightMeters + kElevatorCarriageHeight, 90.0));
+    m_carriageRoot =
+        m_canvas.getRoot(
+            "CarriageRoot", m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05, 0.15);
     m_carriageRoot.append(
-        new LoggedMechanismLigament2d("Carriage", 0.3, 90.0, 10.0, new Color8Bit(255, 0, 0)));
+        new LoggedMechanismLigament2d(
+            "Carriage", kElevatorCarriageHeight, 90.0, 10.0, new Color8Bit(255, 0, 0)));
+    m_armRoot =
+        m_canvas.getRoot(
+            "ArmRoot",
+            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
+            0.15 + kElevatorCarriageHeight / 2);
     m_armMech =
-        m_carriageRoot.append(
+        m_armRoot.append(
             new LoggedMechanismLigament2d(
                 "Arm",
                 kArmLengthMeters,
@@ -62,9 +77,29 @@ public class SuperStructure extends SubsystemBase {
     m_elevator.periodic();
     m_arm.periodic();
 
+    // update mechanism 2d
+    m_carriageRoot.setPosition(
+        m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
+        0.15 + m_elevator.getPositionMeters());
+    m_armRoot.setPosition(
+        m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
+        0.15 + kElevatorCarriageHeight / 2 + m_elevator.getPositionMeters());
     m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
-    m_carriageRoot.setPosition(1.53, 0.15 + m_elevator.getPositionMeters());
     Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
+
+    // Log pose 3d
+    Logger.recordOutput(
+        "SuperStructure/Mechanism3d/0-ElevatorStage1",
+        new Pose3d(
+            0.0,
+            0.0,
+            m_elevator.getPositionMeters() * kElevatorStage1MaxTravel / kElevatorMaxHeightMeters,
+            new Rotation3d()));
+    Logger.recordOutput(
+        "SuperStructure/Mechanism3d/1-ElevatorCarriage",
+        new Pose3d(0.0, 0.0, m_elevator.getPositionMeters(), new Rotation3d()));
+    Logger.recordOutput(
+        "SuperStructure/Mechanism3d/2-Arm", new Pose3d(0.0, 0.0, 0.0, new Rotation3d()));
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/Level")
