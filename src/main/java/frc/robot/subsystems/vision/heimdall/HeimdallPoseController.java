@@ -1,7 +1,7 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-// Special shoutout to OpenAI's o3-mini-hard
+// Special credit to OpenAI's o3-mini-hard
 
 package frc.robot.subsystems.vision.heimdall;
 
@@ -42,10 +42,10 @@ public class HeimdallPoseController {
   private static final double MIN_TIME_STATIONARY_FOR_SYNC = 0.2; // seconds
 
   // -------- Odometry and vision fusion objects -------------
-  private final SwerveDriveKinematics kinematics =
+  private final SwerveDriveKinematics m_kinematics =
       new SwerveDriveKinematics(DriveConstants.kModuleTranslations);
-  private final Rotation2d initialGyro = new Rotation2d();
-  private final SwerveModulePosition[] initialModulePositions =
+  private final Rotation2d m_initialGyro = new Rotation2d();
+  private final SwerveModulePosition[] m_initialModulePositions =
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
         new SwerveModulePosition(),
@@ -53,41 +53,41 @@ public class HeimdallPoseController {
         new SwerveModulePosition()
       };
 
-  private final SwerveDrivePoseEstimator odometryEstimator;
-  private final QuestNav questNav;
+  private final SwerveDrivePoseEstimator m_odometryEstimator;
+  private final QuestNav m_questNav;
 
   // -------- Buffers for recent pose history (for computing offset derivatives) -------------
-  private final TimeInterpolatableBuffer<Pose2d> odometryBuffer;
-  private final TimeInterpolatableBuffer<Pose2d> questBuffer;
+  private final TimeInterpolatableBuffer<Pose2d> m_odometryBuffer;
+  private final TimeInterpolatableBuffer<Pose2d> m_questBuffer;
 
   // -------- Internal state flags -------------
   // True if we have "synced" (i.e. applied a transformation so that Quest's output is in the field
   // frame).
-  private boolean questSynced = false;
+  private boolean m_questSynced = false;
   // Time tracking: last time the robot was moving (used for safe re-sync)
-  private double lastTimeNotStationary = Timer.getFPGATimestamp();
+  private double m_lastTimeNotStationary = Timer.getFPGATimestamp();
 
-  private HeimdallOdometrySource mode;
+  private HeimdallOdometrySource m_mode;
 
   public HeimdallPoseController(HeimdallOdometrySource mode) {
-    odometryEstimator =
-        new SwerveDrivePoseEstimator(kinematics, initialGyro, initialModulePositions, new Pose2d());
+    m_odometryEstimator =
+        new SwerveDrivePoseEstimator(m_kinematics, m_initialGyro, m_initialModulePositions, new Pose2d());
 
-    switch (Constants.currentMode) {
+    switch (Constants.kCurrentMode) {
       case REAL:
-        questNav = new QuestNav(new QuestNavIOReal());
+        m_questNav = new QuestNav(new QuestNavIOReal());
         break;
       case SIM:
-        questNav = new QuestNav(new QuestNavIOSim(odometryEstimator::getEstimatedPosition));
+        m_questNav = new QuestNav(new QuestNavIOSim(m_odometryEstimator::getEstimatedPosition));
         break;
       default:
-        questNav = new QuestNav(new QuestNavIO() {});
+        m_questNav = new QuestNav(new QuestNavIO() {});
     }
 
-    odometryBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
-    questBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
+    m_odometryBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
+    m_questBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
 
-    this.mode = mode;
+    this.m_mode = mode;
   }
 
   /** Update method that should be called each loop with fresh sensor data. */
@@ -98,24 +98,24 @@ public class HeimdallPoseController {
       ChassisSpeeds chassisSpeeds) {
 
     // Update odometry and record the pose in our buffer.
-    odometryEstimator.updateWithTime(currentTimeSeconds, gyroAngle, modulePositions);
-    Pose2d odometryPose = odometryEstimator.getEstimatedPosition();
-    odometryBuffer.addSample(currentTimeSeconds, odometryPose);
+    m_odometryEstimator.updateWithTime(currentTimeSeconds, gyroAngle, modulePositions);
+    Pose2d odometryPose = m_odometryEstimator.getEstimatedPosition();
+    m_odometryBuffer.addSample(currentTimeSeconds, odometryPose);
 
     // If Quest is connected, record its pose.
-    if (questNav.isConnected()) {
-      Pose2d questPose = questNav.getRobotPose();
-      questBuffer.addSample(currentTimeSeconds, questPose);
+    if (m_questNav.isConnected()) {
+      Pose2d questPose = m_questNav.getRobotPose();
+      m_questBuffer.addSample(currentTimeSeconds, questPose);
       Logger.recordOutput("Heimdall/QuestNav", questPose);
     }
 
-    if (mode == HeimdallOdometrySource.AUTO_SWITCH) {
+    if (m_mode == HeimdallOdometrySource.AUTO_SWITCH) {
       // Track whether the robot is moving.
       double normChassisSpeed = computeNormalizedChassisSpeed(chassisSpeeds);
       if (normChassisSpeed > STATIONARY_VELOCITY_THRESHOLD) {
-        lastTimeNotStationary = currentTimeSeconds;
+        m_lastTimeNotStationary = currentTimeSeconds;
       }
-      double timeStationary = currentTimeSeconds - lastTimeNotStationary;
+      double timeStationary = currentTimeSeconds - m_lastTimeNotStationary;
 
       // Evaluate whether to sync or unsync Quest.
       evaluateSyncState(currentTimeSeconds, odometryPose, timeStationary);
@@ -123,7 +123,7 @@ public class HeimdallPoseController {
 
     // Log diagnostics.
     Logger.recordOutput("Heimdall/SwerveDrivePoseEstimator", odometryPose);
-    Logger.recordOutput("Heimdall/QuestSynced", questSynced);
+    Logger.recordOutput("Heimdall/QuestSynced", m_questSynced);
     // Logger.recordOutput("Heimdall/ChassisSpeedNorm", normChassisSpeed);
     // Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
   }
@@ -131,23 +131,23 @@ public class HeimdallPoseController {
   /** Evaluates whether Quest should be synced or unsynced. */
   private void evaluateSyncState(double currentTime, Pose2d odometryPose, double timeStationary) {
 
-    if (questSynced) {
+    if (m_questSynced) {
       // If synced, check if the Quest pose has drifted.
-      if (questNav.isConnected()) {
-        Pose2d questPose = questNav.getRobotPose();
+      if (m_questNav.isConnected()) {
+        Pose2d questPose = m_questNav.getRobotPose();
         double diff = computePoseDifference(questPose, odometryPose);
         if (diff > MAX_POSE_DIFF) {
-          questSynced = false;
+          m_questSynced = false;
           Logger.recordOutput(
               "Heimdall/SyncEvent", "Synced Quest drift exceeded threshold; unsyncing.");
         }
       } else {
-        questSynced = false;
+        m_questSynced = false;
         Logger.recordOutput("Heimdall/SyncEvent", "Quest lost connection; unsyncing.");
       }
     } else {
       // Only consider syncing if we've been stationary long enough.
-      if (!questNav.isConnected() || timeStationary < MIN_TIME_STATIONARY_FOR_SYNC) {
+      if (!m_questNav.isConnected() || timeStationary < MIN_TIME_STATIONARY_FOR_SYNC) {
         return;
       }
       // Compute offset derivative only when needed.
@@ -156,8 +156,8 @@ public class HeimdallPoseController {
       Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
       if (offsetDerivative < OFFSET_DERIVATIVE_THRESHOLD) {
         // Snap Quest into alignment.
-        questNav.setRobotPose(odometryPose);
-        questSynced = true;
+        m_questNav.setRobotPose(odometryPose);
+        m_questSynced = true;
         Logger.recordOutput("Heimdall/SyncEvent", "Re-synced Quest to odometry (stable offset).");
       }
     }
@@ -168,20 +168,20 @@ public class HeimdallPoseController {
    * odometry.
    */
   public Pose2d getEstimatedPosition() {
-    switch (mode) {
+    switch (m_mode) {
       case ONLY_APRILTAG_ODOMETRY:
         Logger.recordOutput("Heimdall/UsingPoseSource", "Odometry");
-        return odometryEstimator.getEstimatedPosition();
+        return m_odometryEstimator.getEstimatedPosition();
       case ONLY_QUEST:
         Logger.recordOutput("Heimdall/UsingPoseSource", "Quest");
-        return questNav.getRobotPose();
+        return m_questNav.getRobotPose();
       default:
-        if (questSynced && questNav.isConnected()) {
+        if (m_questSynced && m_questNav.isConnected()) {
           Logger.recordOutput("Heimdall/UsingPoseSource", "Quest");
-          return questNav.getRobotPose();
+          return m_questNav.getRobotPose();
         } else {
           Logger.recordOutput("Heimdall/UsingPoseSource", "Odometry");
-          return odometryEstimator.getEstimatedPosition();
+          return m_odometryEstimator.getEstimatedPosition();
         }
     }
   }
@@ -191,29 +191,29 @@ public class HeimdallPoseController {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    odometryEstimator.addVisionMeasurement(
+    m_odometryEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 
   /** Resets both odometry and Quest (forcing a sync). */
   public void resetPosition(
       Rotation2d gyroAngle, SwerveModulePosition[] modulePositions, Pose2d poseMeters) {
-    odometryEstimator.resetPosition(gyroAngle, modulePositions, poseMeters);
-    questNav.setRobotPose(poseMeters);
-    questSynced = true;
+    m_odometryEstimator.resetPosition(gyroAngle, modulePositions, poseMeters);
+    m_questNav.setRobotPose(poseMeters);
+    m_questSynced = true;
     Logger.recordOutput("Heimdall/SyncEvent", "Reset both odometry and Quest to new pose.");
   }
 
   /** Allows the driver to force sync the quest */
   public void forceSyncQuest() {
-    questSynced = true;
-    questNav.setRobotPose(odometryEstimator.getEstimatedPosition());
+    m_questSynced = true;
+    m_questNav.setRobotPose(m_odometryEstimator.getEstimatedPosition());
     Logger.recordOutput("Heimdall/SyncEvent", "Forced sync of Quest to odometry.");
   }
 
   /** Update the mode / odometry source */
   public void setMode(HeimdallOdometrySource mode) {
-    this.mode = mode;
+    this.m_mode = mode;
   }
 
   /**
@@ -254,8 +254,8 @@ public class HeimdallPoseController {
    * the buffer window. If the offset is stable, its derivative will be low.
    */
   private double computeOffsetDerivative() {
-    var odomMap = odometryBuffer.getInternalBuffer();
-    var questMap = questBuffer.getInternalBuffer();
+    var odomMap = m_odometryBuffer.getInternalBuffer();
+    var questMap = m_questBuffer.getInternalBuffer();
     if (odomMap.size() < 2 || questMap.size() < 2) {
       return Double.POSITIVE_INFINITY; // not enough data
     }
@@ -272,10 +272,10 @@ public class HeimdallPoseController {
     }
 
     // Interpolate poses at the start and end of this window.
-    Optional<Pose2d> odomStartPose = odometryBuffer.getSample(startTime);
-    Optional<Pose2d> odomEndPose = odometryBuffer.getSample(endTime);
-    Optional<Pose2d> questStartPose = questBuffer.getSample(startTime);
-    Optional<Pose2d> questEndPose = questBuffer.getSample(endTime);
+    Optional<Pose2d> odomStartPose = m_odometryBuffer.getSample(startTime);
+    Optional<Pose2d> odomEndPose = m_odometryBuffer.getSample(endTime);
+    Optional<Pose2d> questStartPose = m_questBuffer.getSample(startTime);
+    Optional<Pose2d> questEndPose = m_questBuffer.getSample(endTime);
     if (!odomStartPose.isPresent()
         || !odomEndPose.isPresent()
         || !questStartPose.isPresent()

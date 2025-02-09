@@ -24,10 +24,10 @@ import org.photonvision.simulation.VisionSystemSim;
 
 /** IO implementation for physics sim using PhotonVision simulator. */
 public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
-  private static VisionSystemSim visionSim;
+  private static VisionSystemSim m_visionSim;
 
-  private final Supplier<Pose2d> poseSupplier;
-  private final PhotonCameraSim cameraSim;
+  private final Supplier<Pose2d> m_poseSupplier;
+  private final PhotonCameraSim m_cameraSim;
 
   /**
    * Creates a new VisionIOPhotonVisionSim.
@@ -38,29 +38,29 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
   public VisionIOPhotonVisionSim(
       String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier) {
     super(name, robotToCamera);
-    this.poseSupplier = poseSupplier;
+    this.m_poseSupplier = poseSupplier;
 
     // Initialize vision sim
-    if (visionSim == null) {
-      visionSim = new VisionSystemSim("main");
-      visionSim.addAprilTags(kAprilTagLayout);
+    if (m_visionSim == null) {
+      m_visionSim = new VisionSystemSim("main");
+      m_visionSim.addAprilTags(kAprilTagLayout);
     }
 
     // Add sim camera
     var cameraProperties = new SimCameraProperties();
-    cameraSim = new PhotonCameraSim(camera, cameraProperties);
-    visionSim.addCamera(cameraSim, robotToCamera);
+    m_cameraSim = new PhotonCameraSim(m_camera, cameraProperties);
+    m_visionSim.addCamera(m_cameraSim, robotToCamera);
 
     // Enable camera streams in simulation
     boolean renderSim = true;
-    cameraSim.enableRawStream(renderSim);
-    cameraSim.enableProcessedStream(renderSim);
-    cameraSim.enableDrawWireframe(renderSim);
+    m_cameraSim.enableRawStream(renderSim);
+    m_cameraSim.enableProcessedStream(renderSim);
+    m_cameraSim.enableDrawWireframe(renderSim);
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    visionSim.update(poseSupplier.get());
+    m_visionSim.update(m_poseSupplier.get());
     super.updateInputs(inputs);
   }
 }

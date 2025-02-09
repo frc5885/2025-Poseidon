@@ -34,7 +34,7 @@ public class Arm {
   public Arm(ArmIO io) {
     m_io = io;
 
-    switch (Constants.currentMode) {
+    switch (Constants.kCurrentMode) {
       case REAL:
         m_armController =
             new TunablePIDController(kArmKp, 0.0, kArmKd, kArmErrorToleranceRads, "ArmPID", true);

@@ -26,7 +26,7 @@ public class QuestNav extends SubsystemBase {
   private Transform2d m_questToField = new Transform2d();
 
   /**
-   * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
+   * Creates a new QuestNav subsystem and uses the robot pose to initialize the quest-to-field
    * transform
    */
   public QuestNav(QuestNavIO questNavIO) {

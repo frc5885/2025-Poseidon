@@ -8,10 +8,10 @@ import java.util.function.Supplier;
 
 public class QuestNavIOSim implements QuestNavIO {
 
-  private final Supplier<Pose2d> robotPoseSupplier;
+  private final Supplier<Pose2d> m_robotPoseSupplier;
 
   public QuestNavIOSim(Supplier<Pose2d> robotPoseSupplier) {
-    this.robotPoseSupplier = robotPoseSupplier;
+    this.m_robotPoseSupplier = robotPoseSupplier;
   }
 
   @Override
@@ -20,7 +20,7 @@ public class QuestNavIOSim implements QuestNavIO {
     inputs.timestamp = Timer.getFPGATimestamp();
     inputs.batteryPercent = 58.85;
 
-    Pose2d robotPose = robotPoseSupplier.get();
+    Pose2d robotPose = m_robotPoseSupplier.get();
     Pose2d questPose = robotPose.transformBy(kRobotToQuestTransform);
     inputs.position = new float[] {(float) -questPose.getY(), 0, (float) questPose.getX()};
     inputs.quaternion = new float[] {0, 0, 0, 1};

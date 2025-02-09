@@ -71,11 +71,11 @@ public class IntakeIOSpark implements IntakeIO {
         new DoubleSupplier[] {m_intakeMotor1::getAppliedOutput, m_intakeMotor1::getBusVoltage},
         (values) -> inputs.appliedVolts = values[0] * values[1]);
     ifOk(m_intakeMotor1, m_intakeMotor1::getOutputCurrent, (value) -> current[0] = value);
-    inputs.intake1Connected = m_intakeConnectedDebounce1.calculate(!sparkStickyFault);
+    inputs.motor1Connected = m_intakeConnectedDebounce1.calculate(!sparkStickyFault);
 
     sparkStickyFault = false;
     ifOk(m_intakeMotor2, m_intakeMotor2::getOutputCurrent, (value) -> current[1] = value);
-    inputs.intake2Connected = m_intakeConnectedDebounce2.calculate(!sparkStickyFault);
+    inputs.motor2Connected = m_intakeConnectedDebounce2.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */

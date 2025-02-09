@@ -36,7 +36,7 @@ public class Elevator {
   public Elevator(ElevatorIO io) {
     m_io = io;
 
-    switch (Constants.currentMode) {
+    switch (Constants.kCurrentMode) {
       case REAL:
         m_elevatorController =
             new TunablePIDController(

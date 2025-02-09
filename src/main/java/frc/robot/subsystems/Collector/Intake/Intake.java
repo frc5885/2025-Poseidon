@@ -5,32 +5,32 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake {
-  private Alert motor1disconnectedAlert;
-  private Alert motor2disconnectedAlert;
-  private IntakeIO intakeIO;
+  private Alert m_motor1DisconnectedAlert;
+  private Alert m_motor2DisconnectedAlert;
+  private IntakeIO m_intakeIO;
   private IntakeIOInputsAutoLogged m_inputs = new IntakeIOInputsAutoLogged();
 
   public Intake(IntakeIO io) {
-    this.intakeIO = io;
+    this.m_intakeIO = io;
 
-    motor1disconnectedAlert = new Alert("Intake motor1 disconnected!", AlertType.kError);
-    motor2disconnectedAlert = new Alert("Intake motor2 disconnected!", AlertType.kError);
+    m_motor1DisconnectedAlert = new Alert("Intake Motor1 disconnected!", AlertType.kError);
+    m_motor2DisconnectedAlert = new Alert("Intake Motor2 disconnected!", AlertType.kError);
   }
 
   public void periodic() {
-    intakeIO.updateInputs(m_inputs);
+    m_intakeIO.updateInputs(m_inputs);
     Logger.processInputs("Collector/Intake", m_inputs);
 
     // Update alerts
-    motor1disconnectedAlert.set(!m_inputs.intake1Connected);
-    motor2disconnectedAlert.set(!m_inputs.intake2Connected);
+    m_motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
+    m_motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
   }
 
   public void runIntake(double volts) {
-    intakeIO.setVoltage(volts);
+    m_intakeIO.setVoltage(volts);
   }
 
   public void stop() {
-    intakeIO.setVoltage(0.0);
+    m_intakeIO.setVoltage(0.0);
   }
 }

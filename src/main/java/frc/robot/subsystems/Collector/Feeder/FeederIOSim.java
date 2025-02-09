@@ -8,10 +8,10 @@ import frc.robot.subsystems.Collector.CollectorConstants.FeederConstants;
 public class FeederIOSim implements FeederIO {
 
   private double m_appliedVolts;
-  private FlywheelSim m_FlywheelSim;
+  private FlywheelSim m_flywheelSim;
 
   public FeederIOSim() {
-    m_FlywheelSim =
+    m_flywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
                 DCMotor.getNEO(1), 0.001, FeederConstants.kGearRatio),
@@ -20,17 +20,17 @@ public class FeederIOSim implements FeederIO {
 
   public void updateInputs(FeederIOInputs inputs) {
 
-    m_FlywheelSim.update(0.020);
+    m_flywheelSim.update(0.020);
 
     inputs.positionRotations = 0.0;
-    inputs.velocityRPM = m_FlywheelSim.getAngularVelocityRPM();
+    inputs.velocityRPM = m_flywheelSim.getAngularVelocityRPM();
     inputs.appliedVolts = m_appliedVolts;
-    inputs.currentAmps = m_FlywheelSim.getCurrentDrawAmps();
+    inputs.currentAmps = m_flywheelSim.getCurrentDrawAmps();
     inputs.feederConnected = true;
   }
 
   public void setVoltage(double volts) {
     m_appliedVolts = volts;
-    m_FlywheelSim.setInput(volts);
+    m_flywheelSim.setInput(volts);
   }
 }
