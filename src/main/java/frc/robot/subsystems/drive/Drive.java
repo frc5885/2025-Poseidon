@@ -83,12 +83,12 @@ public class Drive extends SubsystemBase {
       ModuleIO blModuleIO,
       ModuleIO brModuleIO,
       HeimdallPoseController poseController) {
-    this.m_gyroIO = gyroIO;
+    m_gyroIO = gyroIO;
     m_modules[0] = new Module(flModuleIO, 0);
     m_modules[1] = new Module(frModuleIO, 1);
     m_modules[2] = new Module(blModuleIO, 2);
     m_modules[3] = new Module(brModuleIO, 3);
-    this.m_poseController = poseController;
+    m_poseController = poseController;
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);

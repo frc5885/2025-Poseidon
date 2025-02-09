@@ -39,17 +39,17 @@ public class Vision extends SubsystemBase {
   private final Alert[] m_disconnectedAlerts;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
-    this.m_consumer = consumer;
-    this.m_io = io;
+    m_consumer = consumer;
+    m_io = io;
 
     // Initialize inputs
-    this.m_inputs = new VisionIOInputs[io.length];
+    m_inputs = new VisionIOInputs[io.length];
     for (int i = 0; i < m_inputs.length; i++) {
       m_inputs[i] = new VisionIOInputs();
     }
 
     // Initialize disconnected alerts
-    this.m_disconnectedAlerts = new Alert[io.length];
+    m_disconnectedAlerts = new Alert[io.length];
     for (int i = 0; i < m_inputs.length; i++) {
       m_disconnectedAlerts[i] =
           new Alert(

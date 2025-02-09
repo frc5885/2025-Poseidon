@@ -5,12 +5,12 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
 
 public class Feeder {
-  private Alert m_motorDisconnectedAlert;
-  private FeederIO m_feederIO;
-  private FeederIOInputsAutoLogged m_inputs = new FeederIOInputsAutoLogged();
+  private final Alert m_motorDisconnectedAlert;
+  private final FeederIO m_feederIO;
+  private final FeederIOInputsAutoLogged m_inputs = new FeederIOInputsAutoLogged();
 
   public Feeder(FeederIO io) {
-    this.m_feederIO = io;
+    m_feederIO = io;
 
     m_motorDisconnectedAlert = new Alert("Feeder motor disconnected!", AlertType.kError);
   }

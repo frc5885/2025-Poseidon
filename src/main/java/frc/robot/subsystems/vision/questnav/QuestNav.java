@@ -30,8 +30,8 @@ public class QuestNav extends SubsystemBase {
    * transform
    */
   public QuestNav(QuestNavIO questNavIO) {
-    this.m_questNavIO = questNavIO;
-    this.m_disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
+    m_questNavIO = questNavIO;
+    m_disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
   }
 
   @Override

@@ -5,13 +5,13 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake {
-  private Alert m_motor1DisconnectedAlert;
-  private Alert m_motor2DisconnectedAlert;
-  private IntakeIO m_intakeIO;
-  private IntakeIOInputsAutoLogged m_inputs = new IntakeIOInputsAutoLogged();
+  private final Alert m_motor1DisconnectedAlert;
+  private final Alert m_motor2DisconnectedAlert;
+  private final IntakeIO m_intakeIO;
+  private final IntakeIOInputsAutoLogged m_inputs = new IntakeIOInputsAutoLogged();
 
   public Intake(IntakeIO io) {
-    this.m_intakeIO = io;
+    m_intakeIO = io;
 
     m_motor1DisconnectedAlert = new Alert("Intake Motor1 disconnected!", AlertType.kError);
     m_motor2DisconnectedAlert = new Alert("Intake Motor2 disconnected!", AlertType.kError);

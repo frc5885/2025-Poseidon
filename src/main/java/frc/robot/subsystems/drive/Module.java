@@ -32,8 +32,8 @@ public class Module {
   private SwerveModulePosition[] m_odometryPositions = new SwerveModulePosition[] {};
 
   public Module(ModuleIO io, int index) {
-    this.m_io = io;
-    this.m_index = index;
+    m_io = io;
+    m_index = index;
     m_driveDisconnectedAlert =
         new Alert(
             "Disconnected drive motor on module " + Integer.toString(m_index) + ".",

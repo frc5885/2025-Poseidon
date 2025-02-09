@@ -11,7 +11,7 @@ public class QuestNavIOSim implements QuestNavIO {
   private final Supplier<Pose2d> m_robotPoseSupplier;
 
   public QuestNavIOSim(Supplier<Pose2d> robotPoseSupplier) {
-    this.m_robotPoseSupplier = robotPoseSupplier;
+    m_robotPoseSupplier = robotPoseSupplier;
   }
 
   @Override

@@ -37,7 +37,7 @@ public class VisionIOPhotonVision implements VisionIO {
    */
   public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
     m_camera = new PhotonCamera(name);
-    this.m_robotToCamera = robotToCamera;
+    m_robotToCamera = robotToCamera;
   }
 
   @Override

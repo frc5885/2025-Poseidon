@@ -88,7 +88,7 @@ public class HeimdallPoseController {
     m_odometryBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
     m_questBuffer = TimeInterpolatableBuffer.createBuffer(BUFFER_DURATION);
 
-    this.m_mode = mode;
+    m_mode = mode;
   }
 
   /** Update method that should be called each loop with fresh sensor data. */
@@ -214,7 +214,7 @@ public class HeimdallPoseController {
 
   /** Update the mode / odometry source */
   public void setMode(HeimdallOdometrySource mode) {
-    this.m_mode = mode;
+    m_mode = mode;
   }
 
   /**
