@@ -71,7 +71,8 @@ public class HeimdallPoseController {
 
   public HeimdallPoseController(HeimdallOdometrySource mode) {
     m_odometryEstimator =
-        new SwerveDrivePoseEstimator(m_kinematics, m_initialGyro, m_initialModulePositions, new Pose2d());
+        new SwerveDrivePoseEstimator(
+            m_kinematics, m_initialGyro, m_initialModulePositions, new Pose2d());
 
     switch (Constants.kCurrentMode) {
       case REAL:

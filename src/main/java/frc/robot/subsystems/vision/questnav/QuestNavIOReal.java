@@ -29,7 +29,8 @@ public class QuestNavIOReal implements QuestNavIO {
 
   @Override
   public void updateInputs(QuestNavIOInputs inputs) {
-    inputs.connected = ((Timer.getTimestamp() - m_questBatteryPercent.getLastChange()) / 1000) < 250;
+    inputs.connected =
+        ((Timer.getTimestamp() - m_questBatteryPercent.getLastChange()) / 1000) < 250;
     inputs.timestamp = m_questTimestamp.get();
     inputs.batteryPercent = m_questBatteryPercent.get();
     inputs.position = m_questPosition.get();

@@ -23,33 +23,33 @@ import java.util.Queue;
 
 /** IO implementation for NavX. */
 public class GyroIONavX implements GyroIO {
-  private final AHRS navX = new AHRS(NavXComType.kMXP_SPI, (byte) kOdometryFrequency);
-  private final Queue<Double> yawPositionQueue;
-  private final Queue<Double> yawTimestampQueue;
+  private final AHRS m_navX = new AHRS(NavXComType.kMXP_SPI, (byte) kOdometryFrequency);
+  private final Queue<Double> m_yawPositionQueue;
+  private final Queue<Double> m_yawTimestampQueue;
 
   public GyroIONavX() {
-    yawTimestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
-    yawPositionQueue = SparkOdometryThread.getInstance().registerSignal(navX::getAngle);
+    m_yawTimestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
+    m_yawPositionQueue = SparkOdometryThread.getInstance().registerSignal(m_navX::getAngle);
   }
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
-    inputs.connected = navX.isConnected();
-    inputs.yawPosition = Rotation2d.fromDegrees(-navX.getAngle());
-    inputs.yawVelocityRadPerSec = Units.degreesToRadians(-navX.getRawGyroZ());
+    inputs.connected = m_navX.isConnected();
+    inputs.yawPosition = Rotation2d.fromDegrees(-m_navX.getAngle());
+    inputs.yawVelocityRadPerSec = Units.degreesToRadians(-m_navX.getRawGyroZ());
 
     inputs.odometryYawTimestamps =
-        yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        m_yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryYawPositions =
-        yawPositionQueue.stream()
+        m_yawPositionQueue.stream()
             .map((Double value) -> Rotation2d.fromDegrees(-value))
             .toArray(Rotation2d[]::new);
-    yawTimestampQueue.clear();
-    yawPositionQueue.clear();
+    m_yawTimestampQueue.clear();
+    m_yawPositionQueue.clear();
   }
 
   @Override
   public void resetGyro() {
-    navX.reset();
+    m_navX.reset();
   }
 }

@@ -23,42 +23,43 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
-  private final ModuleIO io;
+  private final ModuleIO m_io;
   private final ModuleIOInputsAutoLogged m_inputs = new ModuleIOInputsAutoLogged();
-  private final int index;
+  private final int m_index;
 
-  private final Alert driveDisconnectedAlert;
-  private final Alert turnDisconnectedAlert;
-  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+  private final Alert m_driveDisconnectedAlert;
+  private final Alert m_turnDisconnectedAlert;
+  private SwerveModulePosition[] m_odometryPositions = new SwerveModulePosition[] {};
 
   public Module(ModuleIO io, int index) {
-    this.io = io;
-    this.index = index;
-    driveDisconnectedAlert =
+    this.m_io = io;
+    this.m_index = index;
+    m_driveDisconnectedAlert =
         new Alert(
-            "Disconnected drive motor on module " + Integer.toString(index) + ".",
+            "Disconnected drive motor on module " + Integer.toString(m_index) + ".",
             AlertType.kError);
-    turnDisconnectedAlert =
+    m_turnDisconnectedAlert =
         new Alert(
-            "Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+            "Disconnected turn motor on module " + Integer.toString(m_index) + ".",
+            AlertType.kError);
   }
 
   public void periodic() {
-    io.updateInputs(m_inputs);
-    Logger.processInputs("Drive/Module" + Integer.toString(index), m_inputs);
+    m_io.updateInputs(m_inputs);
+    Logger.processInputs("Drive/Module" + Integer.toString(m_index), m_inputs);
 
     // Calculate positions for odometry
     int sampleCount = m_inputs.odometryTimestamps.length; // All signals are sampled together
-    odometryPositions = new SwerveModulePosition[sampleCount];
+    m_odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
       double positionMeters = m_inputs.odometryDrivePositionsRad[i] * kWheelRadiusMeters;
       Rotation2d angle = m_inputs.odometryTurnPositions[i];
-      odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
+      m_odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
     }
 
     // Update alerts
-    driveDisconnectedAlert.set(!m_inputs.driveConnected);
-    turnDisconnectedAlert.set(!m_inputs.turnConnected);
+    m_driveDisconnectedAlert.set(!m_inputs.driveConnected);
+    m_turnDisconnectedAlert.set(!m_inputs.turnConnected);
   }
 
   /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
@@ -68,25 +69,25 @@ public class Module {
     state.cosineScale(m_inputs.turnPosition);
 
     // Apply setpoints
-    io.setDriveVelocity(state.speedMetersPerSecond / kWheelRadiusMeters);
-    io.setTurnPosition(state.angle);
+    m_io.setDriveVelocity(state.speedMetersPerSecond / kWheelRadiusMeters);
+    m_io.setTurnPosition(state.angle);
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
-    io.setDriveOpenLoop(output);
-    io.setTurnPosition(new Rotation2d());
+    m_io.setDriveOpenLoop(output);
+    m_io.setTurnPosition(new Rotation2d());
   }
 
   /** Runs the turn motor with the specified output. */
   public void runTurnOpenLoop(double output) {
-    io.setTurnOpenLoop(output);
+    m_io.setTurnOpenLoop(output);
   }
 
   /** Disables all outputs to motors. */
   public void stop() {
-    io.setDriveOpenLoop(0.0);
-    io.setTurnOpenLoop(0.0);
+    m_io.setDriveOpenLoop(0.0);
+    m_io.setTurnOpenLoop(0.0);
   }
 
   /** Returns the current turn angle of the module. */
@@ -124,7 +125,7 @@ public class Module {
 
   /** Returns the module positions received this cycle. */
   public SwerveModulePosition[] getOdometryPositions() {
-    return odometryPositions;
+    return m_odometryPositions;
   }
 
   /** Returns the timestamps of the samples received this cycle. */
@@ -143,6 +144,6 @@ public class Module {
   }
 
   public void setClosedLoop() {
-    io.setClosedLoop();
+    m_io.setClosedLoop();
   }
 }
