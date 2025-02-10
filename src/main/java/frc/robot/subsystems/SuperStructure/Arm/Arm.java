@@ -96,7 +96,7 @@ public class Arm {
 
   // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
-    runArmOpenLoop(outputVolts);
+    m_io.setVoltage(outputVolts);
   }
 
   public void stop() {
