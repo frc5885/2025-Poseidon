@@ -1,5 +1,6 @@
 package frc.robot.subsystems.SuperStructure;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
 public class SuperStructureConstants {
@@ -14,7 +15,12 @@ public class SuperStructureConstants {
     public static final double kElevatorMassKg = 4.0;
     public static final double kElevatorStartingPositionMeters = 0.0;
     public static final double kElevatorMinHeightMeters = 0.0;
-    public static final double kElevatorMaxHeightMeters = 2.0;
+    public static final double kElevatorMaxHeightMeters = Units.inchesToMeters(56.625);
+    public static final double kElevatorCarriageHeight = Units.inchesToMeters(7.375);
+    public static final double kElevatorStage1MaxTravel = Units.inchesToMeters(30.0);
+    // relative to robot origin
+    public static final Translation2d kElevatorTranslation =
+        new Translation2d(Units.inchesToMeters(9.5), 0.0);
 
     // In Meters/Sec
     public static final double kElevatorMaxVelocity = 1.54;
@@ -43,10 +49,10 @@ public class SuperStructureConstants {
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
     public static enum ElevatorLevel {
-      L1(0.0),
+      L1(kElevatorMinHeightMeters),
       L2(0.5),
       L3(1.0),
-      L4(1.5);
+      L4(kElevatorMaxHeightMeters);
 
       public double setpointMeters;
 
@@ -70,7 +76,7 @@ public class SuperStructureConstants {
     public static final double kArmMaxVelocity = Units.degreesToRadians(2500.0);
     // In Rad/SecSq
     public static final double kArmMaxAcceleration = Units.degreesToRadians(5000.0);
-    public static final double kArmMotorReduction = 30.0;
+    public static final double kArmMotorReduction = 240.0;
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec
@@ -82,9 +88,9 @@ public class SuperStructureConstants {
     public static final double kArmKp = 0.0;
     public static final double kArmKd = 0.0;
 
-    public static final double kArmSimKv = 0.5;
-    public static final double kArmSimKg = 3.01;
-    public static final double kArmSimKp = 0.0;
+    public static final double kArmSimKv = 4.7706;
+    public static final double kArmSimKg = 2.6085;
+    public static final double kArmSimKp = 1.0;
     public static final double kArmSimKd = 0.0;
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);

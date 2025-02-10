@@ -16,7 +16,7 @@ public class ArmIOSim implements ArmIO {
         new SingleJointedArmSim(
             DCMotor.getNEO(1),
             kArmMotorReduction,
-            0.4,
+            2.767,
             kArmLengthMeters,
             kArmMinAngleRads,
             kArmMaxAngleRads,

@@ -1,0 +1,88 @@
+{
+  "name": "Poseidon",
+  "rotations": [
+    {
+      "axis": "x",
+      "degrees": 90
+    },
+    {
+      "axis": "z",
+      "degrees": 90
+    }
+  ],
+  "position": [
+    0,
+    0,
+    0
+  ],
+  "cameras": [
+    {
+      "name": "LeftCamera",
+      "rotations": [
+        {
+          "axis": "z",
+          "degrees": -15
+        }
+      ],
+      "position": [
+        0.254,
+        0.318,
+        0
+      ],
+      "resolution": [
+        1280,
+        720
+      ],
+      "fov": 70
+    }
+  ],
+  "components": [
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 180
+        },
+        {
+          "axis": "z",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0.238,
+        0,
+        0.58
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 180
+        }
+      ],
+      "zeroedPosition": [
+        0.238,
+        0,
+        0.242
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": []
+    }
+  ]
+}
