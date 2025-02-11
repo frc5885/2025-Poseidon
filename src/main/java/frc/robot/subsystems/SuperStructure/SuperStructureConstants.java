@@ -114,9 +114,11 @@ public class SuperStructureConstants {
     public static final int kWristMotorCurrentLimit = 40;
 
     public static final double kWristLengthMeters = Units.inchesToMeters(8.5);
+    // real world angle
     public static final double kWristStartingPositionRadians = Units.degreesToRadians(270);
-    public static final double kWristMinAngleRads = Units.degreesToRadians(90);
-    public static final double kWristMaxAngleRads = Units.degreesToRadians(270);
+    // relative to arm
+    public static final double kWristMinAngleRads = Units.degreesToRadians(30);
+    public static final double kWristMaxAngleRads = Units.degreesToRadians(180);
 
     // In Rad/Sec
     public static final double kWristMaxVelocity = Units.degreesToRadians(2500.0);
