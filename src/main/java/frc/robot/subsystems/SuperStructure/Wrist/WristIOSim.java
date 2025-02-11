@@ -1,5 +1,6 @@
 package frc.robot.subsystems.SuperStructure.Wrist;
 
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.kArmStartingPositionRadians;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.*;
 
 import edu.wpi.first.math.MathUtil;
@@ -9,33 +10,33 @@ import java.util.function.DoubleSupplier;
 
 public class WristIOSim implements WristIO {
   private final MovingFrameSingleJointedArmSim m_wristSim;
-  private DoubleSupplier m_armAngleRads;
 
   private double m_appliedVolts;
 
-  public WristIOSim(DoubleSupplier armAngleRads) {
-    m_armAngleRads = armAngleRads;
+  public WristIOSim() {
     m_wristSim =
         new MovingFrameSingleJointedArmSim(
             DCMotor.getNEO(1),
             kWristMotorReduction,
-            2.767,
+            0.7,
             kWristLengthMeters,
             kWristMinAngleRads,
             kWristMaxAngleRads,
             true,
             kWristStartingPositionRadians,
-            m_armAngleRads.getAsDouble());
+            kArmStartingPositionRadians);
   }
 
   @Override
-  public void updateInputs(WristIOInputs inputs) {
-    m_wristSim.setArmAngle(m_armAngleRads.getAsDouble());
+  public void updateInputs(WristIOInputs inputs, DoubleSupplier armAngleSupplier) {
+    double armAngleRads = armAngleSupplier.getAsDouble();
+
+    m_wristSim.setArmAngle(armAngleRads);
     m_wristSim.update(0.02);
 
     inputs.wristConnected = true;
     inputs.positionRads = m_wristSim.getAngleRads();
-    inputs.realWorldPositionRads = inputs.positionRads + m_armAngleRads.getAsDouble();
+    inputs.realWorldPositionRads = inputs.positionRads + armAngleRads;
     inputs.wristVelocityRadPerSec = m_wristSim.getVelocityRadPerSec();
     inputs.wristAppliedVolts = m_appliedVolts;
     inputs.wristCurrentAmps = m_wristSim.getCurrentDrawAmps();

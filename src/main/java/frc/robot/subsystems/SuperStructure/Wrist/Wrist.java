@@ -1,6 +1,7 @@
 package frc.robot.subsystems.SuperStructure.Wrist;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.kArmStartingPositionRadians;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.*;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -13,7 +14,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.util.TunablePIDController;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Wrist {
@@ -27,6 +30,10 @@ public class Wrist {
   private TunablePIDController m_wristController;
   private ArmFeedforward m_wristFeedforward;
   private SysIdRoutine m_sysIdRoutine;
+
+  private WristGoals m_wristGoal = WristGoals.STOW;
+
+  private DoubleSupplier m_armAngleRadSupplier = () -> kArmStartingPositionRadians;
 
   public Wrist(WristIO io) {
     m_io = io;
@@ -59,18 +66,25 @@ public class Wrist {
     motorDisconnectedAlert = new Alert("Wrist disconnected", AlertType.kError);
   }
 
+  // set the supplier to pass the arm angle to the wrist
+  // needs to be called right after creating the wrist subsystem
+  public void setArmAngleSupplier(DoubleSupplier armAngleRadSupplier) {
+    m_armAngleRadSupplier = armAngleRadSupplier;
+  }
+
   public void periodic() {
-    m_io.updateInputs(m_inputs);
+    m_io.updateInputs(m_inputs, m_armAngleRadSupplier);
     Logger.processInputs("SuperStructure/Wrist", m_inputs);
 
     // TODO comment this out for SysId
-    // runArmSetpoint(m_armGoal != null ? m_armGoal.setpointRadians : getPositionRadians());
+    runWristSetpoint(
+        m_wristGoal != null ? m_wristGoal.setpointRadians : getRealWorldPositionRadians());
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.wristConnected);
   }
 
-  public void runArmOpenLoop(double outputVolts) {
+  public void runWristOpenLoop(double outputVolts) {
     // TODO MUST match the real implementation!
     if (outputVolts > 0) {
       m_io.setVoltage(isWithinMaximum(getPositionRadians()) ? outputVolts : 0.0);
@@ -81,16 +95,16 @@ public class Wrist {
     }
   }
 
-  // public void runArmSetpoint(double setpointRadians) {
-  //     if (m_goal.position != setpointRadians) {
-  //     m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
-  //     }
-  //     TrapezoidProfile.State current = getCurrentState();
-  //     TrapezoidProfile.State setpoint = m_armProfile.calculate(0.02, current, m_goal);
-  //     m_io.setVoltage(
-  //         m_armFeedforward.calculate(setpoint.position, setpoint.velocity)
-  //             + m_armController.calculate(current.position, setpoint.position));
-  // }
+  public void runWristSetpoint(double setpointRadians) {
+    if (m_goal.position != setpointRadians) {
+      m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
+    }
+    TrapezoidProfile.State current = getCurrentState();
+    TrapezoidProfile.State setpoint = m_wristProfile.calculate(0.02, current, m_goal);
+    m_io.setVoltage(
+        m_wristFeedforward.calculate(setpoint.position, setpoint.velocity)
+            + m_wristController.calculate(current.position, setpoint.position));
+  }
 
   // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
@@ -113,7 +127,7 @@ public class Wrist {
     return m_inputs.positionRads;
   }
 
-  public double getRealWorldPositionRads() {
+  public double getRealWorldPositionRadians() {
     return m_inputs.realWorldPositionRads;
   }
 
@@ -122,20 +136,21 @@ public class Wrist {
   }
 
   public TrapezoidProfile.State getCurrentState() {
-    return new TrapezoidProfile.State(getPositionRadians(), getVelocityRadPerSec());
+    // controllers need to run based on real world position due to gravity changing
+    return new TrapezoidProfile.State(getRealWorldPositionRadians(), getVelocityRadPerSec());
   }
 
-  // public void setGoal(ArmGoals armGoal) {
-  //     m_armGoal = armGoal;
-  // }
+  public void setGoal(WristGoals wristGoal) {
+    m_wristGoal = wristGoal;
+  }
 
-  // public ArmGoals getGoal() {
-  //     return m_armGoal;
-  // }
+  public WristGoals getGoal() {
+    return m_wristGoal;
+  }
 
-  // public boolean isSetpointAchieved() {
-  //     return Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads;
-  // }
+  public boolean isSetpointAchieved() {
+    return Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads;
+  }
 
   // Configure SysId
   public void sysIdSetup(SuperStructure superStructure) {

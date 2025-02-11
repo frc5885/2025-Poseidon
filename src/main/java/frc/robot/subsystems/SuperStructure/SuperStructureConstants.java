@@ -67,9 +67,9 @@ public class SuperStructureConstants {
     public static final boolean kArmInverted = false;
     public static final int kArmMotorCurrentLimit = 40;
 
-    public static final double kArmLengthMeters = 0.3;
-    public static final double kArmStartingPositionRadians = Units.degreesToRadians(-60.0);
-    public static final double kArmMinAngleRads = Units.degreesToRadians(-60.0);
+    public static final double kArmLengthMeters = Units.inchesToMeters(14.0);
+    public static final double kArmStartingPositionRadians = Units.degreesToRadians(90);
+    public static final double kArmMinAngleRads = Units.degreesToRadians(0);
     public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
 
     // In Rad/Sec
@@ -96,8 +96,8 @@ public class SuperStructureConstants {
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
 
     public static enum ArmGoals {
-      STOW(kArmMinAngleRads),
-      RAISED(kArmMaxAngleRads),
+      STOW(Units.degreesToRadians(90)),
+      INTAKE(Units.degreesToRadians(0)),
       SETPOINT(Units.degreesToRadians(45.0));
 
       public double setpointRadians;
@@ -113,16 +113,16 @@ public class SuperStructureConstants {
     public static final boolean kWristInverted = false;
     public static final int kWristMotorCurrentLimit = 40;
 
-    public static final double kWristLengthMeters = 0.3;
-    public static final double kWristStartingPositionRadians = Units.degreesToRadians(-60.0);
-    public static final double kWristMinAngleRads = Units.degreesToRadians(-60.0);
-    public static final double kWristMaxAngleRads = Units.degreesToRadians(90.0);
+    public static final double kWristLengthMeters = Units.inchesToMeters(8.5);
+    public static final double kWristStartingPositionRadians = Units.degreesToRadians(270);
+    public static final double kWristMinAngleRads = Units.degreesToRadians(90);
+    public static final double kWristMaxAngleRads = Units.degreesToRadians(270);
 
     // In Rad/Sec
     public static final double kWristMaxVelocity = Units.degreesToRadians(2500.0);
     // In Rad/SecSq
     public static final double kWristMaxAcceleration = Units.degreesToRadians(5000.0);
-    public static final double kWristMotorReduction = 240.0;
+    public static final double kWristMotorReduction = 50.0;
     // Motor Rotations -> Wrist Radians
     public static final double kWristEncoderPositionFactor = 2 * Math.PI / kWristMotorReduction;
     // Motor RPM -> Wrist Rad/Sec
@@ -135,17 +135,18 @@ public class SuperStructureConstants {
     public static final double kWristKp = 0.0;
     public static final double kWristKd = 0.0;
 
-    public static final double kWristSimKv = 0.0;
-    public static final double kWristSimKg = 0.0;
-    public static final double kWristSimKp = 0.0;
-    public static final double kWristSimKd = 0.0;
+    public static final double kWristSimKv = 0.85;
+    public static final double kWristSimKg = 5.0;
+    public static final double kWristSimKp = 1.0;
+    public static final double kWristSimKd = 2.0;
 
     public static final double kWristErrorToleranceRads = Units.degreesToRadians(1.5);
 
     public static enum WristGoals {
-      STOW(kWristMinAngleRads),
-      RAISED(kWristMaxAngleRads),
-      SETPOINT(Units.degreesToRadians(-45.0));
+      // these are all in real-world radians
+      STOW(Units.degreesToRadians(270)),
+      INTAKE(Units.degreesToRadians(180)),
+      SETPOINT(Units.degreesToRadians(135));
 
       public double setpointRadians;
 

@@ -1,5 +1,6 @@
 package frc.robot.subsystems.SuperStructure.Wrist;
 
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface WristIO {
@@ -15,7 +16,7 @@ public interface WristIO {
     public double wristCurrentAmps = 0.0;
   }
 
-  public default void updateInputs(WristIOInputs inputs) {}
+  public default void updateInputs(WristIOInputs inputs, DoubleSupplier armAngleSupplier) {}
 
   public default void setVoltage(double outputVolts) {}
 }

@@ -17,10 +17,8 @@ public class WristIOSpark implements WristIO {
   private final SparkMax m_wristSpark;
   private final Debouncer m_wristConnectedDebouncer = new Debouncer(0.5);
   private final RelativeEncoder m_wristEncoder;
-  private DoubleSupplier m_armAngleRads;
 
-  public WristIOSpark(DoubleSupplier armAngleRads) {
-    m_armAngleRads = armAngleRads;
+  public WristIOSpark() {
     m_wristSpark = new SparkMax(kWristSparkId, MotorType.kBrushless);
     m_wristEncoder = m_wristSpark.getEncoder();
 
@@ -55,7 +53,9 @@ public class WristIOSpark implements WristIO {
   }
 
   @Override
-  public void updateInputs(WristIOInputs inputs) {
+  public void updateInputs(WristIOInputs inputs, DoubleSupplier armAngleSupplier) {
+    double armAngleRads = armAngleSupplier.getAsDouble();
+
     sparkStickyFault = false;
     ifOk(
         m_wristSpark,
@@ -64,8 +64,7 @@ public class WristIOSpark implements WristIO {
     ifOk(
         m_wristSpark,
         m_wristEncoder::getPosition,
-        (positionRads) ->
-            inputs.realWorldPositionRads = positionRads + m_armAngleRads.getAsDouble());
+        (positionRads) -> inputs.realWorldPositionRads = positionRads + armAngleRads);
     ifOk(
         m_wristSpark,
         m_wristEncoder::getVelocity,

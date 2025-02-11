@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -49,6 +48,10 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
+import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
+import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
+import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
@@ -106,7 +109,8 @@ public class RobotContainer {
                     VisionConstants.kCamera0Name, VisionConstants.kRobotToCamera0),
                 new VisionIOPhotonVision(
                     VisionConstants.kCamera1Name, VisionConstants.kRobotToCamera1));
-        m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark());
+        m_superStructure =
+            new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark(), new WristIOSpark());
         m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
         m_endEffector = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
 
@@ -135,7 +139,8 @@ public class RobotContainer {
                     m_drive::getPose));
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
-        m_superStructure = new SuperStructure(new ElevatorIOSim(), new ArmIOSim());
+        m_superStructure =
+            new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
         m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
         m_endEffector = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
         break;
@@ -151,7 +156,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 m_poseController);
         m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
+        m_superStructure =
+            new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
 
         m_endEffector = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
@@ -204,6 +210,18 @@ public class RobotContainer {
     // m_autoChooser.addOption(
     //     "Arm SysId (Dynamic Reverse)",
     //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Quasistatic Forward)",
+    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Quasistatic Reverse)",
+    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Dynamic Forward)",
+    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Dynamic Reverse)",
+    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -274,36 +292,49 @@ public class RobotContainer {
                 () ->
                     m_superStructure.setArmGoal(
                         switch (m_superStructure.getArmGoal()) {
-                          case STOW -> ArmGoals.RAISED;
-                          case RAISED -> ArmGoals.SETPOINT;
+                          case STOW -> ArmGoals.INTAKE;
+                          case INTAKE -> ArmGoals.SETPOINT;
                           case SETPOINT -> ArmGoals.STOW;
                           default -> ArmGoals.STOW;
                         }),
                 m_superStructure));
 
-    new JoystickButton(new GenericHID(1), 2)
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_collector.runIntake(12), () -> m_collector.stopIntake(), m_collector));
+    // new JoystickButton(new GenericHID(1), 2)
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_collector.runIntake(12), () -> m_collector.stopIntake(), m_collector));
+
+    // new JoystickButton(new GenericHID(1), 3)
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
 
     new JoystickButton(new GenericHID(1), 3)
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    m_superStructure.setWristGoal(
+                        switch (m_superStructure.getWristGoal()) {
+                          case STOW -> WristGoals.INTAKE;
+                          case INTAKE -> WristGoals.SETPOINT;
+                          case SETPOINT -> WristGoals.STOW;
+                          default -> WristGoals.STOW;
+                        }),
+                m_superStructure));
 
-    new JoystickButton(new GenericHID(1), 4)
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_endEffector.runCoralEjector(12),
-                () -> m_endEffector.stopCoralEjector(),
-                m_collector));
+    // new JoystickButton(new GenericHID(1), 4)
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_endEffector.runCoralEjector(12),
+    //             () -> m_endEffector.stopCoralEjector(),
+    //             m_collector));
 
-    new JoystickButton(new GenericHID(1), 5)
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_endEffector.runAlgaeClaw(12),
-                () -> m_endEffector.stopAlgaeClaw(),
-                m_collector));
+    // new JoystickButton(new GenericHID(1), 5)
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_endEffector.runAlgaeClaw(12),
+    //             () -> m_endEffector.stopAlgaeClaw(),
+    //             m_collector));
 
     // controller.a().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
     // controller.b().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));

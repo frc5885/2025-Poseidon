@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.Arm.Arm;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Elevator.Elevator;
@@ -25,8 +24,6 @@ import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.Wrist.Wrist;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -43,26 +40,18 @@ public class SuperStructure extends SubsystemBase {
   private LoggedMechanismRoot2d m_carriageRoot;
   private LoggedMechanismRoot2d m_armRoot;
   private LoggedMechanismLigament2d m_armMech;
-  private LoggedMechanismRoot2d m_wristRoot;
   private LoggedMechanismLigament2d m_wristMech;
+  private LoggedMechanismLigament2d m_algaeClawMech1;
+  private LoggedMechanismLigament2d m_algaeClawMech2;
 
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
 
-  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO) {
+  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
-    switch (Constants.kCurrentMode) {
-      case REAL:
-        m_wrist = new Wrist(new WristIOSpark(m_arm::getPositionRadians));
-        break;
-      case SIM:
-        m_wrist = new Wrist(new WristIOSim(m_arm::getPositionRadians));
-        break;
-      default:
-        m_wrist = new Wrist(new WristIO() {});
-        break;
-    }
+    m_wrist = new Wrist(wristIO);
+    m_wrist.setArmAngleSupplier(m_arm::getPositionRadians);
 
     visualizationSetup();
 
@@ -87,7 +76,16 @@ public class SuperStructure extends SubsystemBase {
 
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
   public ArmGoals getArmGoal() {
-    return m_arm.getGoal();
+    ArmGoals goal = m_arm.getGoal();
+    Logger.recordOutput("SuperStructure/Arm/GoalPosition", goal.setpointRadians);
+    return goal;
+  }
+
+  @AutoLogOutput(key = "SuperStructure/Wrist/Goal")
+  public WristGoals getWristGoal() {
+    WristGoals goal = m_wrist.getGoal();
+    Logger.recordOutput("SuperStructure/Wrist/GoalPosition", goal.setpointRadians);
+    return goal;
   }
 
   public void setElevatorLevel(ElevatorLevel elevatorLevel) {
@@ -96,6 +94,10 @@ public class SuperStructure extends SubsystemBase {
 
   public void setArmGoal(ArmGoals armGoal) {
     m_arm.setGoal(armGoal);
+  }
+
+  public void setWristGoal(WristGoals wristGoal) {
+    m_wrist.setGoal(wristGoal);
   }
 
   // used to determine if the superstructure achieved the combined([elevator, arm]) goal state
@@ -164,21 +166,22 @@ public class SuperStructure extends SubsystemBase {
                 Units.radiansToDegrees(kArmStartingPositionRadians),
                 10.0,
                 new Color8Bit(0, 255, 0)));
-    m_wristRoot =
-        m_canvas.getRoot(
-            "WristRoot",
-            m_armRootTranslation.getX()
-                + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
-            m_armRootTranslation.getY()
-                + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())));
     m_wristMech =
-        m_armRoot.append(
+        m_armMech.append(
             new LoggedMechanismLigament2d(
                 "Wrist",
                 kWristLengthMeters,
                 Units.radiansToDegrees(kWristStartingPositionRadians),
                 10.0,
-                new Color8Bit(255, 0, 0)));
+                new Color8Bit(0, 255, 255)));
+    m_algaeClawMech1 =
+        m_wristMech.append(
+            new LoggedMechanismLigament2d(
+                "AlgaeClaw1", kWristLengthMeters, -149, 10.0, new Color8Bit(0, 255, 255)));
+    m_algaeClawMech2 =
+        m_wristMech.append(
+            new LoggedMechanismLigament2d(
+                "AlgaeClaw2", kWristLengthMeters, -84, 10.0, new Color8Bit(0, 255, 255)));
   }
 
   private void visualizationUpdate() {
@@ -189,11 +192,6 @@ public class SuperStructure extends SubsystemBase {
     m_armRoot.setPosition(
         m_armRootTranslation.getX(), m_armRootTranslation.getY() + m_elevator.getPositionMeters());
     m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
-    m_wristRoot.setPosition(
-        m_armRootTranslation.getX()
-            + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
-        m_armRootTranslation.getY()
-            + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())));
     m_wristMech.setAngle(Units.radiansToDegrees(m_wrist.getPositionRadians()));
     Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
 
