@@ -6,6 +6,7 @@ package frc.robot.subsystems.SuperStructure;
 
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.*;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -21,6 +22,8 @@ import frc.robot.subsystems.SuperStructure.Elevator.Elevator;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.Wrist.Wrist;
+import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -30,30 +33,36 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
+  private final Wrist m_wrist;
 
   private LoggedMechanism2d m_canvas;
   private LoggedMechanismRoot2d m_elevatorRoot;
   private LoggedMechanismRoot2d m_carriageRoot;
   private LoggedMechanismRoot2d m_armRoot;
   private LoggedMechanismLigament2d m_armMech;
+  private LoggedMechanismLigament2d m_wristMech;
 
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
 
-  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO) {
+  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
+    m_wrist = new Wrist(wristIO);
+    m_wrist.setArmAngleSupplier(m_arm::getPositionRadians);
 
     visualizationSetup();
 
     m_elevator.sysIdSetup(this);
     m_arm.sysIdSetup(this);
+    m_wrist.sysIdSetup(this);
   }
 
   @Override
   public void periodic() {
     m_elevator.periodic();
     m_arm.periodic();
+    m_wrist.periodic();
 
     visualizationUpdate();
   }
@@ -65,7 +74,16 @@ public class SuperStructure extends SubsystemBase {
 
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
   public ArmGoals getArmGoal() {
-    return m_arm.getGoal();
+    ArmGoals goal = m_arm.getGoal();
+    Logger.recordOutput("SuperStructure/Arm/GoalPosition", goal.setpointRadians);
+    return goal;
+  }
+
+  @AutoLogOutput(key = "SuperStructure/Wrist/Goal")
+  public WristGoals getWristGoal() {
+    WristGoals goal = m_wrist.getGoal();
+    Logger.recordOutput("SuperStructure/Wrist/GoalPosition", goal.setpointRadians);
+    return goal;
   }
 
   public void setElevatorLevel(ElevatorLevel elevatorLevel) {
@@ -74,6 +92,10 @@ public class SuperStructure extends SubsystemBase {
 
   public void setArmGoal(ArmGoals armGoal) {
     m_arm.setGoal(armGoal);
+  }
+
+  public void setWristGoal(WristGoals wristGoal) {
+    m_wrist.setGoal(wristGoal);
   }
 
   // used to determine if the superstructure achieved the combined([elevator, arm]) goal state
@@ -100,6 +122,16 @@ public class SuperStructure extends SubsystemBase {
   /** Returns a command to run a arm dynamic test in the specified direction. */
   public Command armSysIdDynamic(SysIdRoutine.Direction direction) {
     return m_arm.getSysIdDynamic(direction);
+  }
+
+  /** Returns a command to run a wrist quasistatic test in the specified direction. */
+  public Command wristSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_wrist.getSysIdQuasistatic(direction);
+  }
+
+  /** Returns a command to run a wrist dynamic test in the specified direction. */
+  public Command wristSysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_wrist.getSysIdDynamic(direction);
   }
 
   private void visualizationSetup() {
@@ -132,6 +164,21 @@ public class SuperStructure extends SubsystemBase {
                 Units.radiansToDegrees(kArmStartingPositionRadians),
                 10.0,
                 new Color8Bit(0, 255, 0)));
+    m_wristMech =
+        m_armMech.append(
+            new LoggedMechanismLigament2d(
+                "Wrist",
+                kWristLengthMeters,
+                Units.radiansToDegrees(kWristStartingPositionRadians),
+                10.0,
+                new Color8Bit(0, 255, 255)));
+    // parts of algae claw (don't need to update because they're fixed relative to wrist)
+    m_wristMech.append(
+        new LoggedMechanismLigament2d(
+            "AlgaeClaw1", kWristLengthMeters, -149, 10.0, new Color8Bit(0, 255, 255)));
+    m_wristMech.append(
+        new LoggedMechanismLigament2d(
+            "AlgaeClaw2", kWristLengthMeters, -84, 10.0, new Color8Bit(0, 255, 255)));
   }
 
   private void visualizationUpdate() {
@@ -142,6 +189,7 @@ public class SuperStructure extends SubsystemBase {
     m_armRoot.setPosition(
         m_armRootTranslation.getX(), m_armRootTranslation.getY() + m_elevator.getPositionMeters());
     m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
+    m_wristMech.setAngle(Units.radiansToDegrees(m_wrist.getPositionRadians()));
     Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
 
     // Log pose 3d
@@ -162,5 +210,16 @@ public class SuperStructure extends SubsystemBase {
             0,
             m_armRootTranslation.getY() + m_elevator.getPositionMeters(),
             new Rotation3d(0, -m_arm.getPositionRadians(), 0)));
+    Logger.recordOutput(
+        "SuperStructure/Mechanism3d/3-Wrist",
+        new Pose3d(
+            kElevatorTranslation.getX()
+                + 0.06
+                + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
+            0,
+            m_armRootTranslation.getY()
+                + m_elevator.getPositionMeters()
+                + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
+            new Rotation3d(0.0, -m_wrist.getRealWorldPositionRadians(), 0.0)));
   }
 }
