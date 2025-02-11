@@ -10,6 +10,8 @@ public class IntakeIOSim implements IntakeIO {
   private double m_appliedVolts;
   private FlywheelSim m_flywheelSim;
 
+  private boolean m_isIntakeOut = false;
+
   public IntakeIOSim() {
     m_flywheelSim =
         new FlywheelSim(
@@ -29,10 +31,21 @@ public class IntakeIOSim implements IntakeIO {
         new double[] {m_flywheelSim.getCurrentDrawAmps(), m_flywheelSim.getCurrentDrawAmps()};
     inputs.motor1Connected = true;
     inputs.motor2Connected = true;
+
+    inputs.isIntakeOut = m_isIntakeOut;
   }
 
   public void setVoltage(double volts) {
     m_appliedVolts = volts;
     m_flywheelSim.setInput(volts);
   }
+
+  public void extendIntake() {
+    m_isIntakeOut = true;
+  }
+
+  public void retractIntake() {
+    m_isIntakeOut = false;
+  }
+
 }
