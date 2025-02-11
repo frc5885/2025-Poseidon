@@ -107,4 +107,51 @@ public class SuperStructureConstants {
       }
     }
   }
+
+  public static class WristConstants {
+    public static final int kWristSparkId = 43;
+    public static final boolean kWristInverted = false;
+    public static final int kWristMotorCurrentLimit = 40;
+
+    public static final double kWristLengthMeters = 0.3;
+    public static final double kWristStartingPositionRadians = Units.degreesToRadians(-60.0);
+    public static final double kWristMinAngleRads = Units.degreesToRadians(-60.0);
+    public static final double kWristMaxAngleRads = Units.degreesToRadians(90.0);
+
+    // In Rad/Sec
+    public static final double kWristMaxVelocity = Units.degreesToRadians(2500.0);
+    // In Rad/SecSq
+    public static final double kWristMaxAcceleration = Units.degreesToRadians(5000.0);
+    public static final double kWristMotorReduction = 240.0;
+    // Motor Rotations -> Wrist Radians
+    public static final double kWristEncoderPositionFactor = 2 * Math.PI / kWristMotorReduction;
+    // Motor RPM -> Wrist Rad/Sec
+    public static final double kWristEncoderVelocityFactor =
+        (2 * Math.PI) / 60 / kWristMotorReduction;
+
+    public static final double kWristKs = 0.0;
+    public static final double kWristKv = 0.0;
+    public static final double kWristKg = 0.0;
+    public static final double kWristKp = 0.0;
+    public static final double kWristKd = 0.0;
+
+    public static final double kWristSimKv = 0.0;
+    public static final double kWristSimKg = 0.0;
+    public static final double kWristSimKp = 0.0;
+    public static final double kWristSimKd = 0.0;
+
+    public static final double kWristErrorToleranceRads = Units.degreesToRadians(1.5);
+
+    public static enum WristGoals {
+      STOW(kWristMinAngleRads),
+      RAISED(kWristMaxAngleRads),
+      SETPOINT(Units.degreesToRadians(-45.0));
+
+      public double setpointRadians;
+
+      private WristGoals(double setpointRads) {
+        setpointRadians = setpointRads;
+      }
+    }
+  }
 }
