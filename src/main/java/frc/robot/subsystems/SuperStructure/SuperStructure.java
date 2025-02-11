@@ -41,8 +41,6 @@ public class SuperStructure extends SubsystemBase {
   private LoggedMechanismRoot2d m_armRoot;
   private LoggedMechanismLigament2d m_armMech;
   private LoggedMechanismLigament2d m_wristMech;
-  private LoggedMechanismLigament2d m_algaeClawMech1;
-  private LoggedMechanismLigament2d m_algaeClawMech2;
 
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
@@ -174,14 +172,13 @@ public class SuperStructure extends SubsystemBase {
                 Units.radiansToDegrees(kWristStartingPositionRadians),
                 10.0,
                 new Color8Bit(0, 255, 255)));
-    m_algaeClawMech1 =
-        m_wristMech.append(
-            new LoggedMechanismLigament2d(
-                "AlgaeClaw1", kWristLengthMeters, -149, 10.0, new Color8Bit(0, 255, 255)));
-    m_algaeClawMech2 =
-        m_wristMech.append(
-            new LoggedMechanismLigament2d(
-                "AlgaeClaw2", kWristLengthMeters, -84, 10.0, new Color8Bit(0, 255, 255)));
+    // parts of algae claw (don't need to update because they're fixed relative to wrist)
+    m_wristMech.append(
+        new LoggedMechanismLigament2d(
+            "AlgaeClaw1", kWristLengthMeters, -149, 10.0, new Color8Bit(0, 255, 255)));
+    m_wristMech.append(
+        new LoggedMechanismLigament2d(
+            "AlgaeClaw2", kWristLengthMeters, -84, 10.0, new Color8Bit(0, 255, 255)));
   }
 
   private void visualizationUpdate() {
@@ -216,13 +213,13 @@ public class SuperStructure extends SubsystemBase {
     Logger.recordOutput(
         "SuperStructure/Mechanism3d/3-Wrist",
         new Pose3d(
-            m_armRootTranslation.getX()
+            kElevatorTranslation.getX()
                 + 0.06
                 + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
             0,
             m_armRootTranslation.getY()
                 + m_elevator.getPositionMeters()
                 + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
-            new Rotation3d(0.0, -m_wrist.getPositionRadians(), 0.0)));
+            new Rotation3d(0.0, -m_wrist.getRealWorldPositionRadians(), 0.0)));
   }
 }
