@@ -49,9 +49,12 @@ public class SuperStructureConstants {
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
     public static enum ElevatorLevel {
-      L1(kElevatorMinHeightMeters),
-      L2(0.5),
-      L3(1.0),
+      STOW(kElevatorMinHeightMeters),
+      L1(0.1),
+      L2ALGAE(0.2),
+      L2(0.4),
+      L3ALGAE(0.5),
+      L3(0.75),
       L4(kElevatorMaxHeightMeters);
 
       public double setpointMeters;
@@ -98,7 +101,8 @@ public class SuperStructureConstants {
     public static enum ArmGoals {
       STOW(Units.degreesToRadians(90)),
       INTAKE(Units.degreesToRadians(0)),
-      SETPOINT(Units.degreesToRadians(45.0));
+      ALGAE_LOW_REEF(Units.degreesToRadians(45.0)),
+      ALGAE_HIGH_REEF(Units.degreesToRadians(60.0));
 
       public double setpointRadians;
 
@@ -148,7 +152,11 @@ public class SuperStructureConstants {
       // these are all in real-world radians
       STOW(Units.degreesToRadians(270)),
       INTAKE(Units.degreesToRadians(180)),
-      SETPOINT(Units.degreesToRadians(135));
+      REEF(Units.degreesToRadians(160)),
+      L4REEF(Units.degreesToRadians(120)),
+      ALGAE_FLOOR(Units.degreesToRadians(60)),
+      ALGAE_REEF(Units.degreesToRadians(120)),
+      PROCESSOR(Units.degreesToRadians(120));
 
       public double setpointRadians;
 

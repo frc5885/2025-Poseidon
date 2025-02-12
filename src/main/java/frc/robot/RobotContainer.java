@@ -14,15 +14,12 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.Collector.Collector;
@@ -49,6 +46,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
+import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
@@ -87,6 +85,7 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
+  private final LoggedDashboardChooser<SuperStructureState> m_stateChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -223,6 +222,23 @@ public class RobotContainer {
     //     "Wrist SysId (Dynamic Reverse)",
     //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
+
+    m_stateChooser.addDefaultOption("Default", SuperStructureState.DEFAULT);
+    m_stateChooser.addDefaultOption("INTAKE_CORAL", SuperStructureState.INTAKE_CORAL);
+    m_stateChooser.addDefaultOption("INTAKE_ALGAE_FLOOR", SuperStructureState.INTAKE_ALGAE_FLOOR);
+    m_stateChooser.addDefaultOption(
+        "INTAKE_ALGAE_LOW_REEF", SuperStructureState.INTAKE_ALGAE_LOW_REEF);
+    m_stateChooser.addDefaultOption(
+        "INTAKE_ALGAE_HIGH_REEF", SuperStructureState.INTAKE_ALGAE_HIGH_REEF);
+    m_stateChooser.addDefaultOption("SCORE_CORAL_L1", SuperStructureState.SCORE_CORAL_L1);
+    m_stateChooser.addDefaultOption("SCORE_CORAL_L2", SuperStructureState.SCORE_CORAL_L2);
+    m_stateChooser.addDefaultOption("SCORE_CORAL_L3", SuperStructureState.SCORE_CORAL_L3);
+    m_stateChooser.addDefaultOption("SCORE_CORAL_L4", SuperStructureState.SCORE_CORAL_L4);
+    m_stateChooser.addDefaultOption(
+        "SCORE_ALGAE_PROCESSOR", SuperStructureState.SCORE_ALGAE_PROCESSOR);
+    m_stateChooser.addDefaultOption("SCORE_ALGAE_NET", SuperStructureState.SCORE_ALGAE_NET);
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -243,58 +259,62 @@ public class RobotContainer {
             () -> -m_driverController.getRightX()));
 
     // Lock to 0° when A button is held
-    m_driverController
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                m_drive,
-                () -> -m_driverController.getLeftY(),
-                () -> -m_driverController.getLeftX(),
-                () -> new Rotation2d()));
+    // m_driverController
+    //     .a()
+    //     .whileTrue(
+    //         DriveCommands.joystickDriveAtAngle(
+    //             m_drive,
+    //             () -> -m_driverController.getLeftY(),
+    //             () -> -m_driverController.getLeftX(),
+    //             () -> new Rotation2d()));
 
     // Switch to X pattern when X button is pressed
-    m_driverController.x().onTrue(Commands.runOnce(m_drive::stopWithX, m_drive));
+    // m_driverController.x().onTrue(Commands.runOnce(m_drive::stopWithX, m_drive));
 
     // Reset gyro to 0° when B button is pressed
     m_driverController
-        .b()
+        .rightStick()
         .onTrue(
             Commands.runOnce(
                     () -> {
                       m_drive.resetGyro();
-                      Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
-                      m_drive.setPose(newPose);
+                      //   Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
+                      //   m_drive.setPose(newPose);
                     },
                     m_drive)
                 .ignoringDisable(true));
 
-    m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
+    // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
     // elevator testing
-    new JoystickButton(new GenericHID(1), 1)
+    m_driverController
+        .y()
         .onTrue(
             Commands.runOnce(
                 () ->
                     m_superStructure.setElevatorLevel(
                         switch (m_superStructure.getElevatorLevel()) {
+                          case STOW -> ElevatorLevel.L1;
                           case L1 -> ElevatorLevel.L2;
                           case L2 -> ElevatorLevel.L3;
                           case L3 -> ElevatorLevel.L4;
-                          case L4 -> ElevatorLevel.L1;
-                          default -> ElevatorLevel.L1;
+                          case L4 -> ElevatorLevel.STOW;
+                          default -> ElevatorLevel.STOW;
                         }),
                 m_superStructure));
 
     // arm testing
-    new JoystickButton(new GenericHID(1), 4)
+    m_driverController
+        .b()
         .onTrue(
             Commands.runOnce(
                 () ->
                     m_superStructure.setArmGoal(
                         switch (m_superStructure.getArmGoal()) {
                           case STOW -> ArmGoals.INTAKE;
-                          case INTAKE -> ArmGoals.SETPOINT;
-                          case SETPOINT -> ArmGoals.STOW;
+                          case INTAKE -> ArmGoals.ALGAE_LOW_REEF;
+                          case ALGAE_LOW_REEF -> ArmGoals.ALGAE_HIGH_REEF;
+                          case ALGAE_HIGH_REEF -> ArmGoals.STOW;
                           default -> ArmGoals.STOW;
                         }),
                 m_superStructure));
@@ -309,17 +329,27 @@ public class RobotContainer {
     //         new StartEndCommand(
     //             () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
 
-    new JoystickButton(new GenericHID(1), 3)
+    // wrist testing
+    m_driverController
+        .x()
         .onTrue(
             Commands.runOnce(
                 () ->
                     m_superStructure.setWristGoal(
                         switch (m_superStructure.getWristGoal()) {
                           case STOW -> WristGoals.INTAKE;
-                          case INTAKE -> WristGoals.SETPOINT;
-                          case SETPOINT -> WristGoals.STOW;
+                          case INTAKE -> WristGoals.REEF;
+                          case REEF -> WristGoals.STOW;
                           default -> WristGoals.STOW;
                         }),
+                m_superStructure));
+
+    // superstructure testing
+    m_driverController
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()),
                 m_superStructure));
 
     // new JoystickButton(new GenericHID(1), 4)

@@ -35,6 +35,8 @@ public class SuperStructure extends SubsystemBase {
   private final Arm m_arm;
   private final Wrist m_wrist;
 
+  private SuperStructureState m_state = SuperStructureState.DEFAULT;
+
   private LoggedMechanism2d m_canvas;
   private LoggedMechanismRoot2d m_elevatorRoot;
   private LoggedMechanismRoot2d m_carriageRoot;
@@ -98,10 +100,24 @@ public class SuperStructure extends SubsystemBase {
     m_wrist.setGoal(wristGoal);
   }
 
+  @AutoLogOutput(key = "SuperStructure/Goal")
+  public SuperStructureState getSuperStructureGoal() {
+    return m_state;
+  }
+
+  public void setSuperStructureGoal(SuperStructureState state) {
+    m_state = state;
+    setElevatorLevel(m_state.elevatorGoal);
+    setArmGoal(m_state.armGoal);
+    setWristGoal(m_state.wristGoal);
+  }
+
   // used to determine if the superstructure achieved the combined([elevator, arm]) goal state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
-    return m_elevator.isSetpointAchieved() && m_arm.isSetpointAchieved();
+    return m_elevator.isSetpointAchieved()
+        && m_arm.isSetpointAchieved()
+        && m_wrist.isSetpointAchieved();
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */
