@@ -22,12 +22,12 @@ public class IntakeIOSpark implements IntakeIO {
   private final Debouncer m_intakeConnectedDebounce1 = new Debouncer(0.5);
   private final Debouncer m_intakeConnectedDebounce2 = new Debouncer(0.5);
 
-  private final Solenoid m_LeftSolenoid =
+  private final Solenoid m_leftSolenoid =
       new Solenoid(
           IntakeConstants.kPneumaticHubCanID,
           PneumaticsModuleType.REVPH,
           IntakeConstants.kSolenoidId1);
-  private final Solenoid m_RightSolenoid =
+  private final Solenoid m_rightSolenoid =
       new Solenoid(
           IntakeConstants.kPneumaticHubCanID,
           PneumaticsModuleType.REVPH,
@@ -100,12 +100,12 @@ public class IntakeIOSpark implements IntakeIO {
   }
 
   public void extendIntake() {
-    m_LeftSolenoid.set(true);
-    m_RightSolenoid.set(true);
+    m_leftSolenoid.set(true);
+    m_rightSolenoid.set(true);
   }
 
   public void retractIntake() {
-    m_LeftSolenoid.set(false);
-    m_RightSolenoid.set(false);
+    m_leftSolenoid.set(false);
+    m_rightSolenoid.set(false);
   }
 }
