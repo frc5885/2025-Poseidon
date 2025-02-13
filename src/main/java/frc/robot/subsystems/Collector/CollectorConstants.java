@@ -15,5 +15,9 @@ public class CollectorConstants {
     public static final boolean kMotor2Inverted = !kMotor1Inverted;
     public static final int kCurrentLimit = 40;
     public static final double kGearRatio = 1.0;
+
+    public static final int kSolenoidId1 = 0;
+    public static final int kSolenoidId2 = 1;
+    public static final int kPneumaticHubCanID = 35;
   }
 }
