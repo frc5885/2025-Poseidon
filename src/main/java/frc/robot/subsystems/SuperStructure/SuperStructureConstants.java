@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
 public class SuperStructureConstants {
-  // TODO temporary
   public static class ElevatorConstants {
     public static final int kElevatorSparkId1 = 40;
     public static final int kElevatorSparkId2 = 41;
@@ -53,8 +52,8 @@ public class SuperStructureConstants {
       L1(0.1),
       L2ALGAE(0.2),
       L2(0.4),
-      L3ALGAE(0.5),
-      L3(0.75),
+      L3ALGAE(0.57),
+      L3(0.77),
       L4(kElevatorMaxHeightMeters);
 
       public double setpointMeters;
@@ -101,8 +100,7 @@ public class SuperStructureConstants {
     public static enum ArmGoals {
       STOW(Units.degreesToRadians(90)),
       INTAKE(Units.degreesToRadians(0)),
-      ALGAE_LOW_REEF(Units.degreesToRadians(45.0)),
-      ALGAE_HIGH_REEF(Units.degreesToRadians(60.0));
+      REEF(Units.degreesToRadians(45.0));
 
       public double setpointRadians;
 
@@ -152,11 +150,13 @@ public class SuperStructureConstants {
       // these are all in real-world radians
       STOW(Units.degreesToRadians(270)),
       INTAKE(Units.degreesToRadians(180)),
-      REEF(Units.degreesToRadians(160)),
-      L4REEF(Units.degreesToRadians(120)),
+      REEF(Units.degreesToRadians(150)),
+      L1REEF(Units.degreesToRadians(155)),
+      L4REEF(Units.degreesToRadians(130)),
       ALGAE_FLOOR(Units.degreesToRadians(60)),
       ALGAE_REEF(Units.degreesToRadians(120)),
-      PROCESSOR(Units.degreesToRadians(120));
+      PROCESSOR(Units.degreesToRadians(110)),
+      NET(Units.degreesToRadians(160));
 
       public double setpointRadians;
 
