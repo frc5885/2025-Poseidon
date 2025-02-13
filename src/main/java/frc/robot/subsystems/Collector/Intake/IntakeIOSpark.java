@@ -22,10 +22,16 @@ public class IntakeIOSpark implements IntakeIO {
   private final Debouncer m_intakeConnectedDebounce1 = new Debouncer(0.5);
   private final Debouncer m_intakeConnectedDebounce2 = new Debouncer(0.5);
 
-  private final Solenoid m_LeftSolenoid = new Solenoid(IntakeConstants.kPneumaticHubCanID, PneumaticsModuleType.REVPH, IntakeConstants.kSolenoidId1);
-  private final Solenoid m_RightSolenoid = new Solenoid(IntakeConstants.kPneumaticHubCanID, PneumaticsModuleType.REVPH, IntakeConstants.kSolenoidId2);
-
-  private boolean m_isIntakeOut = false;
+  private final Solenoid m_LeftSolenoid =
+      new Solenoid(
+          IntakeConstants.kPneumaticHubCanID,
+          PneumaticsModuleType.REVPH,
+          IntakeConstants.kSolenoidId1);
+  private final Solenoid m_RightSolenoid =
+      new Solenoid(
+          IntakeConstants.kPneumaticHubCanID,
+          PneumaticsModuleType.REVPH,
+          IntakeConstants.kSolenoidId2);
 
   public IntakeIOSpark() {
     m_intakeMotor1 = new SparkMax(IntakeConstants.kMotorId1, MotorType.kBrushless);
@@ -65,6 +71,9 @@ public class IntakeIOSpark implements IntakeIO {
         () ->
             m_intakeMotor2.configure(
                 intake2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+    // retract intake on startup
+    retractIntake();
   }
 
   public void updateInputs(IntakeIOInputs inputs) {
@@ -83,8 +92,6 @@ public class IntakeIOSpark implements IntakeIO {
     sparkStickyFault = false;
     ifOk(m_intakeMotor2, m_intakeMotor2::getOutputCurrent, (value) -> current[1] = value);
     inputs.motor2Connected = m_intakeConnectedDebounce2.calculate(!sparkStickyFault);
-
-    inputs.isIntakeOut = m_isIntakeOut;
   }
 
   /** Run open loop at the specified voltage. */
@@ -95,12 +102,10 @@ public class IntakeIOSpark implements IntakeIO {
   public void extendIntake() {
     m_LeftSolenoid.set(true);
     m_RightSolenoid.set(true);
-    m_isIntakeOut = true;
   }
 
   public void retractIntake() {
     m_LeftSolenoid.set(false);
     m_RightSolenoid.set(false);
-    m_isIntakeOut = false;
   }
 }
