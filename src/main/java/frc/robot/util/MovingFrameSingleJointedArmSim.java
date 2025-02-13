@@ -70,8 +70,9 @@ public class MovingFrameSingleJointedArmSim extends SingleJointedArmSim {
               Matrix<N2, N1> xdot = m_plant.getA().times(x).plus(m_plant.getB().times(_u));
               if (m_simulateGravity) {
                 // Calculate the relative angle between the arm and the gravitational force
-                double relativeAngle = x.get(0, 0) - m_armAngle;
-                double alphaGrav = 3.0 / 2.0 * -9.8 * Math.cos(relativeAngle) / m_armLengthMeters;
+                // Use the absolute angle (arm angle + wrist's relative angle)
+                double absoluteAngle = x.get(0, 0) + m_armAngle;
+                double alphaGrav = 3.0 / 2.0 * -9.8 * Math.cos(absoluteAngle) / m_armLengthMeters;
                 xdot = xdot.plus(VecBuilder.fill(0, alphaGrav));
               }
               return xdot;

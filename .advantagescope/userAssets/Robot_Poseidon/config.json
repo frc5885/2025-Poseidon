@@ -83,6 +83,23 @@
         }
       ],
       "zeroedPosition": []
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 180
+        },
+        {
+          "axis": "y",
+          "degrees": 180
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0.07,
+        0
+      ]
     }
   ]
 }
