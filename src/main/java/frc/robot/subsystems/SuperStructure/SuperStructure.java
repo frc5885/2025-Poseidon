@@ -112,7 +112,7 @@ public class SuperStructure extends SubsystemBase {
     setWristGoal(m_state.wristGoal);
   }
 
-  // used to determine if the superstructure achieved the combined([elevator, arm]) goal state
+  // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
     return m_elevator.isSetpointAchieved()
