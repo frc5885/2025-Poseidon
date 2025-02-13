@@ -35,7 +35,7 @@ public class SuperStructure extends SubsystemBase {
   private final Arm m_arm;
   private final Wrist m_wrist;
 
-  private SuperStructureState m_state = SuperStructureState.DEFAULT;
+  private SuperStructureState m_state = SuperStructureState.STOWED;
 
   private LoggedMechanism2d m_canvas;
   private LoggedMechanismRoot2d m_elevatorRoot;
@@ -112,7 +112,8 @@ public class SuperStructure extends SubsystemBase {
     setWristGoal(m_state.wristGoal);
   }
 
-  // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal state
+  // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal
+  // state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
     return m_elevator.isSetpointAchieved()

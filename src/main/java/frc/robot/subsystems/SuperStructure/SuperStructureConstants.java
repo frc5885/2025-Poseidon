@@ -158,7 +158,8 @@ public class SuperStructureConstants {
       ALGAE_FLOOR(TunableDouble.register("Wrist/ALGAE_FLOOR", 60.0)),
       ALGAE_REEF(TunableDouble.register("Wrist/ALGAE_REEF", 120.0)),
       PROCESSOR(TunableDouble.register("Wrist/PROCESSOR", 120.0)),
-      NET(TunableDouble.register("Wrist/NET", 160.0));
+      NET(TunableDouble.register("Wrist/NET", 160.0)),
+      LOCK(() -> -1.0);
 
       public DoubleSupplier setpointDegrees;
 

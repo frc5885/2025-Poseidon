@@ -99,6 +99,13 @@ public class Wrist {
   }
 
   public void runWristSetpoint(double setpointRadians) {
+    Logger.recordOutput("SuperStructure/Wrist/WristSetpoint", setpointRadians);
+    if (setpointRadians == Units.degreesToRadians(WristGoals.LOCK.setpointDegrees.getAsDouble())) {
+      // lock the motor if the setpoint is LOCK
+      m_io.setVoltage(0.0);
+      System.out.println("Wrist is locked");
+      return;
+    }
     if (m_goal.position != setpointRadians) {
       m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
     }
