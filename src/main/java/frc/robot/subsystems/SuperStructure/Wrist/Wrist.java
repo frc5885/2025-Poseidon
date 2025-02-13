@@ -7,6 +7,7 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristC
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -78,7 +79,9 @@ public class Wrist {
 
     // TODO comment this out for SysId
     runWristSetpoint(
-        m_wristGoal != null ? m_wristGoal.setpointRadians : getRealWorldPositionRadians());
+        m_wristGoal != null
+            ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
+            : getRealWorldPositionRadians());
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.wristConnected);

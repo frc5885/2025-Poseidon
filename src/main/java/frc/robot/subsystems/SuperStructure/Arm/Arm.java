@@ -6,6 +6,7 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmCon
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -66,7 +67,10 @@ public class Arm {
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
     // TODO comment this out for SysId
-    runArmSetpoint(m_armGoal != null ? m_armGoal.setpointRadians : getPositionRadians());
+    runArmSetpoint(
+        m_armGoal != null
+            ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+            : getPositionRadians());
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);

@@ -31,7 +31,7 @@ public class Elevator {
   private ElevatorFeedforward m_elevatorFeedforward;
   private SysIdRoutine m_sysIdRoutine;
 
-  private ElevatorLevel m_elevatorLevel = ElevatorLevel.L1;
+  private ElevatorLevel m_elevatorLevel = ElevatorLevel.STOW;
 
   public Elevator(ElevatorIO io) {
     m_io = io;
@@ -80,7 +80,9 @@ public class Elevator {
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
     runElevatorSetpoint(
-        m_elevatorLevel != null ? m_elevatorLevel.setpointMeters : getPositionMeters());
+        m_elevatorLevel != null
+            ? m_elevatorLevel.setpointMeters.getAsDouble()
+            : getPositionMeters());
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);

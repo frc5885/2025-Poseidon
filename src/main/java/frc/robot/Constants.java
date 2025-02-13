@@ -23,7 +23,8 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
   public static final Mode kSimMode = Mode.SIM;
   public static final Mode kCurrentMode = RobotBase.isReal() ? Mode.REAL : kSimMode;
-  public static final boolean TurningMode = true;
+
+  public static final boolean kTuning = true;
 
   public static enum Mode {
     /** Running on a real robot. */
