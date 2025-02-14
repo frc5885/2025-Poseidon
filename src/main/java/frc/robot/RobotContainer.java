@@ -16,9 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -144,9 +141,8 @@ public class RobotContainer {
                     m_drive::getPose,
                     CameraType.AprilTag),
                 new VisionIOPhotonVisionSim(
-                    "coral-test",
-                    new Transform3d(
-                        0, 0, 1, new Rotation3d(0, Units.degreesToRadians(50), Math.PI)),
+                    VisionConstants.kCamera2Name,
+                    VisionConstants.kRobotToCamera2,
                     m_drive::getPose,
                     CameraType.Coral));
         // the sim lags really badly if you use auto switch
