@@ -10,6 +10,9 @@ public class Intake {
   private final IntakeIO m_intakeIO;
   private final IntakeIOInputsAutoLogged m_inputs = new IntakeIOInputsAutoLogged();
 
+  // track state internally
+  private boolean m_isIntakeExtended = false;
+
   public Intake(IntakeIO io) {
     m_intakeIO = io;
 
@@ -32,5 +35,19 @@ public class Intake {
 
   public void stop() {
     m_intakeIO.setVoltage(0.0);
+  }
+
+  public boolean isExtended() {
+    return m_isIntakeExtended;
+  }
+
+  public void extend() {
+    m_intakeIO.extendIntake();
+    m_isIntakeExtended = true;
+  }
+
+  public void retract() {
+    m_intakeIO.retractIntake();
+    m_isIntakeExtended = false;
   }
 }

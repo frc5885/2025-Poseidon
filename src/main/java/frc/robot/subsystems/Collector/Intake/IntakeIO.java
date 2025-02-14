@@ -22,4 +22,8 @@ public interface IntakeIO {
 
   /** Run open loop at the specified voltage. */
   public default void setVoltage(double volts) {}
+
+  public default void extendIntake() {}
+
+  public default void retractIntake() {}
 }
