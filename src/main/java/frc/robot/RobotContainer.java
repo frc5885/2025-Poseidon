@@ -63,6 +63,7 @@ import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.GamePieceVisualizer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -230,6 +231,10 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
+
+    // Set suppliers for the game piece visualizer
+    GamePieceVisualizer.setRobotPoseSupplier(m_drive::getPose);
+    GamePieceVisualizer.setEndEffectorPoseSupplier(m_superStructure::getEndEffectorPose3d);
   }
 
   /**

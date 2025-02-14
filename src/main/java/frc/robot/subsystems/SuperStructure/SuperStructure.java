@@ -322,16 +322,19 @@ public class SuperStructure extends SubsystemBase {
             0,
             m_armRootTranslation.getY() + m_elevator.getPositionMeters(),
             new Rotation3d(0, -m_arm.getPositionRadians(), 0)));
-    Logger.recordOutput(
-        "SuperStructure/Mechanism3d/3-Wrist",
-        new Pose3d(
-            kElevatorTranslation.getX()
-                + 0.06
-                + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
-            0,
-            m_armRootTranslation.getY()
-                + m_elevator.getPositionMeters()
-                + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
-            new Rotation3d(0.0, -m_wrist.getRealWorldPositionRadians(), 0.0)));
+    Logger.recordOutput("SuperStructure/Mechanism3d/3-Wrist", getEndEffectorPose3d());
+  }
+
+  /* Returns the pose of the end effector for game piece visualization */
+  public Pose3d getEndEffectorPose3d() {
+    return new Pose3d(
+        kElevatorTranslation.getX()
+            + 0.06
+            + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
+        0,
+        m_armRootTranslation.getY()
+            + m_elevator.getPositionMeters()
+            + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
+        new Rotation3d(0.0, -m_wrist.getRealWorldPositionRadians(), 0.0));
   }
 }
