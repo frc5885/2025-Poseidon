@@ -14,6 +14,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.SuperStructure.Arm.Arm;
@@ -22,8 +24,16 @@ import frc.robot.subsystems.SuperStructure.Elevator.Elevator;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.subsystems.SuperStructure.Wrist.Wrist;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -34,6 +44,9 @@ public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
   private final Wrist m_wrist;
+
+  private SuperStructureState m_state = SuperStructureState.STOWED;
+  private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
   private LoggedMechanismRoot2d m_elevatorRoot;
@@ -67,27 +80,33 @@ public class SuperStructure extends SubsystemBase {
     visualizationUpdate();
   }
 
-  @AutoLogOutput(key = "SuperStructure/Elevator/Level")
-  public ElevatorLevel getElevatorLevel() {
-    return m_elevator.getLevel();
+  @AutoLogOutput(key = "SuperStructure/Elevator/Goal")
+  public ElevatorLevel getElevatorGoal() {
+    ElevatorLevel goal = m_elevator.getGoal();
+    Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
+    return goal;
   }
 
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
   public ArmGoals getArmGoal() {
     ArmGoals goal = m_arm.getGoal();
-    Logger.recordOutput("SuperStructure/Arm/GoalPosition", goal.setpointRadians);
+    Logger.recordOutput(
+        "SuperStructure/Arm/GoalPosition",
+        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
     return goal;
   }
 
   @AutoLogOutput(key = "SuperStructure/Wrist/Goal")
   public WristGoals getWristGoal() {
     WristGoals goal = m_wrist.getGoal();
-    Logger.recordOutput("SuperStructure/Wrist/GoalPosition", goal.setpointRadians);
+    Logger.recordOutput(
+        "SuperStructure/Wrist/GoalPosition",
+        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
     return goal;
   }
 
-  public void setElevatorLevel(ElevatorLevel elevatorLevel) {
-    m_elevator.setLevel(elevatorLevel);
+  public void setElevatorGoal(ElevatorLevel elevatorGoal) {
+    m_elevator.setGoal(elevatorGoal);
   }
 
   public void setArmGoal(ArmGoals armGoal) {
@@ -98,10 +117,103 @@ public class SuperStructure extends SubsystemBase {
     m_wrist.setGoal(wristGoal);
   }
 
-  // used to determine if the superstructure achieved the combined([elevator, arm]) goal state
+  @AutoLogOutput(key = "SuperStructure/Goal")
+  public SuperStructureState getSuperStructureGoal() {
+    return m_state;
+  }
+
+  public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
+    List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
+    Logger.recordOutput("SuperStructure/States", states.toString());
+
+    return new SequentialCommandGroup(
+        states.stream()
+            .filter(desiredState -> desiredState != m_state)
+            .map(this::setSingleState)
+            .toArray(Command[]::new));
+  }
+
+  /**
+   * Performs a breadth-first search of all possible states to find the shortest path from the start
+   * state to the goal state.
+   *
+   * @param start Current state
+   * @param goal desired goal state
+   * @return A list of states representing the shortest path from start to goal, {@code null} if no
+   *     path exists.
+   */
+  public List<SuperStructureState> findShortestPath(
+      SuperStructureState start, SuperStructureState goal) {
+    // Null defense: if start or goal is null, return an empty list.
+    if (start == null || goal == null) {
+      return Collections.emptyList();
+    }
+
+    // If start equals goal, immediately return a singleton list.
+    if (start.equals(goal)) {
+      return Collections.singletonList(start);
+    }
+
+    // Use a queue for breadth-first search (BFS) where each element is a path (list of states).
+    Queue<List<SuperStructureState>> queue = new LinkedList<>();
+    // Use a set to track visited states to avoid cycles and redundant paths.
+    Set<SuperStructureState> visited = new HashSet<>();
+
+    // Start the BFS with a path that only contains the start state.
+    List<SuperStructureState> initialPath = new ArrayList<>();
+    initialPath.add(start);
+    queue.add(initialPath);
+    visited.add(start);
+
+    while (!queue.isEmpty()) {
+      // Dequeue the next path to explore.
+      List<SuperStructureState> path = queue.poll();
+      SuperStructureState lastState = path.get(path.size() - 1);
+
+      // If the last state is the goal, we've found the shortest path.
+      if (lastState.equals(goal)) {
+        return path;
+      }
+
+      // Explore each neighbor of the last state.
+      for (SuperStructureState neighbor : m_graph.getNeighbors(lastState)) {
+        // Only consider neighbors that haven't been visited.
+        if (!visited.contains(neighbor)) {
+          visited.add(neighbor);
+          // Create a new path that extends the current path with the neighbor.
+          List<SuperStructureState> newPath = new ArrayList<>(path);
+          newPath.add(neighbor);
+          queue.add(newPath);
+        }
+      }
+    }
+
+    // If no path is found, return an empty list instead of null.
+    return Collections.emptyList();
+  }
+
+  private Command setSingleState(SuperStructureState goal) {
+    return Commands.run(
+            () -> {
+              m_elevator.setGoal(goal.elevatorGoal);
+              m_arm.setGoal(goal.armGoal);
+              m_wrist.setGoal(goal.wristGoal);
+            },
+            this)
+        .until(() -> isGoalAchieved())
+        .finallyDo(
+            () -> {
+              m_state = goal;
+            });
+  }
+
+  // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal
+  // state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
-    return m_elevator.isSetpointAchieved() && m_arm.isSetpointAchieved();
+    return m_elevator.isSetpointAchieved()
+        && m_arm.isSetpointAchieved()
+        && m_wrist.isSetpointAchieved();
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */

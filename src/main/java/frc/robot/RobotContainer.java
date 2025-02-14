@@ -18,11 +18,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.Collector.Collector;
@@ -46,9 +46,7 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
+import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
@@ -87,6 +85,7 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
+  private final LoggedDashboardChooser<SuperStructureState> m_stateChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -223,6 +222,12 @@ public class RobotContainer {
     //     "Wrist SysId (Dynamic Reverse)",
     //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
+
+    for (SuperStructureState state : SuperStructureState.values()) {
+      m_stateChooser.addDefaultOption(state.toString(), state);
+    }
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -255,9 +260,9 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     m_driverController.x().onTrue(Commands.runOnce(m_drive::stopWithX, m_drive));
 
-    // Reset gyro to 0° when B button is pressed
+    // Reset gyro to 0° when leftStick is pressed
     m_driverController
-        .b()
+        .leftStick()
         .onTrue(
             Commands.runOnce(
                     () -> {
@@ -270,33 +275,12 @@ public class RobotContainer {
 
     m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
-    // elevator testing
-    new JoystickButton(new GenericHID(1), 1)
+    // superstructure testing
+    m_driverController
+        .b()
         .onTrue(
-            Commands.runOnce(
-                () ->
-                    m_superStructure.setElevatorLevel(
-                        switch (m_superStructure.getElevatorLevel()) {
-                          case L1 -> ElevatorLevel.L2;
-                          case L2 -> ElevatorLevel.L3;
-                          case L3 -> ElevatorLevel.L4;
-                          case L4 -> ElevatorLevel.L1;
-                          default -> ElevatorLevel.L1;
-                        }),
-                m_superStructure));
-
-    // arm testing
-    new JoystickButton(new GenericHID(1), 4)
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    m_superStructure.setArmGoal(
-                        switch (m_superStructure.getArmGoal()) {
-                          case STOW -> ArmGoals.INTAKE;
-                          case INTAKE -> ArmGoals.SETPOINT;
-                          case SETPOINT -> ArmGoals.STOW;
-                          default -> ArmGoals.STOW;
-                        }),
+            new InstantCommand(
+                () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
 
     // new JoystickButton(new GenericHID(1), 2)
@@ -308,19 +292,6 @@ public class RobotContainer {
     //     .whileTrue(
     //         new StartEndCommand(
     //             () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
-
-    new JoystickButton(new GenericHID(1), 3)
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    m_superStructure.setWristGoal(
-                        switch (m_superStructure.getWristGoal()) {
-                          case STOW -> WristGoals.INTAKE;
-                          case INTAKE -> WristGoals.SETPOINT;
-                          case SETPOINT -> WristGoals.STOW;
-                          default -> WristGoals.STOW;
-                        }),
-                m_superStructure));
 
     // new JoystickButton(new GenericHID(1), 4)
     //     .whileTrue(
@@ -335,11 +306,6 @@ public class RobotContainer {
     //             () -> m_endEffector.runAlgaeClaw(12),
     //             () -> m_endEffector.stopAlgaeClaw(),
     //             m_collector));
-
-    // controller.a().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // controller.b().whileTrue(m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // controller.x().whileTrue(m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // controller.y().whileTrue(m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

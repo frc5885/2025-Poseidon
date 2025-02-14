@@ -6,6 +6,7 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmCon
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -15,6 +16,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.util.TunablePIDController;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Arm {
@@ -30,6 +32,7 @@ public class Arm {
   private SysIdRoutine m_sysIdRoutine;
 
   private ArmGoals m_armGoal = ArmGoals.STOW;
+  private boolean m_isSetpointAchievedInvalid = false;
 
   public Arm(ArmIO io) {
     m_io = io;
@@ -66,10 +69,14 @@ public class Arm {
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
     // TODO comment this out for SysId
-    runArmSetpoint(m_armGoal != null ? m_armGoal.setpointRadians : getPositionRadians());
+    runArmSetpoint(
+        m_armGoal != null
+            ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+            : getPositionRadians());
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);
+    m_isSetpointAchievedInvalid = false;
   }
 
   public void runArmOpenLoop(double outputVolts) {
@@ -125,6 +132,10 @@ public class Arm {
   }
 
   public void setGoal(ArmGoals armGoal) {
+    if (m_armGoal == armGoal) {
+      return;
+    }
+    m_isSetpointAchievedInvalid = true;
     m_armGoal = armGoal;
   }
 
@@ -132,8 +143,10 @@ public class Arm {
     return m_armGoal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Arm/SetpointAchieved")
   public boolean isSetpointAchieved() {
-    return Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads;
+    return (Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads)
+        && !m_isSetpointAchievedInvalid;
   }
 
   // Configure SysId

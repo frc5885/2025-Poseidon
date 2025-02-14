@@ -7,6 +7,7 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristC
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -17,6 +18,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.util.TunablePIDController;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Wrist {
@@ -32,6 +34,7 @@ public class Wrist {
   private SysIdRoutine m_sysIdRoutine;
 
   private WristGoals m_wristGoal = WristGoals.STOW;
+  private boolean m_isSetpointAchievedInvalid = false;
 
   private DoubleSupplier m_armAngleRadSupplier = () -> kArmStartingPositionRadians;
 
@@ -78,10 +81,13 @@ public class Wrist {
 
     // TODO comment this out for SysId
     runWristSetpoint(
-        m_wristGoal != null ? m_wristGoal.setpointRadians : getRealWorldPositionRadians());
+        m_wristGoal != null
+            ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
+            : getRealWorldPositionRadians());
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.wristConnected);
+    m_isSetpointAchievedInvalid = false;
   }
 
   public void runWristOpenLoop(double outputVolts) {
@@ -96,6 +102,11 @@ public class Wrist {
   }
 
   public void runWristSetpoint(double setpointRadians) {
+    if (setpointRadians == Units.degreesToRadians(WristGoals.LOCK.setpointDegrees.getAsDouble())) {
+      // lock the motor if the setpoint is LOCK
+      stop();
+      return;
+    }
     if (m_goal.position != setpointRadians) {
       m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
     }
@@ -141,6 +152,10 @@ public class Wrist {
   }
 
   public void setGoal(WristGoals wristGoal) {
+    if (m_wristGoal == wristGoal) {
+      return;
+    }
+    m_isSetpointAchievedInvalid = true;
     m_wristGoal = wristGoal;
   }
 
@@ -148,8 +163,12 @@ public class Wrist {
     return m_wristGoal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Wrist/SetpointAchieved")
   public boolean isSetpointAchieved() {
-    return Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads;
+    // always return true if setpoint is lock
+    return ((Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads)
+            || m_wristGoal.equals(WristGoals.LOCK))
+        && !m_isSetpointAchievedInvalid;
   }
 
   // Configure SysId

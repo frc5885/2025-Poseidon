@@ -2,9 +2,10 @@ package frc.robot.subsystems.SuperStructure;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.util.TunableDouble;
+import java.util.function.DoubleSupplier;
 
 public class SuperStructureConstants {
-  // TODO temporary
   public static class ElevatorConstants {
     public static final int kElevatorSparkId1 = 40;
     public static final int kElevatorSparkId2 = 41;
@@ -49,14 +50,17 @@ public class SuperStructureConstants {
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
     public static enum ElevatorLevel {
-      L1(kElevatorMinHeightMeters),
-      L2(0.5),
-      L3(1.0),
-      L4(kElevatorMaxHeightMeters);
+      STOW(() -> kElevatorMinHeightMeters),
+      L1(TunableDouble.register("Elevator/L1", 0.1)),
+      ALGAE_L2(TunableDouble.register("Elevator/L2ALGAE", 0.2)),
+      L2(TunableDouble.register("Elevator/L2", 0.4)),
+      ALGAE_L3(TunableDouble.register("Elevator/L3ALGAE", 0.57)),
+      L3(TunableDouble.register("Elevator/L3", 0.77)),
+      L4(() -> kElevatorMaxHeightMeters);
 
-      public double setpointMeters;
+      public DoubleSupplier setpointMeters;
 
-      private ElevatorLevel(double setpointMeters) {
+      private ElevatorLevel(DoubleSupplier setpointMeters) {
         this.setpointMeters = setpointMeters;
       }
     }
@@ -96,14 +100,14 @@ public class SuperStructureConstants {
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
 
     public static enum ArmGoals {
-      STOW(Units.degreesToRadians(90)),
-      INTAKE(Units.degreesToRadians(0)),
-      SETPOINT(Units.degreesToRadians(45.0));
+      STOW(() -> 90.0),
+      INTAKE(() -> 0.0),
+      REEF(TunableDouble.register("Arm/REEF", 45.0));
 
-      public double setpointRadians;
+      public DoubleSupplier setpointDegrees;
 
-      private ArmGoals(double setpointRads) {
-        setpointRadians = setpointRads;
+      private ArmGoals(DoubleSupplier setpointDegrees) {
+        this.setpointDegrees = setpointDegrees;
       }
     }
   }
@@ -146,14 +150,21 @@ public class SuperStructureConstants {
 
     public static enum WristGoals {
       // these are all in real-world radians
-      STOW(Units.degreesToRadians(270)),
-      INTAKE(Units.degreesToRadians(180)),
-      SETPOINT(Units.degreesToRadians(135));
+      STOW(() -> 270.0),
+      INTAKE(() -> 180.0),
+      REEF(TunableDouble.register("Wrist/REEF", 150.0)),
+      L1REEF(TunableDouble.register("Wrist/L1REEF", 155.0)),
+      L4REEF(TunableDouble.register("Wrist/L4REEF", 130.0)),
+      ALGAE_FLOOR(TunableDouble.register("Wrist/ALGAE_FLOOR", 60.0)),
+      ALGAE_REEF(TunableDouble.register("Wrist/ALGAE_REEF", 120.0)),
+      PROCESSOR(TunableDouble.register("Wrist/PROCESSOR", 120.0)),
+      NET(TunableDouble.register("Wrist/NET", 160.0)),
+      LOCK(() -> -1.0);
 
-      public double setpointRadians;
+      public DoubleSupplier setpointDegrees;
 
-      private WristGoals(double setpointRads) {
-        setpointRadians = setpointRads;
+      private WristGoals(DoubleSupplier setpointDegrees) {
+        this.setpointDegrees = setpointDegrees;
       }
     }
   }

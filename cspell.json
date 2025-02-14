@@ -30,6 +30,7 @@
     "SETPOINT",
     "setpoints",
     "teleop",
+    "UNSTOWING",
     "unsync",
     "unsyncing",
     "URCL",
