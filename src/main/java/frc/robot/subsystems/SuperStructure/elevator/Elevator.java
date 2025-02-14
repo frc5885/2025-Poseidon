@@ -15,6 +15,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator {
@@ -31,7 +32,7 @@ public class Elevator {
   private ElevatorFeedforward m_elevatorFeedforward;
   private SysIdRoutine m_sysIdRoutine;
 
-  private ElevatorLevel m_elevatorLevel = ElevatorLevel.STOW;
+  private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
   public Elevator(ElevatorIO io) {
@@ -81,9 +82,7 @@ public class Elevator {
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
     runElevatorSetpoint(
-        m_elevatorLevel != null
-            ? m_elevatorLevel.setpointMeters.getAsDouble()
-            : getPositionMeters());
+        m_elevatorGoal != null ? m_elevatorGoal.setpointMeters.getAsDouble() : getPositionMeters());
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
@@ -143,20 +142,22 @@ public class Elevator {
     return new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec());
   }
 
-  public void setLevel(ElevatorLevel elevatorLevel) {
-    if (m_elevatorLevel == elevatorLevel) {
+  public void setGoal(ElevatorLevel elevatorGoal) {
+    if (m_elevatorGoal == elevatorGoal) {
       return;
     }
     m_isSetpointAchievedInvalid = true;
-    m_elevatorLevel = elevatorLevel;
+    m_elevatorGoal = elevatorGoal;
   }
 
-  public ElevatorLevel getLevel() {
-    return m_elevatorLevel;
+  public ElevatorLevel getGoal() {
+    return m_elevatorGoal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Elevator/SetpointAchieved")
   public boolean isSetpointAchieved() {
-    return Math.abs(m_goal.position - getPositionMeters()) < kElevatorErrorToleranceMeters;
+    return (Math.abs(m_goal.position - getPositionMeters()) < kElevatorErrorToleranceMeters)
+        && !m_isSetpointAchievedInvalid;
   }
 
   // Configure SysId

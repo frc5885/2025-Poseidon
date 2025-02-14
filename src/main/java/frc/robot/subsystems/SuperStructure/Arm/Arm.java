@@ -16,6 +16,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.util.TunablePIDController;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Arm {
@@ -142,6 +143,7 @@ public class Arm {
     return m_armGoal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Arm/SetpointAchieved")
   public boolean isSetpointAchieved() {
     return (Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads)
         && !m_isSetpointAchievedInvalid;

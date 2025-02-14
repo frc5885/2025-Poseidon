@@ -73,7 +73,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET,
               SuperStructureState.STOWING
             },
 
@@ -88,7 +87,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // INTAKE_ALGAE_L2 transitions
@@ -102,7 +100,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // INTAKE_ALGAE_L3 transitions
@@ -116,7 +113,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // SCORE_CORAL_L1 transitions
@@ -130,7 +126,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // SCORE_CORAL_L2 transitions
@@ -144,7 +139,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // SCORE_CORAL_L3 transitions
@@ -158,7 +152,6 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L2,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // SCORE_CORAL_L4 transitions
@@ -186,21 +179,11 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L2,
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_NET
             },
 
             // SCORE_ALGAE_NET transitions
             new SuperStructureState[] {
-              SuperStructureState.SCORE_ALGAE_NET,
-              SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.INTAKE_ALGAE_FLOOR,
-              SuperStructureState.INTAKE_ALGAE_L2,
-              SuperStructureState.INTAKE_ALGAE_L3,
-              SuperStructureState.SCORE_CORAL_L1,
-              SuperStructureState.SCORE_CORAL_L2,
-              SuperStructureState.SCORE_CORAL_L3,
-              SuperStructureState.SCORE_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_PROCESSOR
+              SuperStructureState.SCORE_ALGAE_NET, SuperStructureState.SCORE_CORAL_L4,
             },
 
             // STOWED transitions

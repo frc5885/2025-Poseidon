@@ -80,9 +80,11 @@ public class SuperStructure extends SubsystemBase {
     visualizationUpdate();
   }
 
-  @AutoLogOutput(key = "SuperStructure/Elevator/Level")
-  public ElevatorLevel getElevatorLevel() {
-    return m_elevator.getLevel();
+  @AutoLogOutput(key = "SuperStructure/Elevator/Goal")
+  public ElevatorLevel getElevatorGoal() {
+    ElevatorLevel goal = m_elevator.getGoal();
+    Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
+    return goal;
   }
 
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
@@ -103,8 +105,8 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
-  public void setElevatorLevel(ElevatorLevel elevatorLevel) {
-    m_elevator.setLevel(elevatorLevel);
+  public void setElevatorGoal(ElevatorLevel elevatorGoal) {
+    m_elevator.setGoal(elevatorGoal);
   }
 
   public void setArmGoal(ArmGoals armGoal) {
@@ -124,14 +126,11 @@ public class SuperStructure extends SubsystemBase {
     List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
     Logger.recordOutput("SuperStructure/States", states.toString());
 
-    SequentialCommandGroup result = new SequentialCommandGroup();
-
-    for (SuperStructureState desiredState : states) {
-      if (desiredState != m_state) {
-        result.addCommands(setSingleState(desiredState));
-      }
-    }
-    return result;
+    return new SequentialCommandGroup(
+        states.stream()
+            .filter(desiredState -> desiredState != m_state)
+            .map(this::setSingleState)
+            .toArray(Command[]::new));
   }
 
   /**
@@ -145,57 +144,58 @@ public class SuperStructure extends SubsystemBase {
    */
   public List<SuperStructureState> findShortestPath(
       SuperStructureState start, SuperStructureState goal) {
+    // Null defense: if start or goal is null, return an empty list.
+    if (start == null || goal == null) {
+      return Collections.emptyList();
+    }
 
-    // Queue to manage the paths to be explored. Each element in the queue is a list of states
-    // representing a path.
+    // If start equals goal, immediately return a singleton list.
+    if (start.equals(goal)) {
+      return Collections.singletonList(start);
+    }
+
+    // Use a queue for breadth-first search (BFS) where each element is a path (list of states).
     Queue<List<SuperStructureState>> queue = new LinkedList<>();
-
-    // Set to keep track of visited states to avoid revisiting them and getting stuck in loops.
+    // Use a set to track visited states to avoid cycles and redundant paths.
     Set<SuperStructureState> visited = new HashSet<>();
 
-    // Start BFS with a path containing only the start node.
-    // The initial path is a singleton list containing just the start state.
-    queue.add(Collections.singletonList(start));
+    // Start the BFS with a path that only contains the start state.
+    List<SuperStructureState> initialPath = new ArrayList<>();
+    initialPath.add(start);
+    queue.add(initialPath);
+    visited.add(start);
 
-    // Continue exploring until there are no more paths to explore in the queue.
     while (!queue.isEmpty()) {
-      // Retrieve and remove the first path from the queue.
+      // Dequeue the next path to explore.
       List<SuperStructureState> path = queue.poll();
-
-      // Get the last state in the current path. This is the state we will explore next.
       SuperStructureState lastState = path.get(path.size() - 1);
 
-      // Check if the last state in the current path is the goal state.
+      // If the last state is the goal, we've found the shortest path.
       if (lastState.equals(goal)) {
-        // If it is, return the current path as it is the shortest path found.
         return path;
       }
 
-      // If the last state has not been visited yet, process it.
-      if (!visited.contains(lastState)) {
-        // Mark the last state as visited to avoid processing it again in the future.
-        visited.add(lastState);
-
-        // Explore all neighboring states of the last state.
-        for (SuperStructureState neighbor : m_graph.getNeighbors(lastState)) {
-          // Create a new path by copying the current path and adding the neighbor state to it.
+      // Explore each neighbor of the last state.
+      for (SuperStructureState neighbor : m_graph.getNeighbors(lastState)) {
+        // Only consider neighbors that haven't been visited.
+        if (!visited.contains(neighbor)) {
+          visited.add(neighbor);
+          // Create a new path that extends the current path with the neighbor.
           List<SuperStructureState> newPath = new ArrayList<>(path);
           newPath.add(neighbor);
-
-          // Add the new path to the queue for further exploration.
           queue.add(newPath);
         }
       }
     }
 
-    // If the queue is exhausted and no path to the goal state is found, return null.
-    return null;
+    // If no path is found, return an empty list instead of null.
+    return Collections.emptyList();
   }
 
   private Command setSingleState(SuperStructureState goal) {
     return Commands.run(
             () -> {
-              m_elevator.setLevel(goal.elevatorGoal);
+              m_elevator.setGoal(goal.elevatorGoal);
               m_arm.setGoal(goal.armGoal);
               m_wrist.setGoal(goal.wristGoal);
             },

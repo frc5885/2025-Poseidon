@@ -279,7 +279,7 @@ public class RobotContainer {
     m_driverController
         .b()
         .onTrue(
-            Commands.runOnce(
+            new InstantCommand(
                 () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
 

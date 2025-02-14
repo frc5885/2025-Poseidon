@@ -18,6 +18,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.util.TunablePIDController;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Wrist {
@@ -162,10 +163,12 @@ public class Wrist {
     return m_wristGoal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Wrist/SetpointAchieved")
   public boolean isSetpointAchieved() {
     // always return true if setpoint is lock
-    return (Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads)
-        || m_wristGoal.equals(WristGoals.LOCK);
+    return ((Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads)
+            || m_wristGoal.equals(WristGoals.LOCK))
+        && !m_isSetpointAchievedInvalid;
   }
 
   // Configure SysId
