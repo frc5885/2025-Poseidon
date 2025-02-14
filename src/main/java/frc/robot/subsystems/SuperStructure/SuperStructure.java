@@ -14,6 +14,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.SuperStructure.Arm.Arm;
@@ -22,8 +24,16 @@ import frc.robot.subsystems.SuperStructure.Elevator.Elevator;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.subsystems.SuperStructure.Wrist.Wrist;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -36,6 +46,7 @@ public class SuperStructure extends SubsystemBase {
   private final Wrist m_wrist;
 
   private SuperStructureState m_state = SuperStructureState.STOWED;
+  private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
   private LoggedMechanismRoot2d m_elevatorRoot;
@@ -105,11 +116,91 @@ public class SuperStructure extends SubsystemBase {
     return m_state;
   }
 
-  public void setSuperStructureGoal(SuperStructureState state) {
-    m_state = state;
-    setElevatorLevel(m_state.elevatorGoal);
-    setArmGoal(m_state.armGoal);
-    setWristGoal(m_state.wristGoal);
+  public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
+    List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
+    Logger.recordOutput("SuperStructure/States", states.toString());
+
+    SequentialCommandGroup result = new SequentialCommandGroup();
+
+    for (SuperStructureState desiredState : states) {
+      if (desiredState != m_state) {
+        result.addCommands(setSingleState(desiredState));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Performs a breadth-first search of all possible states to find the shortest path from the start
+   * state to the goal state.
+   *
+   * @param start Current state
+   * @param goal desired goal state
+   * @return A list of states representing the shortest path from start to goal, {@code null} if no
+   *     path exists.
+   */
+  public List<SuperStructureState> findShortestPath(
+      SuperStructureState start, SuperStructureState goal) {
+
+    // Queue to manage the paths to be explored. Each element in the queue is a list of states
+    // representing a path.
+    Queue<List<SuperStructureState>> queue = new LinkedList<>();
+
+    // Set to keep track of visited states to avoid revisiting them and getting stuck in loops.
+    Set<SuperStructureState> visited = new HashSet<>();
+
+    // Start BFS with a path containing only the start node.
+    // The initial path is a singleton list containing just the start state.
+    queue.add(Collections.singletonList(start));
+
+    // Continue exploring until there are no more paths to explore in the queue.
+    while (!queue.isEmpty()) {
+      // Retrieve and remove the first path from the queue.
+      List<SuperStructureState> path = queue.poll();
+
+      // Get the last state in the current path. This is the state we will explore next.
+      SuperStructureState lastState = path.get(path.size() - 1);
+
+      // Check if the last state in the current path is the goal state.
+      if (lastState.equals(goal)) {
+        // If it is, return the current path as it is the shortest path found.
+        return path;
+      }
+
+      // If the last state has not been visited yet, process it.
+      if (!visited.contains(lastState)) {
+        // Mark the last state as visited to avoid processing it again in the future.
+        visited.add(lastState);
+
+        // Explore all neighboring states of the last state.
+        for (SuperStructureState neighbor : m_graph.getNeighbors(lastState)) {
+          // Create a new path by copying the current path and adding the neighbor state to it.
+          List<SuperStructureState> newPath = new ArrayList<>(path);
+          newPath.add(neighbor);
+
+          // Add the new path to the queue for further exploration.
+          queue.add(newPath);
+        }
+      }
+    }
+
+    // If the queue is exhausted and no path to the goal state is found, return null.
+    return null;
+  }
+
+  private Command setSingleState(SuperStructureState goal) {
+    return Commands.run(
+            () -> {
+              m_elevator.setLevel(goal.elevatorGoal);
+              m_arm.setGoal(goal.armGoal);
+              m_wrist.setGoal(goal.wristGoal);
+            },
+            this)
+        .until(() -> isGoalAchieved())
+        .finallyDo(
+            () -> {
+              m_state = goal;
+            });
   }
 
   // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal
