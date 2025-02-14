@@ -10,6 +10,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 import java.util.function.DoubleSupplier;
 
@@ -19,6 +21,17 @@ public class IntakeIOSpark implements IntakeIO {
   private RelativeEncoder m_intakeEncoder1;
   private final Debouncer m_intakeConnectedDebounce1 = new Debouncer(0.5);
   private final Debouncer m_intakeConnectedDebounce2 = new Debouncer(0.5);
+
+  private final Solenoid m_leftSolenoid =
+      new Solenoid(
+          IntakeConstants.kPneumaticHubCanID,
+          PneumaticsModuleType.REVPH,
+          IntakeConstants.kSolenoidId1);
+  private final Solenoid m_rightSolenoid =
+      new Solenoid(
+          IntakeConstants.kPneumaticHubCanID,
+          PneumaticsModuleType.REVPH,
+          IntakeConstants.kSolenoidId2);
 
   public IntakeIOSpark() {
     m_intakeMotor1 = new SparkMax(IntakeConstants.kMotorId1, MotorType.kBrushless);
@@ -58,6 +71,9 @@ public class IntakeIOSpark implements IntakeIO {
         () ->
             m_intakeMotor2.configure(
                 intake2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+    // retract intake on startup
+    retractIntake();
   }
 
   public void updateInputs(IntakeIOInputs inputs) {
@@ -81,5 +97,15 @@ public class IntakeIOSpark implements IntakeIO {
   /** Run open loop at the specified voltage. */
   public void setVoltage(double volts) {
     m_intakeMotor1.setVoltage(volts);
+  }
+
+  public void extendIntake() {
+    m_leftSolenoid.set(true);
+    m_rightSolenoid.set(true);
+  }
+
+  public void retractIntake() {
+    m_leftSolenoid.set(false);
+    m_rightSolenoid.set(false);
   }
 }
