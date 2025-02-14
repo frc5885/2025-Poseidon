@@ -32,6 +32,7 @@ public class Elevator {
   private SysIdRoutine m_sysIdRoutine;
 
   private ElevatorLevel m_elevatorLevel = ElevatorLevel.STOW;
+  private boolean m_isSetpointAchievedInvalid = false;
 
   public Elevator(ElevatorIO io) {
     m_io = io;
@@ -87,6 +88,8 @@ public class Elevator {
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
     motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
+
+    m_isSetpointAchievedInvalid = false;
   }
 
   public void runElevatorOpenLoop(double outputVolts) {
@@ -141,6 +144,10 @@ public class Elevator {
   }
 
   public void setLevel(ElevatorLevel elevatorLevel) {
+    if (m_elevatorLevel == elevatorLevel) {
+      return;
+    }
+    m_isSetpointAchievedInvalid = true;
     m_elevatorLevel = elevatorLevel;
   }
 

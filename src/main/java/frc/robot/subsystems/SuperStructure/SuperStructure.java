@@ -88,14 +88,18 @@ public class SuperStructure extends SubsystemBase {
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
   public ArmGoals getArmGoal() {
     ArmGoals goal = m_arm.getGoal();
-    Logger.recordOutput("SuperStructure/Arm/GoalPosition", goal.setpointDegrees);
+    Logger.recordOutput(
+        "SuperStructure/Arm/GoalPosition",
+        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
     return goal;
   }
 
   @AutoLogOutput(key = "SuperStructure/Wrist/Goal")
   public WristGoals getWristGoal() {
     WristGoals goal = m_wrist.getGoal();
-    Logger.recordOutput("SuperStructure/Wrist/GoalPosition", goal.setpointDegrees);
+    Logger.recordOutput(
+        "SuperStructure/Wrist/GoalPosition",
+        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
     return goal;
   }
 

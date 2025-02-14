@@ -33,6 +33,7 @@ public class Wrist {
   private SysIdRoutine m_sysIdRoutine;
 
   private WristGoals m_wristGoal = WristGoals.STOW;
+  private boolean m_isSetpointAchievedInvalid = false;
 
   private DoubleSupplier m_armAngleRadSupplier = () -> kArmStartingPositionRadians;
 
@@ -85,6 +86,7 @@ public class Wrist {
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.wristConnected);
+    m_isSetpointAchievedInvalid = false;
   }
 
   public void runWristOpenLoop(double outputVolts) {
@@ -149,6 +151,10 @@ public class Wrist {
   }
 
   public void setGoal(WristGoals wristGoal) {
+    if (m_wristGoal == wristGoal) {
+      return;
+    }
+    m_isSetpointAchievedInvalid = true;
     m_wristGoal = wristGoal;
   }
 
@@ -157,7 +163,9 @@ public class Wrist {
   }
 
   public boolean isSetpointAchieved() {
-    return Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads;
+    // always return true if setpoint is lock
+    return (Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads)
+        || m_wristGoal.equals(WristGoals.LOCK);
   }
 
   // Configure SysId

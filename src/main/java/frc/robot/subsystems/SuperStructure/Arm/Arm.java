@@ -31,6 +31,7 @@ public class Arm {
   private SysIdRoutine m_sysIdRoutine;
 
   private ArmGoals m_armGoal = ArmGoals.STOW;
+  private boolean m_isSetpointAchievedInvalid = false;
 
   public Arm(ArmIO io) {
     m_io = io;
@@ -74,6 +75,7 @@ public class Arm {
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);
+    m_isSetpointAchievedInvalid = false;
   }
 
   public void runArmOpenLoop(double outputVolts) {
@@ -129,6 +131,10 @@ public class Arm {
   }
 
   public void setGoal(ArmGoals armGoal) {
+    if (m_armGoal == armGoal) {
+      return;
+    }
+    m_isSetpointAchievedInvalid = true;
     m_armGoal = armGoal;
   }
 
@@ -137,7 +143,8 @@ public class Arm {
   }
 
   public boolean isSetpointAchieved() {
-    return Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads;
+    return (Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads)
+        && !m_isSetpointAchievedInvalid;
   }
 
   // Configure SysId

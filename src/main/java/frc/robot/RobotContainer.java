@@ -280,7 +280,7 @@ public class RobotContainer {
         .b()
         .onTrue(
             Commands.runOnce(
-                () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()),
+                () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
 
     // new JoystickButton(new GenericHID(1), 2)
