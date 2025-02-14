@@ -17,17 +17,24 @@ import static frc.robot.subsystems.vision.photon.VisionConstants.kAprilTagLayout
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.util.GamePieces.CoralTargetModel;
 import java.util.function.Supplier;
+import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
 
 /** IO implementation for physics sim using PhotonVision simulator. */
 public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
-  private static VisionSystemSim m_visionSim;
+  // Static means they're global across cameras
+  private static VisionSystemSim m_visionSimAprilTags;
+  private static VisionSystemSim m_visionSimCoral;
 
   private final Supplier<Pose2d> m_poseSupplier;
   private final PhotonCameraSim m_cameraSim;
+
+  private final CameraType m_cameraType;
 
   /**
    * Creates a new VisionIOPhotonVisionSim.
@@ -36,20 +43,42 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
    * @param poseSupplier Supplier for the robot pose to use in simulation.
    */
   public VisionIOPhotonVisionSim(
-      String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier) {
+      String name,
+      Transform3d robotToCamera,
+      Supplier<Pose2d> poseSupplier,
+      CameraType cameraType) {
     super(name, robotToCamera);
     m_poseSupplier = poseSupplier;
+    m_cameraType = cameraType;
 
     // Initialize vision sim
-    if (m_visionSim == null) {
-      m_visionSim = new VisionSystemSim("main");
-      m_visionSim.addAprilTags(kAprilTagLayout);
+    if (m_cameraType == CameraType.AprilTag) {
+      if (m_visionSimAprilTags == null) {
+        m_visionSimAprilTags = new VisionSystemSim("april_tags");
+        // Load april tag layout
+        m_visionSimAprilTags.addAprilTags(kAprilTagLayout);
+      }
+    } else if (m_cameraType == CameraType.Coral) {
+      if (m_visionSimCoral == null) {
+        m_visionSimCoral = new VisionSystemSim("coral");
+        // Add coral targets
+        TargetModel coralModel = CoralTargetModel.getCoralModel();
+        m_visionSimCoral.addVisionTargets(
+            "coral",
+            CoralTargetModel.getCoralPositions().stream()
+                .map(pos -> new VisionTargetSim(pos, coralModel))
+                .toArray(VisionTargetSim[]::new));
+      }
     }
 
     // Add sim camera
     var cameraProperties = new SimCameraProperties();
     m_cameraSim = new PhotonCameraSim(m_camera, cameraProperties);
-    m_visionSim.addCamera(m_cameraSim, robotToCamera);
+    if (m_cameraType == CameraType.AprilTag) {
+      m_visionSimAprilTags.addCamera(m_cameraSim, robotToCamera);
+    } else if (m_cameraType == CameraType.Coral) {
+      m_visionSimCoral.addCamera(m_cameraSim, robotToCamera);
+    }
 
     // Enable camera streams in simulation
     boolean renderSim = true;
@@ -60,7 +89,13 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    m_visionSim.update(m_poseSupplier.get());
+    m_visionSimAprilTags.update(m_poseSupplier.get());
+    m_visionSimCoral.update(m_poseSupplier.get());
     super.updateInputs(inputs);
+  }
+
+  public enum CameraType {
+    AprilTag,
+    Coral,
   }
 }

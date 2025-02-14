@@ -16,7 +16,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.util.GamePieceVisualizer;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -149,8 +149,6 @@ public class Robot extends LoggedRobot {
     // Reset GamePieceVisualizer
     GamePieceVisualizer.resetFieldGamePieces();
     GamePieceVisualizer.showFieldGamePieces();
-    GamePieceVisualizer.setHasCoral(true);
-    GamePieceVisualizer.setHasAlgae(true);
   }
 
   /** This function is called periodically during operator control. */

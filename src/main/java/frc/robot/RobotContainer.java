@@ -16,6 +16,9 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -63,7 +66,8 @@ import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.util.GamePieceVisualizer;
+import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim.CameraType;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -132,11 +136,19 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera0Name,
                     VisionConstants.kRobotToCamera0,
-                    m_drive::getPose),
+                    m_drive::getPose,
+                    CameraType.AprilTag),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    m_drive::getPose));
+                    m_drive::getPose,
+                    CameraType.AprilTag),
+                new VisionIOPhotonVisionSim(
+                    "coral-test",
+                    new Transform3d(
+                        0, 0, 1, new Rotation3d(0, Units.degreesToRadians(50), Math.PI)),
+                    m_drive::getPose,
+                    CameraType.Coral));
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =

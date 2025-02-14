@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.util;
+package frc.robot.util.GamePieces;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
@@ -88,12 +88,10 @@ public class GamePieceVisualizer {
   /** Add all notes to be shown at the beginning of auto */
   public static void resetFieldGamePieces() {
     clearFieldGamePieces();
-    // List<Pose3d> notePoses = NoteModel.getNotePositions();
-    // for (int i = 0; i < notePoses.size(); i++) {
-    //   fieldNotes.add(i, notePoses.get(i).toPose2d().getTranslation());
-    // }
-    Logger.recordOutput("GamePieceVisualizer/Coral/Field", new Pose3d[] {});
-    Logger.recordOutput("GamePieceVisualizer/Algae/Field", new Pose3d[] {});
+    fieldCoral.addAll(
+        CoralTargetModel.getCoralPositions().stream().filter(Objects::nonNull).toList());
+    Logger.recordOutput("GamePieceVisualizer/Coral/Scored", new Pose3d[] {});
+    Logger.recordOutput("GamePieceVisualizer/Algae/Scored", new Pose3d[] {});
   }
 
   /**

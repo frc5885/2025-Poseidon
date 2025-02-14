@@ -1,0 +1,48 @@
+package frc.robot.util.GamePieces;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.photonvision.estimation.TargetModel;
+
+public class CoralTargetModel {
+  public static TargetModel getCoralModel() {
+    return new TargetModel(getVertices());
+  }
+
+  public static List<Translation3d> getVertices() {
+    List<Translation3d> vertices = new ArrayList<>();
+    double radius = 0.055; // 11cm diameter -> 5.5cm radius
+    double halfLength = 0.15; // 30cm length -> ±15cm along X-axis
+    int numSegments = 16; // Number of points around the circle
+
+    // Generate points for the two end circles
+    for (int i = 0; i < numSegments; i++) {
+      double angle = 2.0 * Math.PI * i / numSegments;
+      double y = radius * Math.cos(angle);
+      double z = radius * Math.sin(angle);
+
+      // One circle at x = -0.15 (left end)
+      vertices.add(new Translation3d(-halfLength, y, z));
+
+      // One circle at x = +0.15 (right end)
+      vertices.add(new Translation3d(halfLength, y, z));
+    }
+
+    return vertices;
+  }
+
+  public static List<Pose3d> getCoralPositions() {
+    // positions near human player stations, randomized rotations
+    List<Pose3d> positions =
+        Arrays.asList(
+            new Pose3d(2, 6.45, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)),
+            new Pose3d(1.7, 1.5, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)),
+            new Pose3d(15.8, 6.6, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)),
+            new Pose3d(15.7, 1.9, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)));
+    return positions;
+  }
+}
