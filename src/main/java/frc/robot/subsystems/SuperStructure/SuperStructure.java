@@ -105,15 +105,15 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
-  public void setElevatorGoal(ElevatorLevel elevatorGoal) {
+  private void setElevatorGoal(ElevatorLevel elevatorGoal) {
     m_elevator.setGoal(elevatorGoal);
   }
 
-  public void setArmGoal(ArmGoals armGoal) {
+  private void setArmGoal(ArmGoals armGoal) {
     m_arm.setGoal(armGoal);
   }
 
-  public void setWristGoal(WristGoals wristGoal) {
+  private void setWristGoal(WristGoals wristGoal) {
     m_wrist.setGoal(wristGoal);
   }
 

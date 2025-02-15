@@ -22,11 +22,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeCoralCommand;
+import frc.robot.commands.ScoreCoralCommand;
+import frc.robot.commands.SuperStructureCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -70,6 +74,8 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import frc.robot.util.TunableDouble;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -311,7 +317,7 @@ public class RobotContainer {
                     m_drive)
                 .ignoringDisable(true));
 
-    m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
+    // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
     // superstructure testing
     m_driverController
@@ -321,14 +327,20 @@ public class RobotContainer {
                 () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
 
-    // m_driverController
-    //     .y()
-    //     .whileTrue(
-    //         DriveCommands.driveToGamePiece(
-    //             m_drive,
-    //             TunableDouble.register("Drive/AimingSpeed", -0.6),
-    //             () -> 0.0,
-    //             () -> -m_vision.getTargetX(2).getRadians()));
+    m_driverController
+        .y()
+        .onTrue(
+            new ParallelCommandGroup(
+                    new DriveToPoseCommand(
+                        m_drive,
+                        () ->
+                            FieldConstants.Reef.branchPositions
+                                .get(0)
+                                .get(ReefLevel.L1)
+                                .toPose2d()),
+                    new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
+                .andThen(new ScoreCoralCommand(m_endEffector, m_collector)));
+    m_driverController.rightStick().whileTrue(new ScoreCoralCommand(m_endEffector, m_collector));
 
     m_driverController
         .x()

@@ -22,7 +22,7 @@ import edu.wpi.first.math.util.Units;
 public class VisionConstants {
   // AprilTag layout
   public static final AprilTagFieldLayout kAprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
   // Camera names, must match names configured on coprocessor
   public static final String kCamera0Name = "sandstorm";
