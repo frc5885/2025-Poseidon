@@ -3,7 +3,9 @@ package frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor
 public enum SuperStructureState {
   INTAKE_CORAL(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.INTAKE),
   INTAKE_ALGAE_FLOOR(ElevatorLevel.L2, ArmGoals.ALGAE_FLOOR, WristGoals.ALGAE_FLOOR),
@@ -25,10 +27,4 @@ public enum SuperStructureState {
   public ElevatorLevel elevatorGoal;
   public ArmGoals armGoal;
   public WristGoals wristGoal;
-
-  private SuperStructureState(ElevatorLevel elevatorGoal, ArmGoals armGoal, WristGoals wristGoal) {
-    this.elevatorGoal = elevatorGoal;
-    this.armGoal = armGoal;
-    this.wristGoal = wristGoal;
-  }
 }
