@@ -73,7 +73,7 @@ public class SuperStructureConstants {
 
     public static final double kArmLengthMeters = Units.inchesToMeters(14.0);
     public static final double kArmStartingPositionRadians = Units.degreesToRadians(90);
-    public static final double kArmMinAngleRads = Units.degreesToRadians(0);
+    public static final double kArmMinAngleRads = Units.degreesToRadians(-45);
     public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
 
     // In Rad/Sec
@@ -102,7 +102,8 @@ public class SuperStructureConstants {
     public static enum ArmGoals {
       STOW(() -> 90.0),
       INTAKE(() -> 0.0),
-      REEF(TunableDouble.register("Arm/REEF", 45.0));
+      REEF(TunableDouble.register("Arm/REEF", 45.0)),
+      ALGAE_FLOOR(TunableDouble.register("Arm/ALGAE_FLOOR", -45.0));
 
       public DoubleSupplier setpointDegrees;
 
@@ -155,7 +156,7 @@ public class SuperStructureConstants {
       REEF(TunableDouble.register("Wrist/REEF", 150.0)),
       L1REEF(TunableDouble.register("Wrist/L1REEF", 155.0)),
       L4REEF(TunableDouble.register("Wrist/L4REEF", 130.0)),
-      ALGAE_FLOOR(TunableDouble.register("Wrist/ALGAE_FLOOR", 60.0)),
+      ALGAE_FLOOR(TunableDouble.register("Wrist/ALGAE_FLOOR", 30.0)),
       ALGAE_REEF(TunableDouble.register("Wrist/ALGAE_REEF", 120.0)),
       PROCESSOR(TunableDouble.register("Wrist/PROCESSOR", 120.0)),
       NET(TunableDouble.register("Wrist/NET", 160.0)),

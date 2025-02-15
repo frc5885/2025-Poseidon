@@ -6,7 +6,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstant
 
 public enum SuperStructureState {
   INTAKE_CORAL(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.INTAKE),
-  INTAKE_ALGAE_FLOOR(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.ALGAE_FLOOR),
+  INTAKE_ALGAE_FLOOR(ElevatorLevel.L2, ArmGoals.ALGAE_FLOOR, WristGoals.ALGAE_FLOOR),
   INTAKE_ALGAE_L2(ElevatorLevel.ALGAE_L2, ArmGoals.REEF, WristGoals.ALGAE_REEF),
   INTAKE_ALGAE_L3(ElevatorLevel.ALGAE_L3, ArmGoals.REEF, WristGoals.ALGAE_REEF),
   SCORE_CORAL_L1(ElevatorLevel.L1, ArmGoals.REEF, WristGoals.L1REEF),
