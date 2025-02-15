@@ -43,12 +43,8 @@ public class BeamBreakIOSim implements BeamBreakIO {
     }
   }
 
-  /**
-   * Returns the current sensor state. Internally, if a state change was initiated and the delay has
-   * passed, the sensor state is updated to the target state.
-   */
   @Override
-  public boolean getIsTriggered() {
+  public void updateInputs(BeamBreakIOInputs inputs) {
     double currentTime = Timer.getFPGATimestamp();
 
     // If there's a pending state change and the delay has passed, update sensor state.
@@ -59,6 +55,6 @@ public class BeamBreakIOSim implements BeamBreakIO {
       }
     }
 
-    return sensorState;
+    inputs.state = sensorState;
   }
 }

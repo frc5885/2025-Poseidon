@@ -101,7 +101,6 @@ public class Arm {
             + m_armController.calculate(current.position, setpoint.position));
   }
 
-  // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
     m_io.setVoltage(outputVolts);
   }

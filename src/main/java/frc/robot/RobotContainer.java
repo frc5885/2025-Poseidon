@@ -25,7 +25,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.io.beambreak.BeamBreakIO;
+import frc.robot.io.beambreak.BeamBreakIOReal;
+import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
+import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
 import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
 import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
@@ -112,7 +116,11 @@ public class RobotContainer {
                     VisionConstants.kCamera1Name, VisionConstants.kRobotToCamera1));
         m_superStructure =
             new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark(), new WristIOSpark());
-        m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
+        m_collector =
+            new Collector(
+                new IntakeIOSpark(),
+                new FeederIOSpark(),
+                new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         m_endEffector = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
 
         break;
@@ -149,7 +157,7 @@ public class RobotContainer {
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
             new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
-        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
+        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim(), new BeamBreakIOSim());
         m_endEffector = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
         break;
 
@@ -166,7 +174,7 @@ public class RobotContainer {
         m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure =
             new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
-        m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
+        m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
         m_endEffector = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
         break;
@@ -295,6 +303,33 @@ public class RobotContainer {
             new InstantCommand(
                 () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
+
+
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         DriveCommands.driveToGamePiece(
+    //             m_drive,
+    //             TunableDouble.register("Drive/AimingSpeed", -0.6),
+    //             () -> 0.0,
+    //             () -> -m_vision.getTargetX(2).getRadians()));
+
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new ParallelDeadlineGroup(
+    //             new IntakeCoralCommand(m_collector),
+    //             new InstantCommand(
+    //                 () ->
+    //                     m_superStructure
+    //                         .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
+    //                         .schedule()),
+    //             DriveCommands.driveToGamePiece(
+    //                 m_drive,
+    //                 TunableDouble.register("Drive/AimingSpeed", -0.6),
+    //                 () -> 0.0,
+    //                 () -> -m_vision.getTargetX(2).getRadians())));
+
 
     // new JoystickButton(new GenericHID(1), 2)
     //     .whileTrue(

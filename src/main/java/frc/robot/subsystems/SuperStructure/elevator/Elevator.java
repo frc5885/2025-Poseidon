@@ -113,7 +113,6 @@ public class Elevator {
             + m_elevatorController.calculate(current.position, setpoint.position));
   }
 
-  // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
     m_io.setVoltage(outputVolts);
   }
