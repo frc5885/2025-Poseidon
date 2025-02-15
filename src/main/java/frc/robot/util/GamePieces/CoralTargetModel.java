@@ -17,7 +17,7 @@ public class CoralTargetModel {
     List<Translation3d> vertices = new ArrayList<>();
     double radius = 0.055; // 11cm diameter -> 5.5cm radius
     double halfLength = 0.15; // 30cm length -> ±15cm along X-axis
-    int numSegments = 16; // Number of points around the circle
+    int numSegments = 8; // Number of points around the circle
 
     // Generate points for the two end circles
     for (int i = 0; i < numSegments; i++) {

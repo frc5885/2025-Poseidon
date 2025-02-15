@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake {
@@ -34,6 +35,9 @@ public class Intake {
     // Update alerts
     m_motor1DisconnectedAlert.set(!m_intakeInputs.motor1Connected);
     m_motor2DisconnectedAlert.set(!m_intakeInputs.motor2Connected);
+
+    // Update game piece visualizer
+    GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
   }
 
   public void runIntake(double volts) {

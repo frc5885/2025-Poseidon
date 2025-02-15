@@ -10,51 +10,62 @@ import edu.wpi.first.wpilibj.Timer;
 public class BeamBreakIOSim implements BeamBreakIO {
 
   // The current state reported by the sensor.
-  private boolean sensorState = false;
+  private boolean m_sensorState = false;
 
   // The target state we want the sensor to eventually report.
-  private boolean targetState = false;
+  private boolean m_targetState = false;
 
   // Time when the last state change was initiated.
-  private double stateChangeStartTime = -1;
+  private double m_stateChangeStartTime = -1;
 
-  // Delay in seconds before the sensor state actually updates.
-  private static final double DELAY_SECONDS = 1.0;
-
-  /**
-   * Simulate a game piece being acquired. The sensor will report false for DELAY_SECONDS before
-   * switching to true.
-   */
-  public void simulateGamePieceAcquisition() {
-    if (!targetState) { // Only change if not already targeting acquisition.
-      targetState = true;
-      stateChangeStartTime = Timer.getFPGATimestamp();
-    }
-  }
-
-  /**
-   * Simulate a game piece being removed. The sensor will report true for DELAY_SECONDS before
-   * switching to false.
-   */
-  public void simulateGamePieceRemoval() {
-    if (targetState) { // Only change if not already targeting removal.
-      targetState = false;
-      stateChangeStartTime = Timer.getFPGATimestamp();
-    }
-  }
+  // Delay before the sensor state changes.
+  private double m_delaySeconds = 1.0;
 
   @Override
   public void updateInputs(BeamBreakIOInputs inputs) {
     double currentTime = Timer.getFPGATimestamp();
 
     // If there's a pending state change and the delay has passed, update sensor state.
-    if (sensorState != targetState && stateChangeStartTime > 0) {
-      if (currentTime - stateChangeStartTime >= DELAY_SECONDS) {
-        sensorState = targetState;
-        stateChangeStartTime = -1; // Reset the timer.
+    if (m_sensorState != m_targetState && m_stateChangeStartTime > 0) {
+      if (currentTime - m_stateChangeStartTime >= m_delaySeconds) {
+        m_sensorState = m_targetState;
+        m_stateChangeStartTime = -1; // Reset the timer.
       }
     }
 
-    inputs.state = sensorState;
+    inputs.state = m_sensorState;
+  }
+
+  /**
+   * Simulate a game piece being acquired. The sensor will report false for delaySeconds before
+   * switching to true.
+   */
+  public void simulateGamePieceIntake(double delaySeconds) {
+    m_delaySeconds = delaySeconds;
+    if (!m_targetState) { // Only change if not already targeting acquisition.
+      m_targetState = true;
+      m_stateChangeStartTime = Timer.getFPGATimestamp();
+    }
+  }
+
+  /**
+   * Simulate a game piece being removed. The sensor will report true for delaySeconds before
+   * switching to false.
+   */
+  public void simulateGamePieceOuttake(double delaySeconds) {
+    m_delaySeconds = delaySeconds;
+    if (m_targetState) { // Only change if not already targeting removal.
+      m_targetState = false;
+      m_stateChangeStartTime = Timer.getFPGATimestamp();
+    }
+  }
+
+  /**
+   * Cancel a simulated game piece change. The sensor will report the current state immediately and
+   * will not change.
+   */
+  public void cancelSimulatedGamePieceChange() {
+    m_targetState = m_sensorState;
+    m_stateChangeStartTime = -1;
   }
 }

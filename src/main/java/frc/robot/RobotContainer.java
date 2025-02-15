@@ -22,9 +22,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -67,8 +69,8 @@ import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim.CameraType;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import frc.robot.util.TunableDouble;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -141,18 +143,15 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera0Name,
                     VisionConstants.kRobotToCamera0,
-                    m_drive::getPose,
-                    CameraType.AprilTag),
+                    m_drive::getPose),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    m_drive::getPose,
-                    CameraType.AprilTag),
+                    m_drive::getPose),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera2Name,
                     VisionConstants.kRobotToCamera2,
-                    m_drive::getPose,
-                    CameraType.Coral));
+                    m_drive::getPose));
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
@@ -304,7 +303,6 @@ public class RobotContainer {
                 () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
 
-
     // m_driverController
     //     .y()
     //     .whileTrue(
@@ -314,22 +312,21 @@ public class RobotContainer {
     //             () -> 0.0,
     //             () -> -m_vision.getTargetX(2).getRadians()));
 
-    // m_driverController
-    //     .x()
-    //     .whileTrue(
-    //         new ParallelDeadlineGroup(
-    //             new IntakeCoralCommand(m_collector),
-    //             new InstantCommand(
-    //                 () ->
-    //                     m_superStructure
-    //                         .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
-    //                         .schedule()),
-    //             DriveCommands.driveToGamePiece(
-    //                 m_drive,
-    //                 TunableDouble.register("Drive/AimingSpeed", -0.6),
-    //                 () -> 0.0,
-    //                 () -> -m_vision.getTargetX(2).getRadians())));
-
+    m_driverController
+        .x()
+        .whileTrue(
+            new ParallelDeadlineGroup(
+                new IntakeCoralCommand(m_collector),
+                new InstantCommand(
+                    () ->
+                        m_superStructure
+                            .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
+                            .schedule()),
+                DriveCommands.driveToGamePiece(
+                    m_drive,
+                    TunableDouble.register("Drive/AimingSpeed", -0.6),
+                    () -> 0.0,
+                    () -> -m_vision.getTargetX(2).getRadians())));
 
     // new JoystickButton(new GenericHID(1), 2)
     //     .whileTrue(
