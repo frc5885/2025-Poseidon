@@ -39,8 +39,9 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation()) < 0.2
+    return m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
+            < 0.01
         && m_drive.getPose().getRotation().minus(m_targetPose.get().getRotation()).getDegrees()
-            < 5.0;
+            < 1.0;
   }
 }

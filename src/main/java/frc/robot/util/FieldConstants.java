@@ -111,13 +111,14 @@ public class FieldConstants {
               level,
               new Pose3d(
                   new Translation3d(
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                          .getX(),
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                          .getY(),
-                      level.height),
+                          poseDirection
+                              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
+                              .getX(),
+                          poseDirection
+                              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
+                              .getY(),
+                          level.height)
+                      .plus(new Translation3d(level.offset, 0.0, 0.0)),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
@@ -126,13 +127,14 @@ public class FieldConstants {
               level,
               new Pose3d(
                   new Translation3d(
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
-                          .getX(),
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
-                          .getY(),
-                      level.height),
+                          poseDirection
+                              .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
+                              .getX(),
+                          poseDirection
+                              .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
+                              .getY(),
+                          level.height)
+                      .plus(new Translation3d(level.offset, 0.0, 0.0)),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
@@ -155,16 +157,12 @@ public class FieldConstants {
         new Pose2d(Units.inchesToMeters(48), middleIceCream.getY() - separation, new Rotation2d());
   }
 
+  @RequiredArgsConstructor
   public enum ReefLevel {
-    L1(Units.inchesToMeters(25.0), 0),
-    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35),
-    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35),
-    L4(Units.inchesToMeters(72), -90);
-
-    ReefLevel(double height, double pitch) {
-      this.height = height;
-      this.pitch = pitch; // Degrees
-    }
+    L1(Units.inchesToMeters(25.0), 0, -0.6),
+    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
+    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
+    L4(Units.inchesToMeters(72), -90, -0.6);
 
     public static ReefLevel fromLevel(int level) {
       return Arrays.stream(values())
@@ -175,6 +173,7 @@ public class FieldConstants {
 
     public final double height;
     public final double pitch;
+    public final double offset;
   }
 
   public static final double aprilTagWidth = Units.inchesToMeters(6.50);

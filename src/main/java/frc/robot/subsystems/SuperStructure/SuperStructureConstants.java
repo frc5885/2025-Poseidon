@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.util.TunableDouble;
 import java.util.function.DoubleSupplier;
+import lombok.AllArgsConstructor;
 
 public class SuperStructureConstants {
   public static class ElevatorConstants {
@@ -49,6 +50,7 @@ public class SuperStructureConstants {
 
     public static final double kElevatorErrorToleranceMeters = 0.005;
 
+    @AllArgsConstructor
     public static enum ElevatorLevel {
       STOW(() -> kElevatorMinHeightMeters),
       L1(TunableDouble.register("Elevator/L1", 0.1)),
@@ -59,10 +61,6 @@ public class SuperStructureConstants {
       L4(() -> kElevatorMaxHeightMeters);
 
       public DoubleSupplier setpointMeters;
-
-      private ElevatorLevel(DoubleSupplier setpointMeters) {
-        this.setpointMeters = setpointMeters;
-      }
     }
   }
 
@@ -99,6 +97,7 @@ public class SuperStructureConstants {
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
 
+    @AllArgsConstructor
     public static enum ArmGoals {
       STOW(() -> 90.0),
       INTAKE(() -> 0.0),
@@ -106,10 +105,6 @@ public class SuperStructureConstants {
       ALGAE_FLOOR(TunableDouble.register("Arm/ALGAE_FLOOR", -45.0));
 
       public DoubleSupplier setpointDegrees;
-
-      private ArmGoals(DoubleSupplier setpointDegrees) {
-        this.setpointDegrees = setpointDegrees;
-      }
     }
   }
 
@@ -149,6 +144,7 @@ public class SuperStructureConstants {
 
     public static final double kWristErrorToleranceRads = Units.degreesToRadians(1.5);
 
+    @AllArgsConstructor
     public static enum WristGoals {
       // these are all in real-world radians
       STOW(() -> 270.0),
@@ -163,10 +159,6 @@ public class SuperStructureConstants {
       LOCK(() -> -1.0);
 
       public DoubleSupplier setpointDegrees;
-
-      private WristGoals(DoubleSupplier setpointDegrees) {
-        this.setpointDegrees = setpointDegrees;
-      }
     }
   }
 }

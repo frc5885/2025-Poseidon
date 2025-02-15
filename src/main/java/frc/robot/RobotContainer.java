@@ -336,7 +336,7 @@ public class RobotContainer {
                         () ->
                             FieldConstants.Reef.branchPositions
                                 .get(0)
-                                .get(ReefLevel.L1)
+                                .get(ReefLevel.L4)
                                 .toPose2d()),
                     new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
                 .andThen(new ScoreCoralCommand(m_endEffector, m_collector)));
