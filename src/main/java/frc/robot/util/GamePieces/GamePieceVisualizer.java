@@ -220,7 +220,6 @@ public class GamePieceVisualizer {
             .transformBy(new Transform3d(-0.7, 0, 0, new Rotation3d()));
     return fieldCoral.stream()
         .anyMatch(
-            coralPose ->
-                coralPose.getTranslation().getDistance(intakePose.getTranslation()) < 0.25);
+            coralPose -> coralPose.getTranslation().getDistance(intakePose.getTranslation()) < 0.5);
   }
 }

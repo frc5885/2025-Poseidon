@@ -63,7 +63,7 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
     m_visionSim.addCamera(m_cameraSim, robotToCamera);
 
     // Enable camera streams in simulation
-    boolean renderSim = true;
+    boolean renderSim = false;
     m_cameraSim.enableRawStream(renderSim);
     m_cameraSim.enableProcessedStream(renderSim);
     m_cameraSim.enableDrawWireframe(renderSim);
