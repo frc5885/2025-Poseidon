@@ -45,5 +45,14 @@ public interface VisionIO {
     PHOTONVISION
   }
 
+  public static enum CameraType {
+    APRILTAG,
+    CORAL
+  }
+
   public default void updateInputs(VisionIOInputs inputs) {}
+
+  public default CameraType getCameraType() {
+    return null;
+  }
 }

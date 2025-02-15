@@ -210,4 +210,17 @@ public class GamePieceVisualizer {
                     0.07, 0.0, -0.37, new Rotation3d(0, Units.degreesToRadians(45), 0)));
     return new Pose3d(robotPoseSupplier.get()).transformBy(indexerTransform);
   }
+
+  /*
+   * Returns true if the robot's intake is close to a coral.
+   */
+  public static boolean isIntakeNearCoral() {
+    Pose3d intakePose =
+        new Pose3d(robotPoseSupplier.get())
+            .transformBy(new Transform3d(-0.7, 0, 0, new Rotation3d()));
+    return fieldCoral.stream()
+        .anyMatch(
+            coralPose ->
+                coralPose.getTranslation().getDistance(intakePose.getTranslation()) < 0.25);
+  }
 }

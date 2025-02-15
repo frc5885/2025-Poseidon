@@ -39,8 +39,8 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 5.0;
-  private static final double kAngleKd = 0.4;
+  private static final double kAngleKp = 1.0;
+  private static final double kAngleKd = 0.1;
   private static final double kAngleMaxVelocity = 8.0;
   private static final double kAngleMaxAcceleration = 20.0;
   private static final double kFfStartDelay = 2.0; // Secs
@@ -184,10 +184,8 @@ public class DriveCommands {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Calculate angular speed
-              double omega =
-                  angleController.calculate(
-                      drive.getRotation().getRadians(), rotationSupplier.getAsDouble());
+              // Calculate angular speed (want error to be 0) (means robot is in line with target)
+              double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
