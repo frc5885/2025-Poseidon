@@ -17,13 +17,13 @@ public class DriveToPoseCommand extends Command {
   public DriveToPoseCommand(Drive drive, Supplier<Pose2d> targetPose) {
     m_drive = drive;
     m_targetPose = targetPose;
-    m_command = m_drive.getDriveToPoseCommand(m_targetPose);
 
     addRequirements(m_drive);
   }
 
   @Override
   public void initialize() {
+    m_command = m_drive.getDriveToPoseCommand(m_targetPose);
     m_command.initialize();
   }
 

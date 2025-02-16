@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class ScoreCoralCommand extends Command {
   private final EndEffector m_endEffector;
@@ -42,6 +43,8 @@ public class ScoreCoralCommand extends Command {
       if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
         ((BeamBreakIOSim) m_collector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
+    } else {
+      GamePieceVisualizer.scoreCoral().schedule();
     }
   }
 

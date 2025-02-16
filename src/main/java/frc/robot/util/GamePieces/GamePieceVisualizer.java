@@ -127,7 +127,7 @@ public class GamePieceVisualizer {
                   hasCoral = false;
                   final Pose3d startPose = getCoralIndexerPose3d();
                   final Pose3d endPose =
-                      startPose.transformBy(new Transform3d(0.5, 0, 0, new Rotation3d()));
+                      startPose.transformBy(new Transform3d(-0.3, 0, 0, new Rotation3d()));
 
                   final double duration =
                       startPose.getTranslation().getDistance(endPose.getTranslation()) / ejectSpeed;
@@ -146,6 +146,7 @@ public class GamePieceVisualizer {
                             Logger.recordOutput(
                                 "GamePieceVisualizer/Coral/Scored", new Pose3d[] {});
                             fieldCoral.add(endPose);
+                            showFieldGamePieces();
                           });
                 },
                 Set.of())
@@ -179,6 +180,7 @@ public class GamePieceVisualizer {
                             Logger.recordOutput(
                                 "GamePieceVisualizer/Algae/Scored", new Pose3d[] {});
                             fieldAlgae.add(endPose);
+                            showFieldGamePieces();
                           });
                 },
                 Set.of())
