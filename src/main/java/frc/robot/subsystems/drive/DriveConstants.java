@@ -13,12 +13,17 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Kilogram;
+
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 
 public class DriveConstants {
   public static final double kMaxSpeedMetersPerSec = 4.8;
@@ -114,7 +119,7 @@ public class DriveConstants {
   // PathPlanner configuration
   public static final double kRobotMassKg = 74.088;
   public static final double kRobotMOI = 6.883;
-  public static final double kWheelCOF = 1.2;
+  public static final double kWheelCOF = 0.899;
   public static final RobotConfig kPPConfig =
       new RobotConfig(
           kRobotMassKg,
@@ -127,4 +132,12 @@ public class DriveConstants {
               kDriveMotorCurrentLimit,
               1),
           kModuleTranslations);
+
+  public static final DriveTrainSimulationConfig kMapleSimConfig =
+      DriveTrainSimulationConfig.Default()
+          .withCustomModuleTranslations(kModuleTranslations)
+          .withRobotMass(Kilogram.of(kRobotMassKg))
+          .withGyro(COTS.ofNav2X())
+          .withSwerveModule(COTS.ofMark4i(kDriveGearbox, kTurnGearbox, COTS.WHEELS.COLSONS.cof, 2))
+          .withBumperSize(Inches.of(37.5), Inches.of(37.5));
 }

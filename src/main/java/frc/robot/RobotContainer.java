@@ -61,8 +61,10 @@ import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
@@ -78,6 +80,9 @@ import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import frc.robot.util.TunableDouble;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -94,6 +99,9 @@ public class RobotContainer {
   private final SuperStructure m_superStructure;
   private final Collector m_collector;
   private final EndEffector m_endEffector;
+
+  // SIM
+  private SwerveDriveSimulation m_driveSimulation = null;
 
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
@@ -115,7 +123,8 @@ public class RobotContainer {
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3),
-                m_poseController);
+                m_poseController,
+                (pose) -> {});
         m_vision =
             new Vision(
                 m_drive::addVisionMeasurement,
@@ -143,32 +152,39 @@ public class RobotContainer {
         break;
 
       case SIM:
+        // create a maple-sim swerve drive simulation instance
+        m_driveSimulation =
+            new SwerveDriveSimulation(
+                DriveConstants.kMapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+        // add the simulated drivetrain to the simulation field
+        SimulatedArena.getInstance().addDriveTrainSimulation(m_driveSimulation);
         // Sim robot, instantiate physics sim IO implementations
         m_drive =
             new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                m_poseController);
+                new GyroIOSim(m_driveSimulation.getGyroSimulation()),
+                new ModuleIOSim(m_driveSimulation.getModules()[0]),
+                new ModuleIOSim(m_driveSimulation.getModules()[1]),
+                new ModuleIOSim(m_driveSimulation.getModules()[2]),
+                new ModuleIOSim(m_driveSimulation.getModules()[3]),
+                m_poseController,
+                m_driveSimulation::setSimulationWorldPose);
         m_vision =
             new Vision(
                 m_drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera0Name,
                     VisionConstants.kRobotToCamera0,
-                    m_drive::getPose,
+                    m_driveSimulation::getSimulatedDriveTrainPose,
                     CameraType.APRILTAG),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    m_drive::getPose,
+                    m_driveSimulation::getSimulatedDriveTrainPose,
                     CameraType.APRILTAG),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera2Name,
                     VisionConstants.kRobotToCamera2,
-                    m_drive::getPose,
+                    m_driveSimulation::getSimulatedDriveTrainPose,
                     CameraType.CORAL));
 
         // the sim lags really badly if you use auto switch
@@ -188,7 +204,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                m_poseController);
+                m_poseController,
+                (pose) -> {});
         m_vision =
             new Vision(
                 m_drive::addVisionMeasurement,
@@ -389,5 +406,24 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return m_autoChooser.get();
+  }
+
+  public void resetSimulationField() {
+    if (Constants.kCurrentMode != Constants.Mode.SIM) return;
+
+    m_drive.setPose(new Pose2d(3, 3, new Rotation2d()));
+    SimulatedArena.getInstance().resetFieldForAuto();
+  }
+
+  public void updateSimulation() {
+    if (Constants.kCurrentMode != Constants.Mode.SIM) return;
+
+    SimulatedArena.getInstance().simulationPeriodic();
+    Logger.recordOutput(
+        "FieldSimulation/RobotPosition", m_driveSimulation.getSimulatedDriveTrainPose());
+    Logger.recordOutput(
+        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+    Logger.recordOutput(
+        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
   }
 }

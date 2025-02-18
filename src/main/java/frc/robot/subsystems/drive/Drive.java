@@ -51,6 +51,7 @@ import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -64,6 +65,7 @@ public class Drive extends SubsystemBase {
   private final SysIdRoutine m_sysId;
   private final Alert m_gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+  private final Consumer<Pose2d> m_resetSimulationPoseCallBack;
 
   private SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(kModuleTranslations);
   private Rotation2d m_rawGyroRotation = new Rotation2d();
@@ -84,13 +86,15 @@ public class Drive extends SubsystemBase {
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO,
-      HeimdallPoseController poseController) {
+      HeimdallPoseController poseController,
+      Consumer<Pose2d> resetSimulationPoseCallBack) {
     m_gyroIO = gyroIO;
     m_modules[0] = new Module(flModuleIO, 0);
     m_modules[1] = new Module(frModuleIO, 1);
     m_modules[2] = new Module(blModuleIO, 2);
     m_modules[3] = new Module(brModuleIO, 3);
     m_poseController = poseController;
+    m_resetSimulationPoseCallBack = resetSimulationPoseCallBack;
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -340,6 +344,7 @@ public class Drive extends SubsystemBase {
 
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
+    m_resetSimulationPoseCallBack.accept(pose);
     m_poseController.resetPosition(m_rawGyroRotation, getModulePositions(), pose);
   }
 
