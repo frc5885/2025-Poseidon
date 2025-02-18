@@ -36,13 +36,29 @@ public class CoralTargetModel {
   }
 
   public static List<Pose3d> getCoralPositions() {
-    // positions near human player stations, randomized rotations
+    // positions near human player stations, randomized positions and rotations
     List<Pose3d> positions =
         Arrays.asList(
-            new Pose3d(2, 6.45, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)),
-            new Pose3d(1.7, 1.5, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)),
-            new Pose3d(15.8, 6.6, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)),
-            new Pose3d(15.7, 1.9, 0.055, new Rotation3d(0, 0, Math.random() * Math.PI)));
+            new Pose3d(
+                2.0 + Math.random() * 1.2 - 0.6,
+                6.4 + Math.random() * 1.2 - 0.6,
+                0.055,
+                new Rotation3d(0, 0, Math.random() * Math.PI)),
+            new Pose3d(
+                2.0 + Math.random() * 1.2 - 0.6,
+                1.8 + Math.random() * 1.2 - 0.6,
+                0.055,
+                new Rotation3d(0, 0, Math.random() * Math.PI)),
+            new Pose3d(
+                15.7 + Math.random() * 1.2 - 0.6,
+                6.4 + Math.random() * 1.2 - 0.6,
+                0.055,
+                new Rotation3d(0, 0, Math.random() * Math.PI)),
+            new Pose3d(
+                15.7 + Math.random() * 1.2 - 0.6,
+                1.8 + Math.random() * 1.2 - 0.6,
+                0.055,
+                new Rotation3d(0, 0, Math.random() * Math.PI)));
     return positions;
   }
 }
