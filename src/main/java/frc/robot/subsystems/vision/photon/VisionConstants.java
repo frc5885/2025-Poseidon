@@ -22,11 +22,13 @@ import edu.wpi.first.math.util.Units;
 public class VisionConstants {
   // AprilTag layout
   public static final AprilTagFieldLayout kAprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
   // Camera names, must match names configured on coprocessor
   public static final String kCamera0Name = "sandstorm";
   public static final String kCamera1Name = "tsunami";
+
+  public static final String kCamera2Name = "coral";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
@@ -42,6 +44,9 @@ public class VisionConstants {
           Units.inchesToMeters(12.25),
           Units.inchesToMeters(8.0),
           new Rotation3d(0.0, 0, -Units.degreesToRadians(10)));
+  // coral intake camera
+  public static final Transform3d kRobotToCamera2 =
+      new Transform3d(0, 0, 1, new Rotation3d(0, Units.degreesToRadians(50), Math.PI));
 
   // Basic filtering thresholds
   public static final double kMaxAmbiguity = 0.3;

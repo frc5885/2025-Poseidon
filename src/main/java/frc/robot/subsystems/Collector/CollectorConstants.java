@@ -11,6 +11,8 @@ public class CollectorConstants {
   public static class IntakeConstants {
     public static final int kMotorId1 = 7;
     public static final int kMotorId2 = 8;
+    public static final int kBeamBreakId = 6;
+
     public static final boolean kMotor1Inverted = false;
     public static final boolean kMotor2Inverted = !kMotor1Inverted;
     public static final int kCurrentLimit = 40;

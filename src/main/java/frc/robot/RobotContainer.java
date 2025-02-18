@@ -22,10 +22,20 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.DriveToPoseCommand;
+import frc.robot.commands.IntakeCoralCommand;
+import frc.robot.commands.ScoreCoralCommand;
+import frc.robot.commands.SuperStructureCommand;
+import frc.robot.io.beambreak.BeamBreakIO;
+import frc.robot.io.beambreak.BeamBreakIOReal;
+import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
+import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
 import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
 import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
@@ -61,8 +71,13 @@ import frc.robot.subsystems.vision.heimdall.HeimdallPoseController.HeimdallOdome
 import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.subsystems.vision.photon.VisionConstants;
 import frc.robot.subsystems.vision.photon.VisionIO;
+import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
+import frc.robot.util.TunableDouble;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -105,12 +120,24 @@ public class RobotContainer {
             new Vision(
                 m_drive::addVisionMeasurement,
                 new VisionIOPhotonVision(
-                    VisionConstants.kCamera0Name, VisionConstants.kRobotToCamera0),
+                    VisionConstants.kCamera0Name,
+                    VisionConstants.kRobotToCamera0,
+                    CameraType.APRILTAG),
                 new VisionIOPhotonVision(
-                    VisionConstants.kCamera1Name, VisionConstants.kRobotToCamera1));
+                    VisionConstants.kCamera1Name,
+                    VisionConstants.kRobotToCamera1,
+                    CameraType.APRILTAG),
+                new VisionIOPhotonVision(
+                    VisionConstants.kCamera2Name,
+                    VisionConstants.kRobotToCamera2,
+                    CameraType.CORAL));
         m_superStructure =
             new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark(), new WristIOSpark());
-        m_collector = new Collector(new IntakeIOSpark(), new FeederIOSpark());
+        m_collector =
+            new Collector(
+                new IntakeIOSpark(),
+                new FeederIOSpark(),
+                new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         m_endEffector = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
 
         break;
@@ -131,16 +158,24 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera0Name,
                     VisionConstants.kRobotToCamera0,
-                    m_drive::getPose),
+                    m_drive::getPose,
+                    CameraType.APRILTAG),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    m_drive::getPose));
+                    m_drive::getPose,
+                    CameraType.APRILTAG),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.kCamera2Name,
+                    VisionConstants.kRobotToCamera2,
+                    m_drive::getPose,
+                    CameraType.CORAL));
+
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
             new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
-        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim());
+        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim(), new BeamBreakIOSim());
         m_endEffector = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
         break;
 
@@ -154,10 +189,15 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 m_poseController);
-        m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        m_vision =
+            new Vision(
+                m_drive::addVisionMeasurement,
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {});
         m_superStructure =
             new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
-        m_collector = new Collector(new IntakeIO() {}, new FeederIO() {});
+        m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
         m_endEffector = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
         break;
@@ -230,6 +270,10 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
+
+    // Set suppliers for the game piece visualizer
+    GamePieceVisualizer.setRobotPoseSupplier(m_drive::getPose);
+    GamePieceVisualizer.setEndEffectorPoseSupplier(m_superStructure::getEndEffectorPose3d);
   }
 
   /**
@@ -273,7 +317,7 @@ public class RobotContainer {
                     m_drive)
                 .ignoringDisable(true));
 
-    m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
+    // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
     // superstructure testing
     m_driverController
@@ -282,6 +326,37 @@ public class RobotContainer {
             new InstantCommand(
                 () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
                 m_superStructure));
+
+    m_driverController
+        .y()
+        .onTrue(
+            new ParallelCommandGroup(
+                    new DriveToPoseCommand(
+                        m_drive,
+                        () ->
+                            FieldConstants.Reef.branchPositions
+                                .get(0)
+                                .get(ReefLevel.L4)
+                                .toPose2d()),
+                    new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
+                .andThen(new ScoreCoralCommand(m_endEffector, m_collector)));
+    m_driverController.rightStick().whileTrue(new ScoreCoralCommand(m_endEffector, m_collector));
+
+    m_driverController
+        .x()
+        .whileTrue(
+            new ParallelDeadlineGroup(
+                new IntakeCoralCommand(m_collector),
+                new InstantCommand(
+                    () ->
+                        m_superStructure
+                            .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
+                            .schedule()),
+                DriveCommands.driveToGamePiece(
+                    m_drive,
+                    TunableDouble.register("Drive/AimingSpeed", -0.6),
+                    () -> 0.0,
+                    () -> m_vision.getTargetX(2).getRadians())));
 
     // new JoystickButton(new GenericHID(1), 2)
     //     .whileTrue(

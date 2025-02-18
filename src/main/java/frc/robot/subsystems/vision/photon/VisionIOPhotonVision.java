@@ -28,6 +28,7 @@ import org.photonvision.PhotonCamera;
 public class VisionIOPhotonVision implements VisionIO {
   protected final PhotonCamera m_camera;
   protected final Transform3d m_robotToCamera;
+  protected final CameraType m_type;
 
   /**
    * Creates a new VisionIOPhotonVision.
@@ -35,9 +36,10 @@ public class VisionIOPhotonVision implements VisionIO {
    * @param name The configured name of the camera.
    * @param rotationSupplier The 3D position of the camera relative to the robot.
    */
-  public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
+  public VisionIOPhotonVision(String name, Transform3d robotToCamera, CameraType type) {
     m_camera = new PhotonCamera(name);
     m_robotToCamera = robotToCamera;
+    m_type = type;
   }
 
   @Override
@@ -127,5 +129,10 @@ public class VisionIOPhotonVision implements VisionIO {
     for (int id : tagIds) {
       inputs.tagIds[i++] = id;
     }
+  }
+
+  @Override
+  public CameraType getCameraType() {
+    return m_type;
   }
 }

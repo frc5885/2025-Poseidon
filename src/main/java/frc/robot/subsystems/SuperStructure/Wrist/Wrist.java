@@ -117,7 +117,6 @@ public class Wrist {
             + m_wristController.calculate(current.position, setpoint.position));
   }
 
-  // TODO May adjust limits to avoid damaging the mechanism
   public void runCharacterization(double outputVolts) {
     m_io.setVoltage(outputVolts);
   }

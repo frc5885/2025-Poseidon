@@ -39,8 +39,8 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 5.0;
-  private static final double kAngleKd = 0.4;
+  private static final double kAngleKp = 1.0;
+  private static final double kAngleKd = 0.1;
   private static final double kAngleMaxVelocity = 8.0;
   private static final double kAngleMaxAcceleration = 20.0;
   private static final double kFfStartDelay = 2.0; // Secs
@@ -150,6 +150,50 @@ public class DriveCommands {
                       isFlipped
                           ? drive.getRotation().plus(new Rotation2d(Math.PI))
                           : drive.getRotation()));
+            },
+            drive)
+
+        // Reset PID controller when command starts
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  /**
+   * Field relative drive command using joystick for linear control and PID for angular control.
+   * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
+   * absolute rotation with a joystick.
+   */
+  public static Command driveToGamePiece(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier rotationSupplier) {
+
+    // Create PID controller
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            kAngleKp,
+            0.0,
+            kAngleKd,
+            new TrapezoidProfile.Constraints(kAngleMaxVelocity, kAngleMaxAcceleration));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Construct command
+    return Commands.run(
+            () -> {
+              // Get linear velocity
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+              // Calculate angular speed (want error to be 0) (means robot is in line with target)
+              double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+              drive.runVelocity(speeds);
             },
             drive)
 

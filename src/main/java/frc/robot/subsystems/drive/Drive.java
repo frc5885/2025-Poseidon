@@ -19,6 +19,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -50,6 +51,7 @@ import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -294,6 +296,17 @@ public class Drive extends SubsystemBase {
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
   private ChassisSpeeds getChassisSpeeds() {
     return m_kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
+    Logger.recordOutput("Odometry/TargetPose", pose.get());
+    return AutoBuilder.pathfindToPose(
+        pose.get(),
+        new PathConstraints(
+            getMaxLinearSpeedMetersPerSec(),
+            getMaxAngularSpeedRadPerSec(),
+            getMaxAngularSpeedRadPerSec(),
+            100)); // TODO Figure this out
   }
 
   /** Returns the position of each module in radians. */

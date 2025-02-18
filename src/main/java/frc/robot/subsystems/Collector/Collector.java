@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.subsystems.Collector.Feeder.Feeder;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
 import frc.robot.subsystems.Collector.Intake.Intake;
@@ -19,8 +20,8 @@ public class Collector extends SubsystemBase {
   private final Feeder m_feeder;
 
   /** Creates a new Collector. */
-  public Collector(IntakeIO intakeIO, FeederIO feederIO) {
-    m_intake = new Intake(intakeIO);
+  public Collector(IntakeIO intakeIO, FeederIO feederIO, BeamBreakIO beamBreakIO) {
+    m_intake = new Intake(intakeIO, beamBreakIO);
     m_feeder = new Feeder(feederIO);
   }
 
@@ -59,6 +60,14 @@ public class Collector extends SubsystemBase {
 
   public void retractIntake() {
     m_intake.retract();
+  }
+
+  public boolean isCollected() {
+    return m_intake.isBeamBreakTriggered();
+  }
+
+  public BeamBreakIO getBeamBreakIO() {
+    return m_intake.getBeamBreakIO();
   }
 
   private void visualizationUpdate() {
