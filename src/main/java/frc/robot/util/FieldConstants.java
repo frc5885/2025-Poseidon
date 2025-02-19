@@ -111,18 +111,15 @@ public class FieldConstants {
               level,
               new Pose3d(
                   new Translation3d(
-                          poseDirection
-                              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                              .getX(),
-                          poseDirection
-                              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                              .getY(),
-                          level.height)
-                      .plus(
-                          new Translation3d(level.offset, 0.0, 0.0)
-                              .rotateBy(
-                                  new Rotation3d(
-                                      poseDirection.getRotation().plus(new Rotation2d(Math.PI))))),
+                      poseDirection
+                          .transformBy(
+                              new Transform2d(adjustX - level.offset, adjustY, new Rotation2d()))
+                          .getX(),
+                      poseDirection
+                          .transformBy(
+                              new Transform2d(adjustX - level.offset, adjustY, new Rotation2d()))
+                          .getY(),
+                      level.height),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
@@ -131,18 +128,15 @@ public class FieldConstants {
               level,
               new Pose3d(
                   new Translation3d(
-                          poseDirection
-                              .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
-                              .getX(),
-                          poseDirection
-                              .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
-                              .getY(),
-                          level.height)
-                      .plus(
-                          new Translation3d(level.offset, 0.0, 0.0)
-                              .rotateBy(
-                                  new Rotation3d(
-                                      poseDirection.getRotation().plus(new Rotation2d(Math.PI))))),
+                      poseDirection
+                          .transformBy(
+                              new Transform2d(adjustX - level.offset, -adjustY, new Rotation2d()))
+                          .getX(),
+                      poseDirection
+                          .transformBy(
+                              new Transform2d(adjustX - level.offset, -adjustY, new Rotation2d()))
+                          .getY(),
+                      level.height),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
