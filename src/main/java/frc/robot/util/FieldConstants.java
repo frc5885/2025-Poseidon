@@ -173,6 +173,10 @@ public class FieldConstants {
           .orElse(L4);
     }
 
+    public static ReefLevel fromHeight(double height) {
+      return Arrays.stream(values()).filter(level -> level.height == height).findFirst().orElse(L4);
+    }
+
     public final double height;
     public final double pitch;
     public final double offset;
