@@ -118,7 +118,11 @@ public class FieldConstants {
                               .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
                               .getY(),
                           level.height)
-                      .plus(new Translation3d(level.offset, 0.0, 0.0)),
+                      .plus(
+                          new Translation3d(level.offset, 0.0, 0.0)
+                              .rotateBy(
+                                  new Rotation3d(
+                                      poseDirection.getRotation().plus(new Rotation2d(Math.PI))))),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
@@ -134,7 +138,11 @@ public class FieldConstants {
                               .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
                               .getY(),
                           level.height)
-                      .plus(new Translation3d(level.offset, 0.0, 0.0)),
+                      .plus(
+                          new Translation3d(level.offset, 0.0, 0.0)
+                              .rotateBy(
+                                  new Rotation3d(
+                                      poseDirection.getRotation().plus(new Rotation2d(Math.PI))))),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),

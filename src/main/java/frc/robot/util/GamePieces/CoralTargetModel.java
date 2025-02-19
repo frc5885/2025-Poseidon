@@ -40,23 +40,23 @@ public class CoralTargetModel {
     List<Pose3d> positions =
         Arrays.asList(
             new Pose3d(
-                2.0 + Math.random() * 1.2 - 0.6,
-                6.4 + Math.random() * 1.2 - 0.6,
+                1.5 + Math.random() * 0.6 - 0.3,
+                6.9 + Math.random() * 0.6 - 0.3,
                 0.055,
                 new Rotation3d(0, 0, Math.random() * Math.PI)),
             new Pose3d(
-                2.0 + Math.random() * 1.2 - 0.6,
-                1.8 + Math.random() * 1.2 - 0.6,
+                1.5 + Math.random() * 0.6 - 0.3,
+                1.3 + Math.random() * 0.6 - 0.3,
                 0.055,
                 new Rotation3d(0, 0, Math.random() * Math.PI)),
             new Pose3d(
-                15.7 + Math.random() * 1.2 - 0.6,
-                6.4 + Math.random() * 1.2 - 0.6,
+                16.2 + Math.random() * 0.6 - 0.3,
+                7.9 + Math.random() * 0.6 - 0.3,
                 0.055,
                 new Rotation3d(0, 0, Math.random() * Math.PI)),
             new Pose3d(
-                15.7 + Math.random() * 1.2 - 0.6,
-                1.8 + Math.random() * 1.2 - 0.6,
+                16.2 + Math.random() * 0.6 - 0.3,
+                1.3 + Math.random() * 0.6 - 0.3,
                 0.055,
                 new Rotation3d(0, 0, Math.random() * Math.PI)));
     return positions;
