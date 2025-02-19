@@ -17,8 +17,8 @@ import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.TunableDouble;
 
 public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
-  double kDriveSpeed = -0.6;
-  double kDistanceBeforeLowerSuperStructure = 0.5;
+  private double kDriveSpeed = -0.6;
+  private double kDistanceBeforeLowerSuperStructure = 0.25;
 
   /**
    * A command that intakes a new coral. Moves the robot to a starting pose, lowers the
