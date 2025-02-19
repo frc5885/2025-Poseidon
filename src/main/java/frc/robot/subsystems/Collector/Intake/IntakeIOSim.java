@@ -1,21 +1,36 @@
 package frc.robot.subsystems.Collector.Intake;
 
+import static edu.wpi.first.units.Units.Inches;
+
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
+import org.ironmaple.simulation.IntakeSimulation;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 
 public class IntakeIOSim implements IntakeIO {
 
   private double m_appliedVolts;
   private FlywheelSim m_flywheelSim;
 
-  public IntakeIOSim() {
+  private final IntakeSimulation m_intakeSimulation;
+
+  public IntakeIOSim(SwerveDriveSimulation driveTrain) {
     m_flywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
                 DCMotor.getNEO(2), 0.001, IntakeConstants.kGearRatio),
             DCMotor.getNEO(2));
+
+    m_intakeSimulation =
+        IntakeSimulation.OverTheBumperIntake(
+            "Coral",
+            driveTrain,
+            Inches.of(27.5),
+            Inches.of(21),
+            IntakeSimulation.IntakeSide.BACK,
+            1);
   }
 
   public void updateInputs(IntakeIOInputs inputs) {
@@ -34,5 +49,17 @@ public class IntakeIOSim implements IntakeIO {
   public void setVoltage(double volts) {
     m_appliedVolts = volts;
     m_flywheelSim.setInput(volts);
+  }
+
+  public void extendIntake() {
+    m_intakeSimulation.startIntake();
+  }
+
+  public void retractIntake() {
+    m_intakeSimulation.stopIntake();
+  }
+
+  public IntakeSimulation getMapleIntakeSimulation() {
+    return m_intakeSimulation;
   }
 }

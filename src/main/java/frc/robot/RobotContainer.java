@@ -192,7 +192,9 @@ public class RobotContainer {
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
             new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
-        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim(), new BeamBreakIOSim());
+        m_collector =
+            new Collector(
+                new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
         m_endEffector = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
         break;
 

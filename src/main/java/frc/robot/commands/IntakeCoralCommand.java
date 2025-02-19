@@ -32,8 +32,11 @@ public class IntakeCoralCommand extends Command {
 
     // Simulate a coral being taken in
     if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      if (true) { // TODO: Replace with a check for a coral
+      if (m_collector.getMapleIntakeSim().getGamePiecesAmount() > 0) {
         ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(1.0);
+        m_collector
+            .getMapleIntakeSim()
+            .obtainGamePieceFromIntake(); // remove the coral from the intake
       }
     }
   }
