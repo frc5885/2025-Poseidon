@@ -120,7 +120,8 @@ public class DriveConstants {
   // Speed and acceleration constraints
   public static final double kMaxSpeedMetersPerSec = 3.6; // measured in sim
   public static final double kMaxAccelerationMetersPerSecSq = 5.4; // measured in sim
-  public static final double kMaxAngularSpeedRadiansPerSec = kMaxSpeedMetersPerSec / kDriveBaseRadius;
+  public static final double kMaxAngularSpeedRadiansPerSec =
+      kMaxSpeedMetersPerSec / kDriveBaseRadius;
   public static final double kMaxAngularAccelerationRadiansPerSecSq = 16; // measured in sim
   public static final double kMaxModuleRotationVelocityRadiansPerSec = 15; // measured in sim
 
