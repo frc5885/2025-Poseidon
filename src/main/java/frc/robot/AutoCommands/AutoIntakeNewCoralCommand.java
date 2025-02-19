@@ -8,6 +8,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
@@ -16,23 +17,32 @@ import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.TunableDouble;
 
 public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
-  double driveSpeed = -0.6;
+  double kDriveSpeed = -0.6;
+  double kDistanceBeforeLowerSuperStructure = 0.5;
 
+  /**
+   * A command that intakes a new coral. Moves the robot to a starting pose, lowers the
+   * superstructure, and intakes a coral using game piece tracking. Ends when the robot has intaked
+   * the coral.
+   */
   public AutoIntakeNewCoralCommand(
       Drive drive,
       SuperStructure superStructure,
       Collector collector,
       Vision vision,
-      Pose2d intakePose) {
+      Pose2d startIntakingPose) {
+
     addCommands(
         new ParallelCommandGroup(
-            new DriveToPoseCommand(drive, () -> intakePose),
-            new SuperStructureCommand(superStructure, SuperStructureState.INTAKE_CORAL)),
+            new DriveToPoseCommand(drive, () -> startIntakingPose),
+            new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
+                .andThen(
+                    new SuperStructureCommand(superStructure, SuperStructureState.INTAKE_CORAL))),
         new ParallelDeadlineGroup(
             new IntakeCoralCommand(collector),
             DriveCommands.driveToGamePiece(
                 drive,
-                TunableDouble.register("Drive/AimingSpeed", driveSpeed),
+                TunableDouble.register("Drive/AimingSpeed", kDriveSpeed),
                 () -> 0.0,
                 () -> vision.getTargetX(2).getRadians())));
   }

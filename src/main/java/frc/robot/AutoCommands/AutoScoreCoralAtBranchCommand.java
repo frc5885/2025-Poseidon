@@ -14,6 +14,11 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants.ReefLevel;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
+
+  /**
+   * A command that scores a coral at a branch. Moves to the correct branch, moves the
+   * superstructure to the correct height, and scores the coral.
+   */
   public AutoScoreCoralAtBranchCommand(
       Drive drive,
       SuperStructure superStructure,

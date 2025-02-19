@@ -14,6 +14,7 @@ public class DriveToPoseCommand extends Command {
   private Supplier<Pose2d> m_targetPose;
   private Command m_command;
 
+  /** A command that drives the robot to a target pose using Pathplanner's AutoBuilder. */
   public DriveToPoseCommand(Drive drive, Supplier<Pose2d> targetPose) {
     m_drive = drive;
     m_targetPose = targetPose;

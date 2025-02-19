@@ -15,7 +15,10 @@ import frc.robot.util.GamePieces.GamePieceVisualizer;
 public class ScoreCoralCommand extends Command {
   private final EndEffector m_endEffector;
   private final Collector m_collector;
-
+  /**
+   * A command that scores a coral. Ends when the coral exits the end effector and un-triggers the
+   * beambreak.
+   */
   public ScoreCoralCommand(EndEffector endEffector, Collector collector) {
     m_endEffector = endEffector;
     m_collector = collector;
