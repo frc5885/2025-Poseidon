@@ -12,6 +12,10 @@ import frc.robot.util.GamePieces.GamePieceVisualizer;
 public class IntakeCoralCommand extends Command {
   private Collector m_collector;
 
+  /**
+   * A command that intakes a coral (extends the intake, runs the intake, and retracts the intake).
+   * Ends when the coral is collected.
+   */
   public IntakeCoralCommand(Collector collector) {
     m_collector = collector;
 

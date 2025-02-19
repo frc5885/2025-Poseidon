@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeCoralCommand;
@@ -223,6 +224,10 @@ public class RobotContainer {
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
+    m_autoChooser.addDefaultOption(
+        "4_coral_auto",
+        new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
+
     // Set up SysId routines
     m_autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(m_drive));
@@ -241,6 +246,7 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     m_autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
     // TODO not needed for now
     // m_autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Forward)",

@@ -46,6 +46,7 @@ public class SuperStructure extends SubsystemBase {
   private final Wrist m_wrist;
 
   private SuperStructureState m_state = SuperStructureState.STOWED;
+  private SuperStructureState m_finalGoal = SuperStructureState.STOWED;
   private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
@@ -123,6 +124,8 @@ public class SuperStructure extends SubsystemBase {
   }
 
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
+    m_finalGoal = state;
+    Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoal);
     List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
     Logger.recordOutput("SuperStructure/States", states.toString());
 
@@ -214,6 +217,11 @@ public class SuperStructure extends SubsystemBase {
     return m_elevator.isSetpointAchieved()
         && m_arm.isSetpointAchieved()
         && m_wrist.isSetpointAchieved();
+  }
+
+  @AutoLogOutput(key = "SuperStructure/isFinalGoalAchieved")
+  public boolean isFinalGoalAchieved() {
+    return m_state == m_finalGoal && isGoalAchieved();
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */

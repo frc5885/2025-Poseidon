@@ -130,7 +130,6 @@ public class Robot extends LoggedRobot {
     // Reset GamePieceVisualizer
     GamePieceVisualizer.resetFieldGamePieces();
     GamePieceVisualizer.showFieldGamePieces();
-    // GamePieceVisualizer.setHasCoral(true);
   }
 
   /** This function is called periodically during autonomous. */

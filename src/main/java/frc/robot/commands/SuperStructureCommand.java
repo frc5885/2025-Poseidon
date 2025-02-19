@@ -13,6 +13,10 @@ public class SuperStructureCommand extends Command {
   private SuperStructureState m_state;
   private Command m_command;
 
+  /**
+   * A command that sets the superstructure to a given state. Ends when the superstructure has
+   * reached the desired state.
+   */
   public SuperStructureCommand(SuperStructure superStructure, SuperStructureState state) {
     m_superStructure = superStructure;
     m_state = state;
@@ -42,6 +46,6 @@ public class SuperStructureCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_superStructure.isGoalAchieved();
+    return m_superStructure.isFinalGoalAchieved();
   }
 }
