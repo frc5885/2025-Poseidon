@@ -49,7 +49,7 @@ public class CoralTargetModel {
                 new Rotation2d(Math.random() * Math.PI)),
             new Pose2d(
                 16.2 + Math.random() * 0.6 - 0.3,
-                7.9 + Math.random() * 0.6 - 0.3,
+                6.9 + Math.random() * 0.6 - 0.3,
                 new Rotation2d(Math.random() * Math.PI)),
             new Pose2d(
                 16.2 + Math.random() * 0.6 - 0.3,

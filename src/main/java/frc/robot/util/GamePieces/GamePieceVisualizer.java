@@ -71,6 +71,39 @@ public class GamePieceVisualizer {
         .forEach(SimulatedArena.getInstance()::addGamePiece);
   }
 
+  /**
+   * Checks which of the 4 starting coral poses is missing, and respawns it using CoralTargetModel
+   * generation.
+   */
+  public static void respawnCoral() {
+    List<Pose2d> basePositions = CoralTargetModel.getCoralPositions();
+    for (int i = 0; i < basePositions.size(); i++) {
+      Logger.recordOutput("Respawn", i);
+      Pose2d coralPose = basePositions.get(i);
+      boolean found =
+          SimulatedArena.getInstance().getGamePiecesByType("Coral").stream()
+              .anyMatch(
+                  coral ->
+                      new Translation2d(coral.getX(), coral.getY())
+                                  .getDistance(coralPose.getTranslation())
+                              < 2.0
+                          && coral.getRotation().getY() == 0);
+      if (!found) {
+        // Generate a new candidate for the missing coral using the CoralTargetModel generation
+        List<Pose2d> newPositions = CoralTargetModel.getCoralPositions();
+        Pose2d newRespawnPose = newPositions.get(i);
+        Logger.recordOutput("Respawn", newRespawnPose);
+        Commands.waitSeconds(3)
+            .andThen(
+                () ->
+                    SimulatedArena.getInstance()
+                        .addGamePiece(new ReefscapeCoralOnField(newRespawnPose)))
+            .schedule();
+        break;
+      }
+    }
+  }
+
   /** Shows the currently held coral/algae if there is one */
   public static void showHeldGamePieces() {
     if (hasCoral) {

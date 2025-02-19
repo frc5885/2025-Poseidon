@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class IntakeCoralCommand extends Command {
   private Collector m_collector;
@@ -37,6 +38,7 @@ public class IntakeCoralCommand extends Command {
         m_collector
             .getMapleIntakeSim()
             .obtainGamePieceFromIntake(); // remove the coral from the intake
+        GamePieceVisualizer.respawnCoral();
       }
     }
   }
