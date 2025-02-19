@@ -17,9 +17,6 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -108,8 +105,7 @@ public class Drive extends SubsystemBase {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+        kPPController,
         kPPConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -304,13 +300,7 @@ public class Drive extends SubsystemBase {
 
   public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
     Logger.recordOutput("Odometry/TargetPose", pose.get());
-    return AutoBuilder.pathfindToPose(
-        pose.get(),
-        new PathConstraints(
-            getMaxLinearSpeedMetersPerSec(),
-            getMaxAngularSpeedRadPerSec(),
-            getMaxAngularSpeedRadPerSec(),
-            100)); // TODO Figure this out
+    return AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast);
   }
 
   /** Returns the position of each module in radians. */
@@ -364,7 +354,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the maximum angular speed in radians per sec. */
   public double getMaxAngularSpeedRadPerSec() {
-    return kMaxSpeedMetersPerSec / kDriveBaseRadius;
+    return kMaxAngularSpeedRadiansPerSec;
   }
 
   /**

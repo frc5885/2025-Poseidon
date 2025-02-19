@@ -13,7 +13,11 @@
 
 package frc.robot.commands;
 
+import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
+import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -36,13 +40,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 1.0;
   private static final double kAngleKd = 0.1;
-  private static final double kAngleMaxVelocity = 8.0;
-  private static final double kAngleMaxAcceleration = 20.0;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
@@ -120,7 +123,8 @@ public class DriveCommands {
             kAngleKp,
             0.0,
             kAngleKd,
-            new TrapezoidProfile.Constraints(kAngleMaxVelocity, kAngleMaxAcceleration));
+            new TrapezoidProfile.Constraints(
+                kMaxAngularSpeedRadiansPerSec, kMaxAngularAccelerationRadiansPerSecSq));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -165,12 +169,7 @@ public class DriveCommands {
       DoubleSupplier rotationSupplier) {
 
     // Create PID controller
-    ProfiledPIDController angleController =
-        new ProfiledPIDController(
-            kAngleKp,
-            0.0,
-            kAngleKd,
-            new TrapezoidProfile.Constraints(kAngleMaxVelocity, kAngleMaxAcceleration));
+    PIDController angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
@@ -181,6 +180,7 @@ public class DriveCommands {
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
               // Calculate angular speed (want error to be 0) (means robot is in line with target)
+              Logger.recordOutput("Odometry/GamePieceAngleError", rotationSupplier.getAsDouble());
               double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
 
               // Convert to field relative speeds & send command
@@ -192,9 +192,7 @@ public class DriveCommands {
               drive.runVelocity(speeds);
             },
             drive)
-
-        // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+        .finallyDo(angleController::close);
   }
 
   /**
