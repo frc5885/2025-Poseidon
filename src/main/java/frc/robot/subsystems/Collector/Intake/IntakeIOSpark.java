@@ -92,6 +92,7 @@ public class IntakeIOSpark implements IntakeIO {
     sparkStickyFault = false;
     ifOk(m_intakeMotor2, m_intakeMotor2::getOutputCurrent, (value) -> current[1] = value);
     inputs.motor2Connected = m_intakeConnectedDebounce2.calculate(!sparkStickyFault);
+    inputs.currentAmps = current;
   }
 
   /** Run open loop at the specified voltage. */

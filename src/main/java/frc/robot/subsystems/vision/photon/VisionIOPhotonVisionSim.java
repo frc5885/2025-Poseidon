@@ -116,7 +116,6 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
       if (coralPoses != null && coralPoses.length > 0) {
         VisionTargetSim[] targets =
             Arrays.stream(coralPoses)
-                .filter(pose -> pose.getZ() < 0.5)
                 .map(pose -> new VisionTargetSim(pose, coralModel))
                 .toArray(VisionTargetSim[]::new);
         m_visionSimCoral.addVisionTargets("coral", targets);
