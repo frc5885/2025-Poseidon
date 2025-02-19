@@ -12,18 +12,18 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.Logger;
 
 public class GamePieceVisualizer {
   private static final double ejectSpeed = 4; // Meters per sec
   private static Supplier<Pose2d> robotPoseSupplier = Pose2d::new;
   private static Supplier<Pose3d> endEffectorPoseSupplier = Pose3d::new;
-  private static final List<Pose3d> fieldCoral = new ArrayList<>();
-  private static final List<Pose3d> fieldAlgae = new ArrayList<>();
+  private static final List<Pose3d> scoredCoral = new ArrayList<>();
+  private static final List<Pose3d> scoredAlgae = new ArrayList<>();
   private static boolean hasCoral = false;
   private static boolean hasAlgae = false;
 
@@ -53,57 +53,23 @@ public class GamePieceVisualizer {
     return hasAlgae;
   }
 
-  public static List<Pose3d> getFieldCoral() {
-    // return all coral
-    // result needs to be checked for nulls
-    return fieldCoral;
-  }
-
-  public static List<Pose3d> getFieldAlgae() {
-    // return all algae
-    // result needs to be checked for nulls
-    return fieldAlgae;
-  }
-
-  /** Show all field coral and algae */
-  public static void showFieldGamePieces() {
-    if (fieldCoral.isEmpty()) {
-      Logger.recordOutput("GamePieceVisualizer/Coral/Field", new Pose3d[] {});
-    }
-    if (fieldAlgae.isEmpty()) {
-      Logger.recordOutput("GamePieceVisualizer/Algae/Field", new Pose3d[] {});
-    }
-    Stream<Pose3d> presentCoral = fieldCoral.stream().filter(Objects::nonNull);
-    Logger.recordOutput("GamePieceVisualizer/Coral/Field", presentCoral.toArray(Pose3d[]::new));
-
-    Stream<Pose3d> presentAlgae = fieldAlgae.stream().filter(Objects::nonNull);
-    Logger.recordOutput("GamePieceVisualizer/Algae/Field", presentAlgae.toArray(Pose3d[]::new));
-  }
-
   public static void clearFieldGamePieces() {
-    fieldCoral.clear();
-    fieldAlgae.clear();
+    scoredCoral.clear();
+    scoredAlgae.clear();
   }
 
-  /** Add all notes to be shown at the beginning of auto */
+  /** Add all coral to be shown at the beginning of auto */
   public static void resetFieldGamePieces() {
     clearFieldGamePieces();
-    fieldCoral.addAll(
-        CoralTargetModel.getCoralPositions().stream().filter(Objects::nonNull).toList());
+    SimulatedArena.getInstance().resetFieldForAuto();
     Logger.recordOutput("GamePieceVisualizer/Coral/Scored", new Pose3d[] {});
     Logger.recordOutput("GamePieceVisualizer/Algae/Scored", new Pose3d[] {});
-  }
 
-  /**
-   * Take note from field notes
-   *
-   * @param note Index of note
-   */
-  // public static void takeFieldNote(int note) {
-  //   fieldNotes.set(note, null);
-  //   // refresh the notes shown on the field
-  //   GamePieceVisualizer.showFieldNotes();
-  // }
+    // Add HP coral to the field
+    CoralTargetModel.getCoralPositions().stream()
+        .map(pose -> new ReefscapeCoralOnField(pose))
+        .forEach(SimulatedArena.getInstance()::addGamePiece);
+  }
 
   /** Shows the currently held coral/algae if there is one */
   public static void showHeldGamePieces() {
@@ -133,55 +99,17 @@ public class GamePieceVisualizer {
                       startPose.getTranslation().getDistance(endPose.getTranslation()) / ejectSpeed;
                   final Timer timer = new Timer();
                   timer.start();
+                  scoredCoral.add(startPose);
                   return Commands.run(
-                          () ->
-                              Logger.recordOutput(
-                                  "GamePieceVisualizer/Coral/Scored",
-                                  new Pose3d[] {
-                                    startPose.interpolate(endPose, timer.get() / duration)
-                                  }))
-                      .until(() -> timer.hasElapsed(duration))
-                      .finallyDo(
                           () -> {
+                            scoredCoral.set(
+                                scoredCoral.size() - 1,
+                                startPose.interpolate(endPose, timer.get() / duration));
                             Logger.recordOutput(
-                                "GamePieceVisualizer/Coral/Scored", new Pose3d[] {});
-                            fieldCoral.add(endPose);
-                            showFieldGamePieces();
-                          });
-                },
-                Set.of())
-            .ignoringDisable(true));
-  }
-
-  /** Shoots algae out and leaves it in front of the indexer */
-  public static Command scoreAlgae() {
-    return new ScheduleCommand( // Branch off and exit immediately
-        Commands.defer(
-                () -> {
-                  hasAlgae = false;
-                  final Pose3d startPose = getAlgaeIndexerPose3d();
-                  final Pose3d endPose =
-                      startPose.transformBy(new Transform3d(0.5, 0, 0, new Rotation3d()));
-
-                  final double duration =
-                      startPose.getTranslation().getDistance(endPose.getTranslation()) / ejectSpeed;
-                  final Timer timer = new Timer();
-                  timer.start();
-                  return Commands.run(
-                          () ->
-                              Logger.recordOutput(
-                                  "GamePieceVisualizer/Algae/Scored",
-                                  new Pose3d[] {
-                                    startPose.interpolate(endPose, timer.get() / duration)
-                                  }))
-                      .until(() -> timer.hasElapsed(duration))
-                      .finallyDo(
-                          () -> {
-                            Logger.recordOutput(
-                                "GamePieceVisualizer/Algae/Scored", new Pose3d[] {});
-                            fieldAlgae.add(endPose);
-                            showFieldGamePieces();
-                          });
+                                "GamePieceVisualizer/Coral/Scored",
+                                scoredCoral.toArray(Pose3d[]::new));
+                          })
+                      .until(() -> timer.hasElapsed(duration));
                 },
                 Set.of())
             .ignoringDisable(true));
@@ -211,17 +139,5 @@ public class GamePieceVisualizer {
                 new Transform3d(
                     0.07, 0.0, -0.37, new Rotation3d(0, Units.degreesToRadians(45), 0)));
     return new Pose3d(robotPoseSupplier.get()).transformBy(indexerTransform);
-  }
-
-  /*
-   * Returns true if the robot's intake is close to a coral.
-   */
-  public static boolean isIntakeNearCoral() {
-    Pose3d intakePose =
-        new Pose3d(robotPoseSupplier.get())
-            .transformBy(new Transform3d(-0.7, 0, 0, new Rotation3d()));
-    return fieldCoral.stream()
-        .anyMatch(
-            coralPose -> coralPose.getTranslation().getDistance(intakePose.getTranslation()) < 0.5);
   }
 }

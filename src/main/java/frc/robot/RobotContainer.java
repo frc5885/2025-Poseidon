@@ -418,7 +418,9 @@ public class RobotContainer {
     if (Constants.kCurrentMode != Constants.Mode.SIM) return;
 
     m_drive.setPose(new Pose2d(3, 3, new Rotation2d()));
-    SimulatedArena.getInstance().resetFieldForAuto();
+
+    // Reset GamePieceVisualizer (and SimulatedArena)
+    GamePieceVisualizer.resetFieldGamePieces();
   }
 
   public void updateSimulation() {

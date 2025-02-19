@@ -126,10 +126,6 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-
-    // Reset GamePieceVisualizer
-    GamePieceVisualizer.resetFieldGamePieces();
-    GamePieceVisualizer.showFieldGamePieces();
   }
 
   /** This function is called periodically during autonomous. */
@@ -146,10 +142,6 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-
-    // Reset GamePieceVisualizer
-    GamePieceVisualizer.resetFieldGamePieces();
-    GamePieceVisualizer.showFieldGamePieces();
   }
 
   /** This function is called periodically during operator control. */

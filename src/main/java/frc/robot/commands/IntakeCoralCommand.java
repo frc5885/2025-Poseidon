@@ -7,7 +7,6 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
-import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class IntakeCoralCommand extends Command {
   private Collector m_collector;
@@ -33,7 +32,7 @@ public class IntakeCoralCommand extends Command {
 
     // Simulate a coral being taken in
     if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      if (GamePieceVisualizer.isIntakeNearCoral()) {
+      if (true) { // TODO: Replace with a check for a coral
         ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(1.0);
       }
     }
