@@ -50,6 +50,7 @@ import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIO;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
@@ -147,7 +148,11 @@ public class RobotContainer {
                 new IntakeIOSpark(),
                 new FeederIOSpark(),
                 new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
-        m_endEffector = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
+        m_endEffector =
+            new EndEffector(
+                new AlgaeClawIOSpark(),
+                new CoralEjectorIOSpark(),
+                new BeamBreakIOReal(AlgaeClawConstants.kBeamBreakId));
 
         break;
 
@@ -194,7 +199,8 @@ public class RobotContainer {
         m_collector =
             new Collector(
                 new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
-        m_endEffector = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
+        m_endEffector =
+            new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim(), new BeamBreakIOSim());
         break;
 
       default:
@@ -218,7 +224,8 @@ public class RobotContainer {
             new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
-        m_endEffector = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
+        m_endEffector =
+            new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {}, new BeamBreakIO() {});
         break;
     }
 

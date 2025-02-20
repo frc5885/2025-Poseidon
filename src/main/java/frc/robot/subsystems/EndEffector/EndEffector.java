@@ -1,6 +1,7 @@
 package frc.robot.subsystems.EndEffector;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClaw;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIO;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjector;
@@ -10,8 +11,9 @@ public class EndEffector extends SubsystemBase {
   private AlgaeClaw m_algaeClaw;
   private CoralEjector m_coralEjector;
 
-  public EndEffector(AlgaeClawIO algaeClawIO, CoralEjectorIO coralEjectorIO) {
-    m_algaeClaw = new AlgaeClaw(algaeClawIO);
+  public EndEffector(
+      AlgaeClawIO algaeClawIO, CoralEjectorIO coralEjectorIO, BeamBreakIO beamBreakIO) {
+    m_algaeClaw = new AlgaeClaw(algaeClawIO, beamBreakIO);
     m_coralEjector = new CoralEjector(coralEjectorIO);
   }
 
@@ -25,12 +27,20 @@ public class EndEffector extends SubsystemBase {
     m_coralEjector.runCoralEjector(volts);
   }
 
-  public void stopCoralEjector() {
-    m_coralEjector.stop();
-  }
-
   public void runAlgaeClaw(double volts) {
     m_algaeClaw.runAlgaeClaw(volts);
+  }
+
+  public boolean isAlgaeHeld() {
+    return m_algaeClaw.isBeamBreakTriggered();
+  }
+
+  public BeamBreakIO getBeamBreakIO() {
+    return m_algaeClaw.getBeamBreakIO();
+  }
+
+  public void stopCoralEjector() {
+    m_coralEjector.stop();
   }
 
   public void stopAlgaeClaw() {
