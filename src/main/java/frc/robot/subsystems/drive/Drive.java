@@ -82,7 +82,7 @@ public class Drive extends SubsystemBase {
   private SwerveSetpoint m_previousSetpoint;
 
   private DoubleSupplier adjustmentBaseFactor =
-      TunableDouble.register("Drive/AdjustmentBaseFactor", 1.0);
+      TunableDouble.register("Drive/AdjustmentBaseFactor", 0.3);
   @Setter private DoubleSupplier adjustmentFactor = () -> 0.0;
 
   public Drive(

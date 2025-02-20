@@ -30,7 +30,7 @@ public class ScoreCoralCommand extends Command {
   public void initialize() {
     // Simulate a coral being scored
     if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceOuttake(1.0);
+      ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceOuttake(0.5);
     }
   }
 

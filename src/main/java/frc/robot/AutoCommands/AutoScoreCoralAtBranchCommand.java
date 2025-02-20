@@ -43,12 +43,13 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
         targetPose.toPose2d().transformBy(new Transform2d(-0.6, 0.0, new Rotation2d()));
 
     addCommands(
-        new ParallelCommandGroup(new SuperStructureCommand(superStructure, superStructureState)),
-        new DriveToPoseCommand(
-            drive,
-            () -> targetPose.toPose2d(),
-            DriveConstants.kDistanceTolerance,
-            DriveConstants.kRotationTolerance),
+        new ParallelCommandGroup(
+            new SuperStructureCommand(superStructure, superStructureState),
+            new DriveToPoseCommand(
+                drive,
+                () -> targetPose.toPose2d(),
+                DriveConstants.kDistanceTolerance,
+                DriveConstants.kRotationTolerance)),
         new ScoreCoralCommand(endEffector, collector));
   }
 }
