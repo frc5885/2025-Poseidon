@@ -17,32 +17,29 @@ import org.littletonrobotics.junction.Logger;
 /** Subsystem to interface with a Meta Quest headset acting as a positional sensor. */
 public class QuestNav extends SubsystemBase {
 
-  private final QuestNavIO questNavIO;
-  private final QuestNavIOInputsAutoLogged questNavIOInputs = new QuestNavIOInputsAutoLogged();
-  private final Alert disconnectedAlert;
+  private final QuestNavIO m_questNavIO;
+  private final QuestNavIOInputsAutoLogged m_questNavIOInputs = new QuestNavIOInputsAutoLogged();
+  private final Alert m_disconnectedAlert;
 
   // Transform to map between the quest's local coordinate system and field coordinates
   // The translation and rotation get handled separately
-  private Transform2d questToField = new Transform2d();
+  private Transform2d m_questToField = new Transform2d();
 
   /**
-   * Creates a new QuestNav subsystem and uses the robot pose to initalize the quest-to-field
+   * Creates a new QuestNav subsystem and uses the robot pose to initialize the quest-to-field
    * transform
    */
-  public QuestNav(QuestNavIO questNavIO, Pose2d realRobotPose) {
-    this.questNavIO = questNavIO;
-    this.disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
-    setRobotPose(realRobotPose);
+  public QuestNav(QuestNavIO questNavIO) {
+    m_questNavIO = questNavIO;
+    m_disconnectedAlert = new Alert("QuestNav is disconnected.", AlertType.kWarning);
   }
 
   @Override
   public void periodic() {
-    questNavIO.updateInputs(questNavIOInputs);
-    Logger.processInputs("QuestNav", questNavIOInputs);
-    disconnectedAlert.set(!questNavIOInputs.connected);
-    questNavIO.cleanUpQuestNavMessages();
-
-    Logger.recordOutput("Odometry/QuestNavRobot", getRobotPose());
+    m_questNavIO.updateInputs(m_questNavIOInputs);
+    Logger.processInputs("QuestNav", m_questNavIOInputs);
+    m_disconnectedAlert.set(!m_questNavIOInputs.connected);
+    m_questNavIO.cleanUpQuestNavMessages();
   }
 
   /**
@@ -59,7 +56,7 @@ public class QuestNav extends SubsystemBase {
     // Get our "robot in quest coordinates" (raw Quest pose transformed by the inverse robot->Quest
     // transform)
     Pose2d robotInQuestCoords =
-        getRawQuestPose().transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+        getRawQuestPose().transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
 
     Rotation2d questToFieldAngleOffset =
         realRobotPose.getRotation().minus(robotInQuestCoords.getRotation());
@@ -72,7 +69,7 @@ public class QuestNav extends SubsystemBase {
         realRobotPose.getTranslation().minus(rotatedQuestTranslation);
 
     // Create and store the overall transform
-    questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
+    m_questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
   }
 
   /**
@@ -91,34 +88,39 @@ public class QuestNav extends SubsystemBase {
     // 2) Transform to get "robot in quest coords" (raw Quest pose transformed by the inverse
     // robot->Quest transform)
     Pose2d robotInQuestCoords =
-        questInQuestCoords.transformBy(QuestNavConstants.robotToQuestTransform.inverse());
+        questInQuestCoords.transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
 
     // 3) Combine rotations: robot's rotation + questToField rotation
-    Rotation2d fieldRotation = robotInQuestCoords.getRotation().plus(questToField.getRotation());
+    Rotation2d fieldRotation = robotInQuestCoords.getRotation().plus(m_questToField.getRotation());
 
     // 4) Rotate the translation by questToField rotation
     Translation2d rotatedTranslation =
-        robotInQuestCoords.getTranslation().rotateBy(questToField.getRotation());
+        robotInQuestCoords.getTranslation().rotateBy(m_questToField.getRotation());
 
     // 5) Build pose with the updated (rotated) translation and combined rotation
     Pose2d robotInFieldRotated = new Pose2d(rotatedTranslation, fieldRotation);
 
     // 6) Now apply the questToField translation
     return new Pose2d(
-        robotInFieldRotated.getTranslation().plus(questToField.getTranslation()),
+        robotInFieldRotated.getTranslation().plus(m_questToField.getTranslation()),
         robotInFieldRotated.getRotation());
   }
 
   /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
   private Pose2d getRawQuestPose() {
-    float[] questnavPosition = questNavIOInputs.position;
+    float[] questnavPosition = m_questNavIOInputs.position;
     return new Pose2d(questnavPosition[2], -questnavPosition[0], getRawQuestRotation());
   }
 
   /** Returns the yaw angle from the Quest's eulerAngles */
   private Rotation2d getRawQuestRotation() {
-    float[] eulerAngles = questNavIOInputs.eulerAngles;
+    float[] eulerAngles = m_questNavIOInputs.eulerAngles;
     float ret = -eulerAngles[1];
     return new Rotation2d(Units.degreesToRadians(ret));
+  }
+
+  /** Get whether or not the Quest is connected */
+  public boolean isConnected() {
+    return m_questNavIOInputs.connected;
   }
 }

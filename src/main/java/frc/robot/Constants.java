@@ -23,8 +23,10 @@ import edu.wpi.first.wpilibj.RobotBase;
  * (log replay from a file).
  */
 public final class Constants {
-  public static final Mode simMode = Mode.SIM;
-  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+  public static final Mode kSimMode = Mode.SIM;
+  public static final Mode kCurrentMode = RobotBase.isReal() ? Mode.REAL : kSimMode;
+
+  public static final boolean kTuning = true;
 
   // Scoring Pose Constants
   public static final double kReefAdditionalDistance = 11.80 - 3.23;
