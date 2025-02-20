@@ -35,6 +35,7 @@ import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
+import frc.robot.io.operatorPanel.OperatorPanel;
 import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
@@ -106,6 +107,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
+  private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
