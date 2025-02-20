@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
@@ -32,6 +31,7 @@ import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -80,7 +80,6 @@ import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
-import frc.robot.util.TunableDouble;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -318,45 +317,48 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
-    // Lock to 0° when A button is held
-    m_driverController
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                m_drive,
-                () -> -m_driverController.getLeftY(),
-                () -> -m_driverController.getLeftX(),
-                () -> new Rotation2d()));
-
-    // Switch to X pattern when X button is pressed
-    m_driverController.x().onTrue(Commands.runOnce(m_drive::stopWithX, m_drive));
-
     // Reset gyro to 0° when leftStick is pressed
-    m_driverController
-        .leftStick()
-        .onTrue(
-            Commands.runOnce(
-                    () -> {
-                      m_drive.resetGyro();
-                      Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
-                      m_drive.setPose(newPose);
-                    },
-                    m_drive)
-                .ignoringDisable(true));
+    // m_driverController
+    //     .leftStick()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //                 () -> {
+    //                   m_drive.resetGyro();
+    //                   Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
+    //                   m_drive.setPose(newPose);
+    //                 },
+    //                 m_drive)
+    //             .ignoringDisable(true));
 
     // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
-    // superstructure testing
-    m_driverController
-        .b()
-        .onTrue(
-            new InstantCommand(
-                () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
-                m_superStructure));
+    // ============================================================================
+    // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
+    // ============================================================================
 
+    // INTAKE CORAL
     m_driverController
-        .y()
-        .onTrue(
+        .rightBumper()
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL)
+                .andThen(
+                    new ParallelDeadlineGroup(
+                        new IntakeCoralCommand(m_collector),
+                        new InstantCommand(
+                            () ->
+                                m_superStructure
+                                    .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
+                                    .schedule()),
+                        DriveCommands.driveToGamePiece(
+                            m_drive,
+                            () -> m_driverController.getLeftY(),
+                            () -> m_driverController.getLeftX(),
+                            () -> m_vision.getTargetX(2).getRadians()))));
+
+    // SCORE CORAL
+    m_driverController
+        .rightTrigger(0.1)
+        .whileTrue(
             new ParallelCommandGroup(
                     new DriveToPoseCommand(
                         m_drive,
@@ -365,24 +367,15 @@ public class RobotContainer {
                         DriveConstants.kDistanceTolerance,
                         DriveConstants.kRotationTolerance),
                     new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
-                .andThen(new ScoreCoralCommand(m_endEffector, m_collector)));
-    m_driverController.rightStick().whileTrue(new ScoreCoralCommand(m_endEffector, m_collector));
+                .andThen(new ScoreCoralCommand(m_endEffector, m_collector)))
+        .onFalse(
+            new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                .andThen(
+                    new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL)));
 
-    m_driverController
-        .x()
-        .whileTrue(
-            new ParallelDeadlineGroup(
-                new IntakeCoralCommand(m_collector),
-                new InstantCommand(
-                    () ->
-                        m_superStructure
-                            .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
-                            .schedule()),
-                DriveCommands.driveToGamePiece(
-                    m_drive,
-                    TunableDouble.register("Drive/AimingSpeed", -0.6),
-                    () -> 0.0,
-                    () -> m_vision.getTargetX(2).getRadians())));
+    // ============================================================================
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
+    // ============================================================================
 
     // new JoystickButton(new GenericHID(1), 2)
     //     .whileTrue(
