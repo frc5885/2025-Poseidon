@@ -137,6 +137,11 @@ public class Elevator {
     return m_inputs.velocityMetersPerSec;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Elevator/AdjustmentCoefficient")
+  public double getAdjustmentCoefficient() {
+    return Math.abs(getPositionMeters() / kElevatorMaxHeightMeters);
+  }
+
   public TrapezoidProfile.State getCurrentState() {
     return new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec());
   }

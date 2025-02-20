@@ -223,6 +223,8 @@ public class RobotContainer {
         break;
     }
 
+    m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
+
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -359,10 +361,9 @@ public class RobotContainer {
                     new DriveToPoseCommand(
                         m_drive,
                         () ->
-                            FieldConstants.Reef.branchPositions
-                                .get(0)
-                                .get(ReefLevel.L4)
-                                .toPose2d()),
+                            FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d(),
+                        DriveConstants.kDistanceTolerance,
+                        DriveConstants.kRotationTolerance),
                     new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
                 .andThen(new ScoreCoralCommand(m_endEffector, m_collector)));
     m_driverController.rightStick().whileTrue(new ScoreCoralCommand(m_endEffector, m_collector));

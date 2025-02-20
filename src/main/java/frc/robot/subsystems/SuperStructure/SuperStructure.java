@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -88,6 +89,10 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
+  public DoubleSupplier getAdjustmentCoefficient() {
+    return m_elevator::getAdjustmentCoefficient;
+  }
+
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
   public ArmGoals getArmGoal() {
     ArmGoals goal = m_arm.getGoal();
@@ -104,18 +109,6 @@ public class SuperStructure extends SubsystemBase {
         "SuperStructure/Wrist/GoalPosition",
         Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
     return goal;
-  }
-
-  private void setElevatorGoal(ElevatorLevel elevatorGoal) {
-    m_elevator.setGoal(elevatorGoal);
-  }
-
-  private void setArmGoal(ArmGoals armGoal) {
-    m_arm.setGoal(armGoal);
-  }
-
-  private void setWristGoal(WristGoals wristGoal) {
-    m_wrist.setGoal(wristGoal);
   }
 
   @AutoLogOutput(key = "SuperStructure/Goal")

@@ -28,6 +28,7 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -46,10 +47,13 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.TunableDouble;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -76,6 +80,10 @@ public class Drive extends SubsystemBase {
 
   private final SwerveSetpointGenerator m_setpointGenerator;
   private SwerveSetpoint m_previousSetpoint;
+
+  private DoubleSupplier adjustmentBaseFactor =
+      TunableDouble.register("Drive/AdjustmentBaseFactor", 1.0);
+  @Setter private DoubleSupplier adjustmentFactor = () -> 0.0;
 
   public Drive(
       GyroIO gyroIO,
@@ -205,6 +213,16 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    // speed adjustment
+    double linearMagnitude = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    Rotation2d linearDirection =
+        new Rotation2d(Math.atan2(speeds.vyMetersPerSecond, speeds.vxMetersPerSecond));
+    Translation2d adjustmentVector =
+        new Translation2d(
+            linearMagnitude * adjustmentBaseFactor.getAsDouble() * adjustmentFactor.getAsDouble(),
+            linearDirection);
+    speeds = speeds.minus(new ChassisSpeeds(adjustmentVector.getX(), adjustmentVector.getY(), 0.0));
+
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = m_kinematics.toSwerveModuleStates(discreteSpeeds);

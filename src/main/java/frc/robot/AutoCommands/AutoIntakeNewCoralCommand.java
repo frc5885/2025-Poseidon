@@ -13,6 +13,7 @@ import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.TunableDouble;
 
@@ -34,7 +35,11 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
 
     addCommands(
         new ParallelCommandGroup(
-            new DriveToPoseCommand(drive, () -> startIntakingPose),
+            new DriveToPoseCommand(
+                drive,
+                () -> startIntakingPose,
+                DriveConstants.kDistanceTolerance,
+                DriveConstants.kRotationTolerance),
             new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
                 .andThen(
                     new SuperStructureCommand(superStructure, SuperStructureState.INTAKE_CORAL))),

@@ -12,12 +12,20 @@ import java.util.function.Supplier;
 public class DriveToPoseCommand extends Command {
   private final Drive m_drive;
   private Supplier<Pose2d> m_targetPose;
+  private double m_distanceTolerance;
+  private double m_rotationTolerance;
   private Command m_command;
 
   /** A command that drives the robot to a target pose using Pathplanner's AutoBuilder. */
-  public DriveToPoseCommand(Drive drive, Supplier<Pose2d> targetPose) {
+  public DriveToPoseCommand(
+      Drive drive,
+      Supplier<Pose2d> targetPose,
+      double distanceToleranceMeters,
+      double rotationToleranceDegrees) {
     m_drive = drive;
     m_targetPose = targetPose;
+    m_distanceTolerance = distanceToleranceMeters;
+    m_rotationTolerance = rotationToleranceDegrees;
 
     addRequirements(m_drive);
   }
@@ -41,8 +49,8 @@ public class DriveToPoseCommand extends Command {
   @Override
   public boolean isFinished() {
     return m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
-            < 0.01
+            < m_distanceTolerance
         && m_drive.getPose().getRotation().minus(m_targetPose.get().getRotation()).getDegrees()
-            < 1.0;
+            < m_rotationTolerance;
   }
 }
