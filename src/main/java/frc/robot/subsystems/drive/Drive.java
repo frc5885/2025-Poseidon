@@ -266,17 +266,6 @@ public class Drive extends SubsystemBase {
     runVelocity(new ChassisSpeeds());
   }
 
-  public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
-    Logger.recordOutput("Odometry/TargetPose", pose.get());
-    return AutoBuilder.pathfindToPose(
-        pose.get(),
-        new PathConstraints(
-            getMaxLinearSpeedMetersPerSec(),
-            getMaxAngularSpeedRadPerSec(),
-            getMaxAngularSpeedRadPerSec(),
-            100)); // TODO Figure this out
-  }
-
   /**
    * Stops the drive and turns the modules to an X arrangement to resist movement. The modules will
    * return to their normal orientations the next time a nonzero velocity is requested.

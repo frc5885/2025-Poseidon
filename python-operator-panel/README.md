@@ -4,7 +4,7 @@
 Creates a python virtual environment in a folder called "env" where we will install the requirements
 
 ```
-cd python-webserver
+cd python-operator-panel
 python -m venv env
 ```
 
@@ -30,7 +30,7 @@ For VSCode to know that the packages are installed in the virtual environment an
  - Open main.py
  - Click the python version in the bottom right
  - Click "Enter Interpreter Path"
- - Enter `.\python-webserver\env\Scripts\python.exe`
+ - Enter `.\python-operator-panel\env\Scripts\python.exe`
  - Now all the error/warning underlines should go away
 
 ## Run the app

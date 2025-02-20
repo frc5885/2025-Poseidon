@@ -116,7 +116,7 @@ def create_buttons(center, radius, rotation=0):
     
     return buttons
 
-def creatLevelButtons():
+def createLevelButtons():
     buttons = []
     for i in range(1,5):
         buttons.append(HexagonButton((850, 20 + 110*i), 0,200, 100 ))
@@ -127,8 +127,8 @@ def main():
     buttons = create_buttons(center, HEX_RADIUS, BUTTON_ANGLE)
     active_button = None  # Track the currently active button
 
-    levelbuttons = creatLevelButtons()
-    active_buttonLevel = levelbuttons[0]
+    levelButtons = createLevelButtons()
+    active_buttonLevel = levelButtons[0]
     
     running = True
     while running:
@@ -138,7 +138,7 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                for btnl in levelbuttons:
+                for btnl in levelButtons:
                     if btnl.check_click(mouse_pos):
                         if active_buttonLevel:
                             active_buttonLevel.is_active = False
@@ -156,9 +156,9 @@ def main():
                     if btn.is_active:
                         sd.putNumber("ReefTargets", buttons.index(btn))
                         sd.putNumber("ReefTargetsLevel",0)
-                for btnl in levelbuttons:
+                for btnl in levelButtons:
                     if btnl.is_active:
-                        sd.putNumber("ReefTargetsLevel", 4 - levelbuttons.index(btnl))
+                        sd.putNumber("ReefTargetsLevel", 4 - levelButtons.index(btnl))
   
         # Draw elements
         screen.fill(COLORS['background'])
@@ -170,8 +170,8 @@ def main():
         # Draw buttons
         for btn in buttons:
             btn.draw(screen)
-        for butn in levelbuttons:
-            butn.draw(screen)
+        for btn in levelButtons:
+            btn.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)
