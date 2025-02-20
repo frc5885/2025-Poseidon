@@ -7,13 +7,12 @@
 
 package frc.robot.io.operatorPanel;
 
-import org.littletonrobotics.junction.AutoLogOutput;
-
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.littletonrobotics.junction.AutoLogOutput;
 
 /** Interface for physical override switches on operator console. */
 public class OperatorPanel {
@@ -49,13 +48,13 @@ public class OperatorPanel {
   }
 
   /** Returns the reef level from 1 to 4 */
-  @AutoLogOutput(key="OperatorPanel/ReefLevel")
+  @AutoLogOutput(key = "OperatorPanel/ReefLevel")
   public int getReefLevel() {
     return m_networkTable.getEntry(NETWORK_ENTRY_level).getNumber(0).intValue();
   }
 
   /** Returns the target reef branch from 0 to 11 */
-  @AutoLogOutput(key="OperatorPanel/ReefTarget")
+  @AutoLogOutput(key = "OperatorPanel/ReefTarget")
   public int getReefTarget() {
     return m_networkTable.getEntry(NETWORK_ENTRY).getNumber(0).intValue();
   }

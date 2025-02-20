@@ -20,13 +20,13 @@ BUTTON_WIDTH = 40   # Width of rectangular buttons
 ROTATION_ANGLE = 90  # Rotate hexagon by 90 degrees
 BUTTON_ANGLE = 30
 COLORS = {
-    'background': (255, 255, 255),
+    'background': (21, 23, 27),
     'hexagon': (0, 0, 0),
-    'button_default': (0, 120, 215),
+    'button_default': (0, 72, 167),
     'button_active': (255, 165, 0),
     'text': (0, 0, 0),
     'toggle_bg': (200, 200, 200),
-    'toggle_fg': (0, 120, 215),
+    'toggle_fg': (0, 72, 167),
     'toggle_text': (0, 0, 0)
 }
 
@@ -39,6 +39,12 @@ clock = pygame.time.Clock()
 pygame.font.init()
 font = pygame.font.SysFont(None, 48)
 small_font = pygame.font.SysFont(None, 36)
+
+# Reef graphics
+reef = pygame.image.load("python-operator-panel/reef.png")
+
+branch = pygame.image.load("python-operator-panel/branch.png").convert_alpha()
+branch = pygame.transform.scale(branch, (126, 402))
 
 class Spinner:
     def __init__(self, center, radius):
@@ -120,7 +126,7 @@ class ToggleSwitch:
         # Add a subtle highlight to the knob
         highlight_pos = (knob_x - knob_radius//3, knob_y - knob_radius//3)
         highlight_radius = knob_radius//3
-        pygame.draw.circle(surface, (255, 255, 255, 128), highlight_pos, highlight_radius)
+        pygame.draw.circle(surface, (200, 200, 200, 128), highlight_pos, highlight_radius)
         
     def update(self):
         # Animate the toggle
@@ -164,7 +170,7 @@ class ConnectingScreen:
         surface.fill(COLORS['background'])
         
         # Draw "Trying to connect" text
-        text = font.render("Trying to connect...", True, COLORS['text'])
+        text = font.render("Trying to connect...", True, (200, 200, 200))
         text_rect = text.get_rect(center=(WINDOW_SIZE[0]//2, WINDOW_SIZE[1]//2 - 100))
         surface.blit(text, text_rect)
         
@@ -318,7 +324,8 @@ def main():
             connecting_screen.draw(screen, connection_manager)
         else:
             screen.fill(COLORS['background'])
-            
+            screen.blit(reef, (21, 56))
+            screen.blit(branch, (650, 100))
             # Draw hexagon outline with rotation
             pygame.draw.polygon(screen, COLORS['hexagon'], 
                                calculate_hexagon_points(center, HEX_RADIUS, ROTATION_ANGLE), 2)
