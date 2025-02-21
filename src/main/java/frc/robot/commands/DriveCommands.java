@@ -163,17 +163,21 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier rotationSupplier,
-      boolean fieldOriented) {
+      boolean humanOperated) {
 
     // Construct command
     return Commands.run(
         () -> {
           // Get linear velocity
-          Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-
-          // Calculate angular speed (want error to be 0) (means robot is in line with target)
-          Logger.recordOutput("Odometry/GamePieceAngleError", rotationSupplier.getAsDouble());
+          Translation2d linearVelocity;
+          if (humanOperated) {
+            linearVelocity =
+                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+          } else {
+            // divided by PI to slow it down, seems to work
+            double yVelocity = yController.calculate(rotationSupplier.getAsDouble() / Math.PI, 0);
+            linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
+          }
           double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
 
           // Convert to field relative speeds & send command
@@ -183,7 +187,7 @@ public class DriveCommands {
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                   omega);
 
-          if (fieldOriented) {
+          if (humanOperated) {
             // field oriented (teleop)
             boolean isFlipped =
                 DriverStation.getAlliance().isPresent()
