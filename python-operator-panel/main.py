@@ -184,31 +184,48 @@ class ConnectingScreen:
     def check_mode_button(self, pos):
         return self.toggle.check_click(pos)
 
+# Font setup
+pygame.font.init()
+font = pygame.font.SysFont(None, 48)
+small_font = pygame.font.SysFont(None, 36)
+button_font = pygame.font.SysFont(None, 28)  # New font for button numbers
+
+letters = ["A", "B", "C", "D", "E", "F"]
+positions = [(333, 170), (448, 237), (448, 368), 
+             (333, 434), (218, 368), (218, 237)]
+
 class HexagonButton:
-    def __init__(self, center, angle, width, length):
-        """Initialize a hexagonal button
-        Args:
-            center (tuple): (x, y) position of button center
-            angle (float): Rotation angle in radians
-        """
+    def __init__(self, center, angle, width, length, number, is_level_button=False):
+        """Initialize button with flag for level button"""
         self.width = width
         self.length = length
         self.center = center
-        self.angle = angle  # Store angle in radians
+        self.angle = angle
         self.rect = pygame.Rect(0, 0, length, width)
         self.rect.center = center
         self.is_active = False
+        self.number = number
+        self.is_level_button = is_level_button
+        self.display_number = number  # For level buttons, this will change dynamically
 
     def draw(self, surface):
-        """Draw rotated button on specified surface"""
-        # Create temporary surface for rotation
-        temp_surface = pygame.Surface((BUTTON_LENGTH, BUTTON_WIDTH), pygame.SRCALPHA)
-        temp_surface.fill(COLORS['button_active' if self.is_active else 'button_default'])
+        temp_surface = pygame.Surface((self.length, self.width), pygame.SRCALPHA)
+        bg_color = COLORS['button_active' if self.is_active else 'button_default']
+        temp_surface.fill(bg_color)
         
-        # Rotate and position
+        # Different text handling for hexagon vs level buttons
+        if not self.is_level_button:
+            display_text = "1 - 4" if self.number % 2 != 0 else "5 - 8"
+        else:
+            display_text = str(self.display_number)
+            
+        text_color = COLORS['text'] if self.is_active else (255, 255, 255)
+        text_surf = button_font.render(display_text, True, text_color)
+        text_rect = text_surf.get_rect(center=(self.length//2, self.width//2))
+        temp_surface.blit(text_surf, text_rect)
+        
         rotated_surf = pygame.transform.rotate(temp_surface, math.degrees(-self.angle))
         new_rect = rotated_surf.get_rect(center=self.rect.center)
-        
         surface.blit(rotated_surf, new_rect.topleft)
 
     def check_click(self, mouse_pos):
@@ -235,41 +252,41 @@ def calculate_hexagon_points(center, radius, rotation=0):
             for angle in range(30, 390, 60)]
 
 def create_buttons(center, radius, rotation=0):
-    """Generate buttons along hexagon edges with rotation
-    Args:
-        center (tuple): (x, y) of hexagon center
-        radius (float): Hexagon radius
-        rotation (float): Rotation angle in degrees
-    Returns:
-        list: HexagonButton objects
-    """
+    """Generate numbered buttons along hexagon edges"""
     buttons = []
+    button_number = 1  # Start numbering from 1
     vertices = calculate_hexagon_points(center, radius, rotation)
     
-    # Process each edge
     for i in range(6):
         start = vertices[i]
         end = vertices[(i+1)%6]
-        
-        # Calculate edge vector
         edge_vector = (end[0]-start[0], end[1]-start[1])
         edge_angle = math.atan2(edge_vector[1], edge_vector[0])
         
-        # Create three buttons per edge
+        # Add 180 degrees (pi radians) for bottom edges
+        # Bottom edges are indices 0, 1, 5 in the hexagon
+        if i in [0, 1, 5]:
+            edge_angle += math.pi
+        
+        # Create two buttons per edge with numbers
         for t in [9/30, 21/30]:
-            # Calculate button position
             x = start[0] + t * edge_vector[0]
             y = start[1] + t * edge_vector[1]
-            
-            buttons.append(HexagonButton((x, y), edge_angle,BUTTON_WIDTH, BUTTON_LENGTH))
+            buttons.append(HexagonButton((x, y), edge_angle, 
+                                      BUTTON_WIDTH, BUTTON_LENGTH,
+                                      button_number,))
+            button_number += 1  # Increment for next button
     
     return buttons
 
 def createLevelButtons():
     buttons = []
     for i in range(1,5):
-        buttons.append(HexagonButton((850, 20 + 110*i), 0,200, 100 ))
+        btn = HexagonButton((850, 20 + 110*i), 0, 52, 100, 5-i, is_level_button=True)
+        buttons.append(btn)
     return buttons
+
+
 
 def main():
     connection_manager = ConnectionManager()
@@ -335,6 +352,19 @@ def main():
                 btn.draw(screen)
             for btn in levelButtons:
                 btn.draw(screen)
+            for btn in buttons:
+                if btn.is_active:
+                    # Update level button numbers based on active hexagon button
+                    base = 4 if btn.number % 2 != 0 else 8
+                    for i, level_btn in enumerate(levelButtons):
+                        level_btn.display_number = base - i
+            
+            # Draw letters only
+            for i, letter in enumerate(letters):
+                x, y = positions[i]
+                text_surface = font.render(letter, True, (255, 255, 255))
+                text_rect = text_surface.get_rect(center=(x, y))
+                screen.blit(text_surface, text_rect)  # Draw text
         
         pygame.display.flip()
         clock.tick(60)
