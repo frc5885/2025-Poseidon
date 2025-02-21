@@ -24,15 +24,10 @@ public class IntakeAlgaeCommand extends Command {
   public void execute() {
     m_endEffector.runAlgaeClaw(12.0);
 
-    // TODO Simulate an algae being taken in
-    // if (m_endEffector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-    //   if (m_endEffector.getMapleIntakeSim().getGamePiecesAmount() > 0) {
-    //     ((BeamBreakIOSim) m_endEffector.getBeamBreakIO()).simulateGamePieceIntake(0.5);
-    //     m_endEffector
-    //         .getMapleIntakeSim()
-    //         .obtainGamePieceFromIntake(); // remove the coral from the intake
-    //   }
-    // }
+    // Simulate an algae being taken in
+    if (m_endEffector.getBeamBreakIO() instanceof BeamBreakIOSim) {
+      ((BeamBreakIOSim) m_endEffector.getBeamBreakIO()).simulateGamePieceIntake(0.5);
+    }
   }
 
   @Override

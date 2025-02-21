@@ -46,6 +46,8 @@ public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 1.0;
   private static final double kAngleKd = 0.1;
+  private static final double kTranslateKp = 1.0;
+  private static final double kTranslateKd = 0.1;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
@@ -193,6 +195,50 @@ public class DriveCommands {
             },
             drive)
         .finallyDo(angleController::close);
+  }
+
+  /** Robot relative drive command for precise reef faces aligning. */
+  public static Command preciseChassisAlign(Drive drive, Supplier<Pose2d> targetPose) {
+
+    // Create PID controller
+    PIDController angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    PIDController xController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
+    PIDController yController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
+
+    // Construct command
+    return Commands.run(
+            () -> {
+              double vxMetersPerSecond =
+                  xController.calculate(drive.getPose().getX(), targetPose.get().getX());
+              double vyMetersPerSecond =
+                  yController.calculate(drive.getPose().getY(), targetPose.get().getY());
+
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(),
+                      targetPose.get().getRotation().getRadians());
+
+              Logger.recordOutput("DriveVx", vxMetersPerSecond);
+              Logger.recordOutput("DriveVy", vyMetersPerSecond);
+              Logger.recordOutput("DriveOmega", omega);
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds = new ChassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omega);
+              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
+            },
+            drive)
+        .until(
+            () ->
+                xController.atSetpoint()
+                    && yController.atSetpoint()
+                    && angleController.atSetpoint())
+        .finallyDo(
+            () -> {
+              angleController.close();
+              xController.close();
+              yController.close();
+            });
   }
 
   /**

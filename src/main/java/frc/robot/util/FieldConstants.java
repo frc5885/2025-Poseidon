@@ -13,6 +13,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -43,10 +44,12 @@ public class FieldConstants {
 
   public static class Processor {
     public static final Pose2d centerFace =
-        new Pose2d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(),
-            0,
-            Rotation2d.fromDegrees(90));
+        AprilTagLayoutType.OFFICIAL
+            .getLayout()
+            .getTagPose(16)
+            .get()
+            .toPose2d()
+            .plus(new Transform2d(0.65, 0.0, new Rotation2d(Math.PI)));
   }
 
   public static class Barge {
@@ -85,18 +88,58 @@ public class FieldConstants {
 
     public static final Pose2d[] centerFaces =
         new Pose2d[6]; // Starting facing the reef in clockwise order
+    public static final SuperStructureState[] AlgaeLevel = new SuperStructureState[6];
+    public static final double centerFaceOffset = 0.65;
     public static final List<Map<ReefLevel, Pose3d>> branchPositions =
         new ArrayList<>(); // Starting at the right branch facing the reef in clockwise
 
     static {
       // Initialize faces
       var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
-      centerFaces[0] = aprilTagLayout.getTagPose(18).get().toPose2d();
-      centerFaces[1] = aprilTagLayout.getTagPose(19).get().toPose2d();
-      centerFaces[2] = aprilTagLayout.getTagPose(20).get().toPose2d();
-      centerFaces[3] = aprilTagLayout.getTagPose(21).get().toPose2d();
-      centerFaces[4] = aprilTagLayout.getTagPose(22).get().toPose2d();
-      centerFaces[5] = aprilTagLayout.getTagPose(17).get().toPose2d();
+      centerFaces[0] =
+          aprilTagLayout
+              .getTagPose(18)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(centerFaceOffset, 0.0, new Rotation2d(Math.PI)));
+      centerFaces[1] =
+          aprilTagLayout
+              .getTagPose(19)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(centerFaceOffset, 0.0, new Rotation2d(Math.PI)));
+      centerFaces[2] =
+          aprilTagLayout
+              .getTagPose(20)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(centerFaceOffset, 0.0, new Rotation2d(Math.PI)));
+      centerFaces[3] =
+          aprilTagLayout
+              .getTagPose(21)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(centerFaceOffset, 0.0, new Rotation2d(Math.PI)));
+      centerFaces[4] =
+          aprilTagLayout
+              .getTagPose(22)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(centerFaceOffset, 0.0, new Rotation2d(Math.PI)));
+      centerFaces[5] =
+          aprilTagLayout
+              .getTagPose(17)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(centerFaceOffset, 0.0, new Rotation2d(Math.PI)));
+
+      // Initialize algae heights
+      AlgaeLevel[0] = SuperStructureState.INTAKE_ALGAE_L3;
+      AlgaeLevel[1] = SuperStructureState.INTAKE_ALGAE_L2;
+      AlgaeLevel[2] = SuperStructureState.INTAKE_ALGAE_L3;
+      AlgaeLevel[3] = SuperStructureState.INTAKE_ALGAE_L2;
+      AlgaeLevel[4] = SuperStructureState.INTAKE_ALGAE_L3;
+      AlgaeLevel[5] = SuperStructureState.INTAKE_ALGAE_L2;
 
       // Initialize branch positions
       for (int face = 0; face < 6; face++) {

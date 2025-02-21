@@ -28,7 +28,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
+import frc.robot.commands.IntakeAlgaeAutoDriveCommand;
 import frc.robot.commands.IntakeCoralCommand;
+import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilFarFromCommand;
@@ -381,6 +383,21 @@ public class RobotContainer {
             new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                 .andThen(
                     new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL)));
+
+    m_driverController
+        .a()
+        .onTrue(
+            new IntakeAlgaeAutoDriveCommand(
+                    m_drive, m_superStructure, m_endEffector, m_drive::getPose)
+                .andThen(
+                    new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                        .andThen(
+                            new SuperStructureCommand(
+                                m_superStructure, SuperStructureState.INTAKE_CORAL))));
+
+    m_driverController
+        .b()
+        .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^

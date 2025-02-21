@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.Logger;
 
 public class AlgaeClaw {
@@ -28,6 +29,9 @@ public class AlgaeClaw {
 
     // Update alerts
     m_algaeClawDisconnectedAlert.set(!m_algaeInputs.algaeClawConnected);
+
+    // Update game piece visualizer
+    GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
   }
 
   public void runAlgaeClaw(double volt) {
