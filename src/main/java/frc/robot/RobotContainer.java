@@ -25,8 +25,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
+import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.IntakeAlgaeAutoDriveCommand;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeProcessor;
@@ -82,7 +82,6 @@ import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
-import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -349,7 +348,7 @@ public class RobotContainer {
     // INTAKE CORAL
     m_driverController
         .rightBumper()
-        .onTrue(new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL))
+        .onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL))
         // separating the move superstructure and intake commands because it was locking up
         // the drivetrain until the superstructure was lowered, this might still have to be changed
         // when we test on the robot
@@ -376,22 +375,20 @@ public class RobotContainer {
         .onFalse(
             new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                 .andThen(
-                    new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL)));
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
 
+    // INTAKE ALGAE
     m_driverController
-        .a()
-        .onTrue(
-            new IntakeAlgaeAutoDriveCommand(
-                m_drive,
-                m_superStructure,
-                m_endEffector,
-                () -> m_drive.getPose().nearest(List.of(FieldConstants.Reef.centerFaces)))
-            // .andThen(
-            //     new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-            //         .andThen(
-            //             new SuperStructureCommand(
-            //                 m_superStructure, SuperStructureState.INTAKE_CORAL)))
-            );
+        .leftBumper()
+        .whileTrue(
+            new AutoIntakeAlgaeReefCommand(
+                m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
+        .onFalse(
+            new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                .andThen(
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
 
     m_driverController
         .b()

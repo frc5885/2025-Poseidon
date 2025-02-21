@@ -35,7 +35,7 @@ public class EndEffector extends SubsystemBase {
     return m_algaeClaw.isBeamBreakTriggered();
   }
 
-  public BeamBreakIO getBeamBreakIO() {
+  public BeamBreakIO getAlgaeBeamBreakIO() {
     return m_algaeClaw.getBeamBreakIO();
   }
 

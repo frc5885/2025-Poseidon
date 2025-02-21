@@ -25,8 +25,8 @@ public class IntakeAlgaeCommand extends Command {
     m_endEffector.runAlgaeClaw(12.0);
 
     // Simulate an algae being taken in
-    if (m_endEffector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      ((BeamBreakIOSim) m_endEffector.getBeamBreakIO()).simulateGamePieceIntake(0.5);
+    if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
+      ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).simulateGamePieceIntake(0.5);
     }
   }
 
@@ -36,8 +36,8 @@ public class IntakeAlgaeCommand extends Command {
 
     // Don't simulate a successful intake if the command was interrupted
     if (interrupted) {
-      if (m_endEffector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-        ((BeamBreakIOSim) m_endEffector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
+      if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
     }
   }

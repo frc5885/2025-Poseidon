@@ -7,19 +7,21 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
+import java.util.function.Supplier;
 
 public class SuperStructureCommand extends Command {
   private final SuperStructure m_superStructure;
-  private SuperStructureState m_state;
+  private final Supplier<SuperStructureState> m_stateSupplier;
   private Command m_command;
 
   /**
    * A command that sets the superstructure to a given state. Ends when the superstructure has
    * reached the desired state.
    */
-  public SuperStructureCommand(SuperStructure superStructure, SuperStructureState state) {
+  public SuperStructureCommand(
+      SuperStructure superStructure, Supplier<SuperStructureState> stateSupplier) {
     m_superStructure = superStructure;
-    m_state = state;
+    m_stateSupplier = stateSupplier;
 
     addRequirements(superStructure);
   }
@@ -27,7 +29,7 @@ public class SuperStructureCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_command = m_superStructure.setSuperStructureGoal(m_state);
+    m_command = m_superStructure.setSuperStructureGoal(m_stateSupplier.get());
     m_command.initialize();
   }
 

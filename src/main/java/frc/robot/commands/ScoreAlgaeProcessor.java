@@ -16,7 +16,8 @@ public class ScoreAlgaeProcessor extends SequentialCommandGroup {
   public ScoreAlgaeProcessor(Drive drive, SuperStructure superStructure, EndEffector endEffector) {
     addCommands(
         new ParallelCommandGroup(
-            new SuperStructureCommand(superStructure, SuperStructureState.SCORE_ALGAE_PROCESSOR),
+            new SuperStructureCommand(
+                superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR),
             DriveCommands.preciseChassisAlign(drive, () -> FieldConstants.Processor.centerFace)));
   }
 }

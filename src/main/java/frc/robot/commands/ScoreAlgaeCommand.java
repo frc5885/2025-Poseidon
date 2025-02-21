@@ -23,8 +23,8 @@ public class ScoreAlgaeCommand extends Command {
   @Override
   public void initialize() {
     // Simulate an algae being scored
-    if (m_endEffector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      ((BeamBreakIOSim) m_endEffector.getBeamBreakIO()).simulateGamePieceOuttake(0.5);
+    if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
+      ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).simulateGamePieceOuttake(0.5);
     }
   }
 
@@ -39,8 +39,8 @@ public class ScoreAlgaeCommand extends Command {
 
     // Don't simulate a successful outtake if the command was interrupted
     if (interrupted) {
-      if (m_endEffector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-        ((BeamBreakIOSim) m_endEffector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
+      if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
     } else {
       if (Constants.kCurrentMode != Mode.REAL) {

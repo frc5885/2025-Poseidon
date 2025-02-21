@@ -42,7 +42,8 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
                 DriveConstants.kRotationTolerance),
             new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
                 .andThen(
-                    new SuperStructureCommand(superStructure, SuperStructureState.INTAKE_CORAL))),
+                    new SuperStructureCommand(
+                        superStructure, () -> SuperStructureState.INTAKE_CORAL))),
         new ParallelDeadlineGroup(
             new IntakeCoralCommand(collector),
             DriveCommands.driveToGamePiece(

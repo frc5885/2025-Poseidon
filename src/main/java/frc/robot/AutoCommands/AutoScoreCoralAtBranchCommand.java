@@ -49,7 +49,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
 
     addCommands(
         new ParallelCommandGroup(
-            new SuperStructureCommand(superStructure, superStructureState),
+            new SuperStructureCommand(superStructure, () -> superStructureState),
             new DriveToPoseCommand(
                 drive,
                 () -> transitionPose2d,
