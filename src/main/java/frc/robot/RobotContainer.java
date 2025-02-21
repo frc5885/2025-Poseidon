@@ -367,11 +367,12 @@ public class RobotContainer {
         .rightTrigger(0.1)
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
-                m_drive,
-                m_superStructure,
-                m_endEffector,
-                m_collector,
-                FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)))
+                    m_drive,
+                    m_superStructure,
+                    m_endEffector,
+                    m_collector,
+                    FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4))
+                .unless(() -> !m_collector.isCollected()))
         .onFalse(
             new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                 .andThen(
@@ -390,6 +391,7 @@ public class RobotContainer {
                     new SuperStructureCommand(
                         m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
 
+    // SCORE ALGAE TODO
     m_driverController
         .b()
         .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector))
