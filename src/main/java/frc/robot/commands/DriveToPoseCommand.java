@@ -16,6 +16,8 @@ public class DriveToPoseCommand extends Command {
   private double m_rotationTolerance;
   private Command m_command;
 
+  private boolean distanceTooShort = false;
+
   /** A command that drives the robot to a target pose using Pathplanner's AutoBuilder. */
   public DriveToPoseCommand(
       Drive drive,
@@ -32,6 +34,11 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public void initialize() {
+    // Pathplanner won't generate a path if the distance is less than 0.6m
+    if (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
+        < 0.61) {
+      distanceTooShort = true;
+    }
     m_command = m_drive.getDriveToPoseCommand(m_targetPose);
     m_command.initialize();
   }
@@ -48,9 +55,10 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
-            < m_distanceTolerance
-        && m_drive.getPose().getRotation().minus(m_targetPose.get().getRotation()).getDegrees()
-            < m_rotationTolerance;
+    return (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
+                < m_distanceTolerance
+            && m_drive.getPose().getRotation().minus(m_targetPose.get().getRotation()).getDegrees()
+                < m_rotationTolerance)
+        || distanceTooShort;
   }
 }

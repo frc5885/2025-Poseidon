@@ -31,7 +31,7 @@ public class AlgaeClaw {
     m_algaeClawDisconnectedAlert.set(!m_algaeInputs.algaeClawConnected);
 
     // Update game piece visualizer
-    GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
+    GamePieceVisualizer.setHasAlgae(m_beamBreakInputs.state);
   }
 
   public void runAlgaeClaw(double volt) {

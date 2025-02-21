@@ -129,8 +129,8 @@ public class DriveConstants {
   public static final double kRobotMassKg = 60; // TODO: measure
   public static final double kRobotMOI = 5.0; // can be calculated from sysID, check PP docs
   public static final double kWheelCOF = 0.899; // maple sim constant for colsons
-  public static final double kDistanceTolerance = 0.025; // meters
-  public static final double kRotationTolerance = 1.5; // degrees
+  public static final double kDistanceTolerance = 0.1; // meters
+  public static final double kRotationTolerance = 5; // degrees
   public static final RobotConfig kPPConfig =
       new RobotConfig(
           kRobotMassKg,

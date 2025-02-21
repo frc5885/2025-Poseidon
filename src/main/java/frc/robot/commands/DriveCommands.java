@@ -13,19 +13,14 @@
 
 package frc.robot.commands;
 
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -44,14 +39,26 @@ import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 1.0;
-  private static final double kAngleKd = 0.1;
-  private static final double kTranslateKp = 1.0;
-  private static final double kTranslateKd = 0.1;
+  private static final double kAngleKp = 2.0;
+  private static final double kAngleKd = 0.2;
+  private static final double kTranslateKp = 3.0;
+  private static final double kTranslateKd = 0.5;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
+
+  // Create PID controllers
+  private static PIDController angleController;
+  private static PIDController xController;
+  private static PIDController yController;
+  // Static initialization block
+  static {
+    angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    xController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
+    yController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
+  }
 
   private DriveCommands() {}
 
@@ -119,48 +126,35 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
-    // Create PID controller
-    ProfiledPIDController angleController =
-        new ProfiledPIDController(
-            kAngleKp,
-            0.0,
-            kAngleKd,
-            new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSec, kMaxAngularAccelerationRadiansPerSecSq));
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-
     // Construct command
     return Commands.run(
-            () -> {
-              // Get linear velocity
-              Translation2d linearVelocity =
-                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+        () -> {
+          // Get linear velocity
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Calculate angular speed
-              double omega =
-                  angleController.calculate(
-                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+          // Calculate angular speed
+          double omega =
+              angleController.calculate(
+                  drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      isFlipped
-                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
-            },
-            drive)
-
-        // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+          // Convert to field relative speeds & send command
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                  omega);
+          boolean isFlipped =
+              DriverStation.getAlliance().isPresent()
+                  && DriverStation.getAlliance().get() == Alliance.Red;
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds,
+                  isFlipped
+                      ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                      : drive.getRotation()));
+        },
+        drive);
   }
 
   /** Robot relative drive command using PID for angular control. */
@@ -170,58 +164,44 @@ public class DriveCommands {
       DoubleSupplier ySupplier,
       DoubleSupplier rotationSupplier) {
 
-    // Create PID controller
-    PIDController angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-
     // Construct command
     return Commands.run(
-            () -> {
-              // Get linear velocity
-              Translation2d linearVelocity =
-                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+        () -> {
+          // Get linear velocity
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Calculate angular speed (want error to be 0) (means robot is in line with target)
-              Logger.recordOutput("Odometry/GamePieceAngleError", rotationSupplier.getAsDouble());
-              double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
+          // Calculate angular speed (want error to be 0) (means robot is in line with target)
+          Logger.recordOutput("Odometry/GamePieceAngleError", rotationSupplier.getAsDouble());
+          double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
-              drive.runVelocity(speeds);
-            },
-            drive)
-        .finallyDo(angleController::close);
+          // Convert to field relative speeds & send command
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                  omega);
+          drive.runVelocity(speeds);
+        },
+        drive);
   }
 
   /** Robot relative drive command for precise reef faces aligning. */
   public static Command preciseChassisAlign(Drive drive, Supplier<Pose2d> targetPose) {
 
-    // Create PID controller
-    PIDController angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-    PIDController xController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
-    PIDController yController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
-
     // Construct command
     return Commands.run(
             () -> {
+              Pose2d targetPoseValue = targetPose.get();
+              Logger.recordOutput("Odometry/TargetPose", targetPoseValue);
               double vxMetersPerSecond =
-                  xController.calculate(drive.getPose().getX(), targetPose.get().getX());
+                  xController.calculate(drive.getPose().getX(), targetPoseValue.getX());
               double vyMetersPerSecond =
-                  yController.calculate(drive.getPose().getY(), targetPose.get().getY());
+                  yController.calculate(drive.getPose().getY(), targetPoseValue.getY());
 
               double omega =
                   angleController.calculate(
-                      drive.getRotation().getRadians(),
-                      targetPose.get().getRotation().getRadians());
-
-              Logger.recordOutput("DriveVx", vxMetersPerSecond);
-              Logger.recordOutput("DriveVy", vyMetersPerSecond);
-              Logger.recordOutput("DriveOmega", omega);
+                      drive.getRotation().getRadians(), targetPoseValue.getRotation().getRadians());
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds = new ChassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omega);
@@ -232,13 +212,7 @@ public class DriveCommands {
             () ->
                 xController.atSetpoint()
                     && yController.atSetpoint()
-                    && angleController.atSetpoint())
-        .finallyDo(
-            () -> {
-              angleController.close();
-              xController.close();
-              yController.close();
-            });
+                    && angleController.atSetpoint());
   }
 
   /**

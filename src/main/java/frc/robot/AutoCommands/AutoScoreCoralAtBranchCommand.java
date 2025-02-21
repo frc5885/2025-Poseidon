@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -18,6 +19,8 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
+
+  private final double kTransitionDistance = 0.3;
 
   /**
    * A command that scores a coral at a branch. Moves to the correct branch, moves the
@@ -40,16 +43,19 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
         };
 
     Pose2d transitionPose2d =
-        targetPose.toPose2d().transformBy(new Transform2d(-0.6, 0.0, new Rotation2d()));
+        targetPose
+            .toPose2d()
+            .transformBy(new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
 
     addCommands(
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, superStructureState),
             new DriveToPoseCommand(
                 drive,
-                () -> targetPose.toPose2d(),
+                () -> transitionPose2d,
                 DriveConstants.kDistanceTolerance,
                 DriveConstants.kRotationTolerance)),
+        DriveCommands.preciseChassisAlign(drive, () -> targetPose.toPose2d()),
         new ScoreCoralCommand(endEffector, collector));
   }
 }

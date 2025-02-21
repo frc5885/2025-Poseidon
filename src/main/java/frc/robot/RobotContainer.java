@@ -21,18 +21,16 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeAlgaeAutoDriveCommand;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeProcessor;
-import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
@@ -372,15 +370,12 @@ public class RobotContainer {
     m_driverController
         .rightTrigger(0.1)
         .whileTrue(
-            new ParallelCommandGroup(
-                    new DriveToPoseCommand(
-                        m_drive,
-                        () ->
-                            FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d(),
-                        DriveConstants.kDistanceTolerance,
-                        DriveConstants.kRotationTolerance),
-                    new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
-                .andThen(new ScoreCoralCommand(m_endEffector, m_collector)))
+            new AutoScoreCoralAtBranchCommand(
+                m_drive,
+                m_superStructure,
+                m_endEffector,
+                m_collector,
+                FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)))
         .onFalse(
             new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                 .andThen(
