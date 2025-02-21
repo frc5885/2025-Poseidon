@@ -38,6 +38,9 @@ public class DriveToPoseCommand extends Command {
     if (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
         < 0.61) {
       distanceTooShort = true;
+    } else {
+      // need to add this or it never gets reset
+      distanceTooShort = false;
     }
     m_command = m_drive.getDriveToPoseCommand(m_targetPose);
     m_command.initialize();

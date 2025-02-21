@@ -49,6 +49,7 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
                 drive,
                 TunableDouble.register("Drive/AimingSpeed", kDriveSpeed),
                 () -> 0.0,
-                () -> vision.getTargetX(2).getRadians())));
+                () -> vision.getTargetX(2).getRadians(),
+                false)));
   }
 }

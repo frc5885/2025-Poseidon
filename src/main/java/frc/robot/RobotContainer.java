@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -350,21 +349,19 @@ public class RobotContainer {
     // INTAKE CORAL
     m_driverController
         .rightBumper()
+        .onTrue(new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL))
+        // separating the move superstructure and intake commands because it was locking up
+        // the drivetrain until the superstructure was lowered, this might still have to be changed
+        // when we test on the robot
         .whileTrue(
-            new SuperStructureCommand(m_superStructure, SuperStructureState.INTAKE_CORAL)
-                .andThen(
-                    new ParallelDeadlineGroup(
-                        new IntakeCoralCommand(m_collector),
-                        new InstantCommand(
-                            () ->
-                                m_superStructure
-                                    .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
-                                    .schedule()),
-                        DriveCommands.driveToGamePiece(
-                            m_drive,
-                            () -> m_driverController.getLeftY(),
-                            () -> m_driverController.getLeftX(),
-                            () -> m_vision.getTargetX(2).getRadians()))));
+            new ParallelDeadlineGroup(
+                new IntakeCoralCommand(m_collector),
+                DriveCommands.driveToGamePiece(
+                    m_drive,
+                    () -> -m_driverController.getLeftY(),
+                    () -> -m_driverController.getLeftX(),
+                    () -> m_vision.getTargetX(2).getRadians(),
+                    true)));
 
     // SCORE CORAL
     m_driverController
