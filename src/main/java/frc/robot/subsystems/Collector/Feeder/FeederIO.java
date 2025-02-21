@@ -12,8 +12,9 @@ public interface FeederIO {
     public double positionRotations = 0.0;
     public double velocityRPM = 0.0;
     public double appliedVolts = 0.0;
-    public double currentAmps = 0.0;
-    public boolean feederConnected = false;
+    public double[] currentAmps = {0.0, 0.0};
+    public boolean motor1Connected = false;
+    public boolean motor2Connected = false;
   }
 
   /** Updates the set of loggable inputs. */

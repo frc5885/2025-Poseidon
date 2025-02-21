@@ -5,14 +5,16 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
 
 public class Feeder {
-  private final Alert m_motorDisconnectedAlert;
+  private final Alert m_motor1DisconnectedAlert;
+  private final Alert m_motor2DisconnectedAlert;
   private final FeederIO m_feederIO;
   private final FeederIOInputsAutoLogged m_inputs = new FeederIOInputsAutoLogged();
 
   public Feeder(FeederIO io) {
     m_feederIO = io;
 
-    m_motorDisconnectedAlert = new Alert("Feeder motor disconnected!", AlertType.kError);
+    m_motor1DisconnectedAlert = new Alert("Feeder motor 1 disconnected!", AlertType.kError);
+    m_motor2DisconnectedAlert = new Alert("Feeder motor 2 disconnected!", AlertType.kError);
   }
 
   public void periodic() {
@@ -20,7 +22,8 @@ public class Feeder {
     Logger.processInputs("Collector/Feeder", m_inputs);
 
     // Update alert
-    m_motorDisconnectedAlert.set(!m_inputs.feederConnected);
+    m_motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
+    m_motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
   }
 
   public void runFeeder(double volts) {
