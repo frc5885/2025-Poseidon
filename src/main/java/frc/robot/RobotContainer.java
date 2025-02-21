@@ -30,6 +30,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeAlgaeAutoDriveCommand;
 import frc.robot.commands.IntakeCoralCommand;
+import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -84,6 +85,7 @@ import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -388,16 +390,21 @@ public class RobotContainer {
         .a()
         .onTrue(
             new IntakeAlgaeAutoDriveCommand(
-                    m_drive, m_superStructure, m_endEffector, m_drive::getPose)
-                .andThen(
-                    new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-                        .andThen(
-                            new SuperStructureCommand(
-                                m_superStructure, SuperStructureState.INTAKE_CORAL))));
+                m_drive,
+                m_superStructure,
+                m_endEffector,
+                () -> m_drive.getPose().nearest(List.of(FieldConstants.Reef.centerFaces)))
+            // .andThen(
+            //     new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+            //         .andThen(
+            //             new SuperStructureCommand(
+            //                 m_superStructure, SuperStructureState.INTAKE_CORAL)))
+            );
 
     m_driverController
         .b()
-        .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector));
+        .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector))
+        .onFalse(new ScoreAlgaeCommand(m_endEffector));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
