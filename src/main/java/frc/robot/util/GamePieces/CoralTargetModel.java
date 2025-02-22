@@ -1,7 +1,7 @@
 package frc.robot.util.GamePieces;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,30 +35,26 @@ public class CoralTargetModel {
     return vertices;
   }
 
-  public static List<Pose3d> getCoralPositions() {
+  public static List<Pose2d> getCoralPositions() {
     // positions near human player stations, randomized positions and rotations
-    List<Pose3d> positions =
+    List<Pose2d> positions =
         Arrays.asList(
-            new Pose3d(
-                2.0 + Math.random() * 1.2 - 0.6,
-                6.4 + Math.random() * 1.2 - 0.6,
-                0.055,
-                new Rotation3d(0, 0, Math.random() * Math.PI)),
-            new Pose3d(
-                2.0 + Math.random() * 1.2 - 0.6,
-                1.8 + Math.random() * 1.2 - 0.6,
-                0.055,
-                new Rotation3d(0, 0, Math.random() * Math.PI)),
-            new Pose3d(
-                15.7 + Math.random() * 1.2 - 0.6,
-                6.4 + Math.random() * 1.2 - 0.6,
-                0.055,
-                new Rotation3d(0, 0, Math.random() * Math.PI)),
-            new Pose3d(
-                15.7 + Math.random() * 1.2 - 0.6,
-                1.8 + Math.random() * 1.2 - 0.6,
-                0.055,
-                new Rotation3d(0, 0, Math.random() * Math.PI)));
+            new Pose2d(
+                1.5 + Math.random() * 0.6 - 0.3,
+                6.9 + Math.random() * 0.6 - 0.3,
+                new Rotation2d(Math.random() * Math.PI)),
+            new Pose2d(
+                1.5 + Math.random() * 0.6 - 0.3,
+                1.3 + Math.random() * 0.6 - 0.3,
+                new Rotation2d(Math.random() * Math.PI)),
+            new Pose2d(
+                16.2 + Math.random() * 0.6 - 0.3,
+                6.9 + Math.random() * 0.6 - 0.3,
+                new Rotation2d(Math.random() * Math.PI)),
+            new Pose2d(
+                16.2 + Math.random() * 0.6 - 0.3,
+                1.3 + Math.random() * 0.6 - 0.3,
+                new Rotation2d(Math.random() * Math.PI)));
     return positions;
   }
 }

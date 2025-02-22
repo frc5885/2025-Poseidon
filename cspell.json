@@ -1,6 +1,8 @@
 {
   "version": "0.2",
-  "ignorePaths": [],
+  "ignorePaths": [
+    "./python-operator-panel/main.py"
+  ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
@@ -8,6 +10,7 @@
     "APRILTAG",
     "beambreak",
     "Brushless",
+    "COLSONS",
     "Deadband",
     "Debouncer",
     "debouncers",
@@ -15,10 +18,13 @@
     "Feedforward",
     "Feedforwards",
     "Holonomic",
+    "intaked",
+    "Intaking",
     "Interpolatable",
     "MEGATAG",
     "Mosi",
     "multitag",
+    "networktables",
     "Odometry",
     "pathfind",
     "Pathfinding",
@@ -27,6 +33,7 @@
     "Quasistatic",
     "questnav",
     "Reefscape",
+    "respawn",
     "robo",
     "SETPOINT",
     "setpoints",

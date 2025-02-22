@@ -12,6 +12,10 @@ import frc.robot.util.GamePieces.GamePieceVisualizer;
 public class IntakeCoralCommand extends Command {
   private Collector m_collector;
 
+  /**
+   * A command that intakes a coral (extends the intake, runs the intake, and retracts the intake).
+   * Ends when the coral is collected.
+   */
   public IntakeCoralCommand(Collector collector) {
     m_collector = collector;
 
@@ -29,8 +33,12 @@ public class IntakeCoralCommand extends Command {
 
     // Simulate a coral being taken in
     if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      if (GamePieceVisualizer.isIntakeNearCoral()) {
-        ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(1.0);
+      if (m_collector.getMapleIntakeSim().getGamePiecesAmount() > 0) {
+        ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(0.5);
+        m_collector
+            .getMapleIntakeSim()
+            .obtainGamePieceFromIntake(); // remove the coral from the intake
+        GamePieceVisualizer.respawnCoral();
       }
     }
   }

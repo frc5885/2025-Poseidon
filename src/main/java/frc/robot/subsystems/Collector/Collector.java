@@ -13,6 +13,7 @@ import frc.robot.subsystems.Collector.Feeder.Feeder;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
 import frc.robot.subsystems.Collector.Intake.Intake;
 import frc.robot.subsystems.Collector.Intake.IntakeIO;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.Logger;
 
 public class Collector extends SubsystemBase {
@@ -68,6 +69,10 @@ public class Collector extends SubsystemBase {
 
   public BeamBreakIO getBeamBreakIO() {
     return m_intake.getBeamBreakIO();
+  }
+
+  public IntakeSimulation getMapleIntakeSim() {
+    return m_intake.getMapleIntakeSim();
   }
 
   private void visualizationUpdate() {

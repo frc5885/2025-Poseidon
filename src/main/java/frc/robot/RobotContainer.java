@@ -20,20 +20,23 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.RightAuto;
+import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.IntakeCoralCommand;
-import frc.robot.commands.ScoreCoralCommand;
+import frc.robot.commands.ScoreAlgaeCommand;
+import frc.robot.commands.ScoreAlgaeNet;
+import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
+import frc.robot.io.operatorPanel.OperatorPanel;
 import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
@@ -49,6 +52,7 @@ import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIO;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
@@ -61,8 +65,10 @@ import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIONavX;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
@@ -77,7 +83,9 @@ import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
-import frc.robot.util.TunableDouble;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -95,8 +103,12 @@ public class RobotContainer {
   private final Collector m_collector;
   private final EndEffector m_endEffector;
 
+  // SIM
+  private SwerveDriveSimulation m_driveSimulation = null;
+
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
+  private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
@@ -115,7 +127,8 @@ public class RobotContainer {
                 new ModuleIOSpark(1),
                 new ModuleIOSpark(2),
                 new ModuleIOSpark(3),
-                m_poseController);
+                m_poseController,
+                (pose) -> {});
         m_vision =
             new Vision(
                 m_drive::addVisionMeasurement,
@@ -138,45 +151,59 @@ public class RobotContainer {
                 new IntakeIOSpark(),
                 new FeederIOSpark(),
                 new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
-        m_endEffector = new EndEffector(new AlgaeClawIOSpark(), new CoralEjectorIOSpark());
+        m_endEffector =
+            new EndEffector(
+                new AlgaeClawIOSpark(),
+                new CoralEjectorIOSpark(),
+                new BeamBreakIOReal(AlgaeClawConstants.kBeamBreakId));
 
         break;
 
       case SIM:
+        // create a maple-sim swerve drive simulation instance
+        m_driveSimulation =
+            new SwerveDriveSimulation(
+                DriveConstants.kMapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+        // add the simulated drivetrain to the simulation field
+        SimulatedArena.getInstance().addDriveTrainSimulation(m_driveSimulation);
         // Sim robot, instantiate physics sim IO implementations
         m_drive =
             new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                m_poseController);
+                new GyroIOSim(m_driveSimulation.getGyroSimulation()),
+                new ModuleIOSim(m_driveSimulation.getModules()[0]),
+                new ModuleIOSim(m_driveSimulation.getModules()[1]),
+                new ModuleIOSim(m_driveSimulation.getModules()[2]),
+                new ModuleIOSim(m_driveSimulation.getModules()[3]),
+                m_poseController,
+                m_driveSimulation::setSimulationWorldPose);
         m_vision =
             new Vision(
                 m_drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera0Name,
                     VisionConstants.kRobotToCamera0,
-                    m_drive::getPose,
+                    m_driveSimulation::getSimulatedDriveTrainPose,
                     CameraType.APRILTAG),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    m_drive::getPose,
+                    m_driveSimulation::getSimulatedDriveTrainPose,
                     CameraType.APRILTAG),
                 new VisionIOPhotonVisionSim(
                     VisionConstants.kCamera2Name,
                     VisionConstants.kRobotToCamera2,
-                    m_drive::getPose,
+                    m_driveSimulation::getSimulatedDriveTrainPose,
                     CameraType.CORAL));
 
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
             new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
-        m_collector = new Collector(new IntakeIOSim(), new FeederIOSim(), new BeamBreakIOSim());
-        m_endEffector = new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim());
+        m_collector =
+            new Collector(
+                new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
+        m_endEffector =
+            new EndEffector(new AlgaeClawIOSim(), new CoralEjectorIOSim(), new BeamBreakIOSim());
         break;
 
       default:
@@ -188,7 +215,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                m_poseController);
+                m_poseController,
+                (pose) -> {});
         m_vision =
             new Vision(
                 m_drive::addVisionMeasurement,
@@ -199,12 +227,19 @@ public class RobotContainer {
             new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
-        m_endEffector = new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {});
+        m_endEffector =
+            new EndEffector(new AlgaeClawIO() {}, new CoralEjectorIO() {}, new BeamBreakIO() {});
         break;
     }
 
+    m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
+
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+    m_autoChooser.addDefaultOption(
+        "4_coral_auto",
+        new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
     // Set up SysId routines
     m_autoChooser.addOption(
@@ -224,6 +259,7 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     m_autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
     // TODO not needed for now
     // m_autoChooser.addOption(
     //     "Elevator SysId (Quasistatic Forward)",
@@ -291,72 +327,92 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
-    // Lock to 0° when A button is held
-    m_driverController
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                m_drive,
-                () -> -m_driverController.getLeftY(),
-                () -> -m_driverController.getLeftX(),
-                () -> new Rotation2d()));
-
-    // Switch to X pattern when X button is pressed
-    m_driverController.x().onTrue(Commands.runOnce(m_drive::stopWithX, m_drive));
-
     // Reset gyro to 0° when leftStick is pressed
-    m_driverController
-        .leftStick()
-        .onTrue(
-            Commands.runOnce(
-                    () -> {
-                      m_drive.resetGyro();
-                      Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
-                      m_drive.setPose(newPose);
-                    },
-                    m_drive)
-                .ignoringDisable(true));
+    // m_driverController
+    //     .leftStick()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //                 () -> {
+    //                   m_drive.resetGyro();
+    //                   Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
+    //                   m_drive.setPose(newPose);
+    //                 },
+    //                 m_drive)
+    //             .ignoringDisable(true));
 
     // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
 
-    // superstructure testing
-    m_driverController
-        .b()
-        .onTrue(
-            new InstantCommand(
-                () -> m_superStructure.setSuperStructureGoal(m_stateChooser.get()).schedule(),
-                m_superStructure));
+    // ============================================================================
+    // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
+    // ============================================================================
 
+    // INTAKE CORAL
     m_driverController
-        .y()
-        .onTrue(
-            new ParallelCommandGroup(
-                    new DriveToPoseCommand(
-                        m_drive,
-                        () ->
-                            FieldConstants.Reef.branchPositions
-                                .get(0)
-                                .get(ReefLevel.L4)
-                                .toPose2d()),
-                    new SuperStructureCommand(m_superStructure, SuperStructureState.SCORE_CORAL_L4))
-                .andThen(new ScoreCoralCommand(m_endEffector, m_collector)));
-    m_driverController.rightStick().whileTrue(new ScoreCoralCommand(m_endEffector, m_collector));
-
-    m_driverController
-        .x()
+        .rightBumper()
+        .onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL))
+        // separating the move superstructure and intake commands because it was locking up
+        // the drivetrain until the superstructure was lowered, this might still have to be changed
+        // when we test on the robot
         .whileTrue(
             new ParallelDeadlineGroup(
                 new IntakeCoralCommand(m_collector),
-                new InstantCommand(
-                    () ->
-                        m_superStructure
-                            .setSuperStructureGoal(SuperStructureState.INTAKE_CORAL)
-                            .schedule()),
                 DriveCommands.driveToGamePiece(
                     m_drive,
-                    TunableDouble.register("Drive/AimingSpeed", -0.6),
-                    () -> 0.0,
-                    () -> m_vision.getTargetX(2).getRadians())));
+                    () -> -m_driverController.getLeftY(),
+                    () -> -m_driverController.getLeftX(),
+                    () -> m_vision.getTargetX(2).getRadians(),
+                    true)));
+
+    // SCORE CORAL
+    m_driverController
+        .rightTrigger(0.1)
+        .whileTrue(
+            new AutoScoreCoralAtBranchCommand(
+                    m_drive,
+                    m_superStructure,
+                    m_endEffector,
+                    m_collector,
+                    FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4))
+                .unless(() -> !m_collector.isCollected()))
+        .onFalse(
+            new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                .andThen(
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
+
+    // INTAKE ALGAE
+    m_driverController
+        .leftBumper()
+        .debounce(0.1)
+        .whileTrue(
+            new AutoIntakeAlgaeReefCommand(
+                m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
+        .onFalse(
+            new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                .andThen(
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
+
+    // SCORE ALGAE PROCESSOR
+    m_driverController
+        .b()
+        .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector))
+        .onFalse(new ScoreAlgaeCommand(m_endEffector));
+
+    // SCORE ALGAE NET
+    m_driverController
+        .y()
+        .whileTrue(new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector))
+        .onFalse(
+            new ScoreAlgaeCommand(m_endEffector)
+                .andThen(
+                    new WaitUntilFarFromCommand(m_drive::getPose, 0.3),
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
+
+    // ============================================================================
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
+    // ============================================================================
 
     // new JoystickButton(new GenericHID(1), 2)
     //     .whileTrue(
@@ -389,5 +445,26 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return m_autoChooser.get();
+  }
+
+  public void resetSimulationField() {
+    if (Constants.kCurrentMode != Constants.Mode.SIM) return;
+
+    m_drive.setPose(new Pose2d(3, 3, new Rotation2d()));
+
+    // Reset GamePieceVisualizer (and SimulatedArena)
+    GamePieceVisualizer.resetFieldGamePieces();
+  }
+
+  public void updateSimulation() {
+    if (Constants.kCurrentMode != Constants.Mode.SIM) return;
+
+    SimulatedArena.getInstance().simulationPeriodic();
+    Logger.recordOutput(
+        "FieldSimulation/RobotPosition", m_driveSimulation.getSimulatedDriveTrainPose());
+    Logger.recordOutput(
+        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+    Logger.recordOutput(
+        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
   }
 }

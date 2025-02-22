@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake {
@@ -68,5 +69,9 @@ public class Intake {
 
   public BeamBreakIO getBeamBreakIO() {
     return m_beamBreakIO;
+  }
+
+  public IntakeSimulation getMapleIntakeSim() {
+    return ((IntakeIOSim) m_intakeIO).getMapleIntakeSimulation();
   }
 }

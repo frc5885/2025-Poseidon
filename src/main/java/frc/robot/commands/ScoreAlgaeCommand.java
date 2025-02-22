@@ -8,55 +8,49 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIOSim;
-import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 
-public class ScoreCoralCommand extends Command {
-  private final EndEffector m_endEffector;
-  private final Collector m_collector;
-  /**
-   * A command that scores a coral. Ends when the coral exits the end effector and un-triggers the
-   * beambreak.
-   */
-  public ScoreCoralCommand(EndEffector endEffector, Collector collector) {
+public class ScoreAlgaeCommand extends Command {
+  private EndEffector m_endEffector;
+
+  public ScoreAlgaeCommand(EndEffector endEffector) {
     m_endEffector = endEffector;
-    m_collector = collector;
 
     addRequirements(m_endEffector);
   }
 
   @Override
   public void initialize() {
-    // Simulate a coral being scored
-    if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceOuttake(0.5);
+    // Simulate an algae being scored
+    if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
+      ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).simulateGamePieceOuttake(0.5);
     }
   }
 
   @Override
   public void execute() {
-    m_endEffector.runCoralEjector(12.0);
+    m_endEffector.runAlgaeClaw(-12.0);
   }
 
   @Override
   public void end(boolean interrupted) {
-    m_endEffector.stopCoralEjector();
+    m_endEffector.stopAlgaeClaw();
 
     // Don't simulate a successful outtake if the command was interrupted
     if (interrupted) {
-      if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-        ((BeamBreakIOSim) m_collector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
+      if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
     } else {
       if (Constants.kCurrentMode != Mode.REAL) {
-        GamePieceVisualizer.scoreCoral().schedule();
+        GamePieceVisualizer.setHasAlgae(false);
       }
     }
   }
 
   @Override
   public boolean isFinished() {
-    return !m_collector.isCollected();
+    return !m_endEffector.isAlgaeHeld();
   }
 }

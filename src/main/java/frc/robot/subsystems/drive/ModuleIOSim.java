@@ -13,19 +13,24 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.util.SparkUtil;
+import java.util.Arrays;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
+import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 
 /** Physics sim implementation of module IO. */
 public class ModuleIOSim implements ModuleIO {
-  private final DCMotorSim m_driveSim;
-  private final DCMotorSim m_turnSim;
+  private final SwerveModuleSimulation m_moduleSimulation;
+  private final SimulatedMotorController.GenericMotorController m_driveMotor;
+  private final SimulatedMotorController.GenericMotorController m_turnMotor;
 
   private boolean m_driveClosedLoop = false;
   private boolean m_turnClosedLoop = false;
@@ -35,16 +40,17 @@ public class ModuleIOSim implements ModuleIO {
   private double m_driveAppliedVolts = 0.0;
   private double m_turnAppliedVolts = 0.0;
 
-  public ModuleIOSim() {
+  public ModuleIOSim(SwerveModuleSimulation moduleSimulation) {
     // Create drive and turn sim models
-    m_driveSim =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(kDriveGearbox, 0.025, kDriveMotorReduction),
-            kDriveGearbox);
-    m_turnSim =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(kTurnGearbox, 0.004, kTurnMotorReduction),
-            kTurnGearbox);
+    m_moduleSimulation = moduleSimulation;
+    m_driveMotor =
+        moduleSimulation
+            .useGenericMotorControllerForDrive()
+            .withCurrentLimit(Amps.of(kDriveMotorCurrentLimit));
+    m_turnMotor =
+        moduleSimulation
+            .useGenericControllerForSteer()
+            .withCurrentLimit(Amps.of(kTurnMotorCurrentLimit));
 
     // Enable wrapping for turn PID
     m_turnController.enableContinuousInput(-Math.PI, Math.PI);
@@ -55,41 +61,47 @@ public class ModuleIOSim implements ModuleIO {
     // Run closed-loop control
     if (m_driveClosedLoop) {
       m_driveAppliedVolts =
-          m_driveFFVolts + m_driveController.calculate(m_driveSim.getAngularVelocityRadPerSec());
+          m_driveFFVolts
+              + m_driveController.calculate(
+                  m_moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond));
     } else {
       m_driveController.reset();
     }
     if (m_turnClosedLoop) {
-      m_turnAppliedVolts = m_turnController.calculate(m_turnSim.getAngularPositionRad());
+      m_turnAppliedVolts =
+          m_turnController.calculate(m_moduleSimulation.getSteerAbsoluteFacing().getRadians());
     } else {
       m_turnController.reset();
     }
 
     // Update simulation state
-    m_driveSim.setInputVoltage(MathUtil.clamp(m_driveAppliedVolts, -12.0, 12.0));
-    m_turnSim.setInputVoltage(MathUtil.clamp(m_turnAppliedVolts, -12.0, 12.0));
-    m_driveSim.update(0.02);
-    m_turnSim.update(0.02);
+    m_driveMotor.requestVoltage(Volts.of(m_driveAppliedVolts));
+    m_turnMotor.requestVoltage(Volts.of(m_turnAppliedVolts));
 
     // Update drive inputs
     inputs.driveConnected = true;
-    inputs.drivePositionRad = m_driveSim.getAngularPositionRad();
-    inputs.driveVelocityRadPerSec = m_driveSim.getAngularVelocityRadPerSec();
+    inputs.drivePositionRad = m_moduleSimulation.getDriveWheelFinalPosition().in(Radians);
+    inputs.driveVelocityRadPerSec =
+        m_moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond);
     inputs.driveAppliedVolts = m_driveAppliedVolts;
-    inputs.driveCurrentAmps = Math.abs(m_driveSim.getCurrentDrawAmps());
+    inputs.driveCurrentAmps = Math.abs(m_moduleSimulation.getDriveMotorStatorCurrent().in(Amps));
 
     // Update turn inputs
     inputs.turnConnected = true;
-    inputs.turnPosition = new Rotation2d(m_turnSim.getAngularPositionRad());
-    inputs.turnAbsolutePosition = new Rotation2d(m_turnSim.getAngularPositionRad());
-    inputs.turnVelocityRadPerSec = m_turnSim.getAngularVelocityRadPerSec();
+    inputs.turnPosition = m_moduleSimulation.getSteerAbsoluteFacing();
+    inputs.turnAbsolutePosition = m_moduleSimulation.getSteerAbsoluteFacing();
+    inputs.turnVelocityRadPerSec =
+        m_moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
     inputs.turnAppliedVolts = m_turnAppliedVolts;
-    inputs.turnCurrentAmps = Math.abs(m_turnSim.getCurrentDrawAmps());
+    inputs.turnCurrentAmps = Math.abs(m_moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
 
     // Update odometry inputs (50Hz because high-frequency odometry in sim doesn't matter)
-    inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
-    inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
-    inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnPosition};
+    inputs.odometryTimestamps = SparkUtil.getSimulationOdometryTimeStamps();
+    inputs.odometryDrivePositionsRad =
+        Arrays.stream(m_moduleSimulation.getCachedDriveWheelFinalPositions())
+            .mapToDouble(angle -> angle.in(Radians))
+            .toArray();
+    inputs.odometryTurnPositions = m_moduleSimulation.getCachedSteerAbsolutePositions();
   }
 
   @Override

@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -46,6 +47,7 @@ public class SuperStructure extends SubsystemBase {
   private final Wrist m_wrist;
 
   private SuperStructureState m_state = SuperStructureState.STOWED;
+  private SuperStructureState m_finalGoal = SuperStructureState.STOWED;
   private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
@@ -87,6 +89,10 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
+  public DoubleSupplier getAdjustmentCoefficient() {
+    return m_elevator::getAdjustmentCoefficient;
+  }
+
   @AutoLogOutput(key = "SuperStructure/Arm/Goal")
   public ArmGoals getArmGoal() {
     ArmGoals goal = m_arm.getGoal();
@@ -105,24 +111,14 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
-  private void setElevatorGoal(ElevatorLevel elevatorGoal) {
-    m_elevator.setGoal(elevatorGoal);
-  }
-
-  private void setArmGoal(ArmGoals armGoal) {
-    m_arm.setGoal(armGoal);
-  }
-
-  private void setWristGoal(WristGoals wristGoal) {
-    m_wrist.setGoal(wristGoal);
-  }
-
   @AutoLogOutput(key = "SuperStructure/Goal")
   public SuperStructureState getSuperStructureGoal() {
     return m_state;
   }
 
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
+    m_finalGoal = state;
+    Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoal);
     List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
     Logger.recordOutput("SuperStructure/States", states.toString());
 
@@ -214,6 +210,11 @@ public class SuperStructure extends SubsystemBase {
     return m_elevator.isSetpointAchieved()
         && m_arm.isSetpointAchieved()
         && m_wrist.isSetpointAchieved();
+  }
+
+  @AutoLogOutput(key = "SuperStructure/isFinalGoalAchieved")
+  public boolean isFinalGoalAchieved() {
+    return m_state == m_finalGoal && isGoalAchieved();
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */

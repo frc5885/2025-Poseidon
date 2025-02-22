@@ -17,9 +17,6 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -31,6 +28,7 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -49,9 +47,13 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.TunableDouble;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -64,6 +66,7 @@ public class Drive extends SubsystemBase {
   private final SysIdRoutine m_sysId;
   private final Alert m_gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+  private final Consumer<Pose2d> m_resetSimulationPoseCallBack;
 
   private SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(kModuleTranslations);
   private Rotation2d m_rawGyroRotation = new Rotation2d();
@@ -78,19 +81,25 @@ public class Drive extends SubsystemBase {
   private final SwerveSetpointGenerator m_setpointGenerator;
   private SwerveSetpoint m_previousSetpoint;
 
+  private DoubleSupplier adjustmentBaseFactor =
+      TunableDouble.register("Drive/AdjustmentBaseFactor", 0.3);
+  @Setter private DoubleSupplier adjustmentFactor = () -> 0.0;
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO,
-      HeimdallPoseController poseController) {
+      HeimdallPoseController poseController,
+      Consumer<Pose2d> resetSimulationPoseCallBack) {
     m_gyroIO = gyroIO;
     m_modules[0] = new Module(flModuleIO, 0);
     m_modules[1] = new Module(frModuleIO, 1);
     m_modules[2] = new Module(blModuleIO, 2);
     m_modules[3] = new Module(brModuleIO, 3);
     m_poseController = poseController;
+    m_resetSimulationPoseCallBack = resetSimulationPoseCallBack;
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -104,8 +113,7 @@ public class Drive extends SubsystemBase {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+        kPPController,
         kPPConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -205,6 +213,16 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    // speed adjustment
+    double linearMagnitude = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    Rotation2d linearDirection =
+        new Rotation2d(Math.atan2(speeds.vyMetersPerSecond, speeds.vxMetersPerSecond));
+    Translation2d adjustmentVector =
+        new Translation2d(
+            linearMagnitude * adjustmentBaseFactor.getAsDouble() * adjustmentFactor.getAsDouble(),
+            linearDirection);
+    speeds = speeds.minus(new ChassisSpeeds(adjustmentVector.getX(), adjustmentVector.getY(), 0.0));
+
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = m_kinematics.toSwerveModuleStates(discreteSpeeds);
@@ -300,13 +318,7 @@ public class Drive extends SubsystemBase {
 
   public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
     Logger.recordOutput("Odometry/TargetPose", pose.get());
-    return AutoBuilder.pathfindToPose(
-        pose.get(),
-        new PathConstraints(
-            getMaxLinearSpeedMetersPerSec(),
-            getMaxAngularSpeedRadPerSec(),
-            getMaxAngularSpeedRadPerSec(),
-            100)); // TODO Figure this out
+    return AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast);
   }
 
   /** Returns the position of each module in radians. */
@@ -340,6 +352,7 @@ public class Drive extends SubsystemBase {
 
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
+    m_resetSimulationPoseCallBack.accept(pose);
     m_poseController.resetPosition(m_rawGyroRotation, getModulePositions(), pose);
   }
 
@@ -359,7 +372,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the maximum angular speed in radians per sec. */
   public double getMaxAngularSpeedRadPerSec() {
-    return kMaxSpeedMetersPerSec / kDriveBaseRadius;
+    return kMaxAngularSpeedRadiansPerSec;
   }
 
   /**

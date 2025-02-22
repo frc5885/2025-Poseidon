@@ -16,9 +16,12 @@ package frc.robot.subsystems.vision.photon;
 import static frc.robot.subsystems.vision.photon.VisionConstants.kAprilTagLayout;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.util.GamePieces.CoralTargetModel;
+import java.util.Arrays;
 import java.util.function.Supplier;
+import org.ironmaple.simulation.SimulatedArena;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -30,6 +33,13 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
   // Static means they're global across cameras
   private static VisionSystemSim m_visionSimAprilTags;
   private static VisionSystemSim m_visionSimCoral;
+
+  // these are so that we only call update once per cycle even if we have multiple cameras
+  private static boolean m_mainAprilTagCameraSet = false;
+  private static boolean m_mainCoralCameraSet = false;
+  private final boolean m_isMainCamera;
+
+  private static final TargetModel coralModel = CoralTargetModel.getCoralModel();
 
   private final Supplier<Pose2d> m_poseSupplier;
   private final PhotonCameraSim m_cameraSim;
@@ -51,6 +61,17 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
     m_poseSupplier = poseSupplier;
     m_cameraType = cameraType;
 
+    // Check if this is the main camera
+    if (m_cameraType == CameraType.APRILTAG && !m_mainAprilTagCameraSet) {
+      m_mainAprilTagCameraSet = true;
+      m_isMainCamera = true;
+    } else if (m_cameraType == CameraType.CORAL && !m_mainCoralCameraSet) {
+      m_mainCoralCameraSet = true;
+      m_isMainCamera = true;
+    } else {
+      m_isMainCamera = false;
+    }
+
     // Initialize vision sim
     if (m_cameraType == CameraType.APRILTAG) {
       if (m_visionSimAprilTags == null) {
@@ -61,13 +82,8 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
     } else if (m_cameraType == CameraType.CORAL) {
       if (m_visionSimCoral == null) {
         m_visionSimCoral = new VisionSystemSim("coral");
-        // Add coral targets
-        TargetModel coralModel = CoralTargetModel.getCoralModel();
-        m_visionSimCoral.addVisionTargets(
-            "coral",
-            CoralTargetModel.getCoralPositions().stream()
-                .map(pos -> new VisionTargetSim(pos, coralModel))
-                .toArray(VisionTargetSim[]::new));
+        // Initialize with empty targets - will be updated dynamically
+        m_visionSimCoral.addVisionTargets("coral");
       }
     }
 
@@ -81,7 +97,7 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
     }
 
     // Enable camera streams in simulation
-    boolean renderSim = false;
+    boolean renderSim = true;
     m_cameraSim.enableRawStream(renderSim);
     m_cameraSim.enableProcessedStream(renderSim);
     m_cameraSim.enableDrawWireframe(renderSim);
@@ -89,8 +105,24 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    m_visionSimAprilTags.update(m_poseSupplier.get());
-    m_visionSimCoral.update(m_poseSupplier.get());
+    if (m_cameraType == CameraType.APRILTAG && m_isMainCamera) {
+      m_visionSimAprilTags.update(m_poseSupplier.get());
+    } else if (m_cameraType == CameraType.CORAL && m_isMainCamera) {
+      // Get coral positions from simulated arena
+      Pose3d[] coralPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
+
+      // Update vision targets with new coral positions
+      m_visionSimCoral.removeVisionTargets("coral");
+      if (coralPoses != null && coralPoses.length > 0) {
+        VisionTargetSim[] targets =
+            Arrays.stream(coralPoses)
+                .map(pose -> new VisionTargetSim(pose, coralModel))
+                .toArray(VisionTargetSim[]::new);
+        m_visionSimCoral.addVisionTargets("coral", targets);
+      }
+
+      m_visionSimCoral.update(m_poseSupplier.get());
+    }
     super.updateInputs(inputs);
   }
 }
