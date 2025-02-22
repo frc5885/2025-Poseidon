@@ -28,6 +28,7 @@ public class ScoreAlgaeNet extends SequentialCommandGroup {
             DriveConstants.kRotationTolerance),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
         DriveCommands.preciseChassisAlign(
-            drive, () -> new Pose2d(7.8, drive.getPose().getY(), new Rotation2d())));
+            drive, () -> new Pose2d(7.8, drive.getPose().getY(), new Rotation2d())),
+        new ScoreAlgaeCommand(endEffector));
   }
 }

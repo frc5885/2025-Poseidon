@@ -21,8 +21,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
@@ -31,7 +29,6 @@ import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
-import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.SuperStructureCommand;
@@ -391,21 +388,18 @@ public class RobotContainer {
     // SCORE ALGAE PROCESSOR
     m_driverController
         .b()
-        .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector))
+        .whileTrue(
+            new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector)
+                .unless(() -> !m_endEffector.isAlgaeHeld()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE ALGAE NET
     m_driverController
         .y()
         .whileTrue(
-            new SequentialCommandGroup(
-                new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector),
-                DriveCommands.joystickDrive(
-                    m_drive, () -> 0.0, () -> m_driverController.getLeftX(), () -> 0)))
-        .onFalse(
-            // TODO temporary
-            new ScoreAlgaeCommand(m_endEffector)
-                .andThen(new ResetSuperStructureCommand(m_drive, m_superStructure)));
+            new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector)
+                .unless(() -> !m_endEffector.isAlgaeHeld()))
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
