@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.DriveCommands;
@@ -12,6 +13,8 @@ import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
@@ -48,6 +51,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
             .transformBy(new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
 
     addCommands(
+        new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.SCORING_LINE_UP)),
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> superStructureState),
             new DriveToPoseCommand(

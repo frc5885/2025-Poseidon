@@ -10,6 +10,8 @@ import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class ScoreCoralCommand extends Command {
@@ -32,6 +34,7 @@ public class ScoreCoralCommand extends Command {
     if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
       ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceOuttake(0.5);
     }
+    LEDSubsystem.getInstance().setStates(LEDStates.SCORED);
   }
 
   @Override

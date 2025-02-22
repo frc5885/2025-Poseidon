@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class IntakeCoralCommand extends Command {
@@ -25,6 +26,7 @@ public class IntakeCoralCommand extends Command {
   @Override
   public void initialize() {
     m_collector.extendIntake();
+    LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.INTAKE_RUNNING);
   }
 
   @Override
@@ -53,6 +55,9 @@ public class IntakeCoralCommand extends Command {
       if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
         ((BeamBreakIOSim) m_collector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
+      LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.IDLE);
+    } else {
+      LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.HOLDING_PIECE);
     }
   }
 

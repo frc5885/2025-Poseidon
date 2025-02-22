@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
@@ -29,11 +28,11 @@ import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCoralCommand;
+import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.SuperStructureCommand;
-import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -54,8 +53,6 @@ import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
-import frc.robot.subsystems.LEDS.LEDSubsystem;
-import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
@@ -358,15 +355,13 @@ public class RobotContainer {
         // when we test on the robot
         .whileTrue(
             new ParallelDeadlineGroup(
-                    new IntakeCoralCommand(m_collector),
-                    DriveCommands.driveToGamePiece(
-                        m_drive,
-                        () -> -m_driverController.getLeftY(),
-                        () -> -m_driverController.getLeftX(),
-                        () -> m_vision.getTargetX(2).getRadians(),
-                        true))
-                .deadlineFor(new RunCommand(() -> LEDSubsystem.setStates(LEDStates.INTAKE_RUNNING)))
-                .finallyDo(() -> LEDSubsystem.setStates(LEDStates.IDLE)));
+                new IntakeCoralCommand(m_collector),
+                DriveCommands.driveToGamePiece(
+                    m_drive,
+                    () -> -m_driverController.getLeftY(),
+                    () -> -m_driverController.getLeftX(),
+                    () -> m_vision.getTargetX(2).getRadians(),
+                    true)));
 
     // SCORE CORAL
     m_driverController
@@ -379,14 +374,7 @@ public class RobotContainer {
                     m_collector,
                     FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4))
                 .unless(() -> !m_collector.isCollected()))
-        .onFalse(
-            new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-                .andThen(
-                    new SuperStructureCommand(
-                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL))
-                .deadlineFor(
-                    new RunCommand(() -> LEDSubsystem.setStates(LEDStates.RESETTING_SUPERSTRUCTURE))
-                        .finallyDo(() -> LEDSubsystem.setStates(LEDStates.IDLE))));
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // INTAKE ALGAE
     m_driverController
@@ -395,17 +383,13 @@ public class RobotContainer {
         .whileTrue(
             new AutoIntakeAlgaeReefCommand(
                 m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
-        .onFalse(
-            new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-                .andThen(
-                    new SuperStructureCommand(
-                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE ALGAE PROCESSOR
     m_driverController
         .b()
         .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector))
-        .onFalse(new ScoreAlgaeCommand(m_endEffector));
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE ALGAE NET
     m_driverController
@@ -413,10 +397,7 @@ public class RobotContainer {
         .whileTrue(new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector))
         .onFalse(
             new ScoreAlgaeCommand(m_endEffector)
-                .andThen(
-                    new WaitUntilFarFromCommand(m_drive::getPose, 0.3),
-                    new SuperStructureCommand(
-                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
+                .andThen(new ResetSuperStructureCommand(m_drive, m_superStructure)));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
