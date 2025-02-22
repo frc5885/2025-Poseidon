@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
@@ -53,6 +54,8 @@ import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
 import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
@@ -355,13 +358,15 @@ public class RobotContainer {
         // when we test on the robot
         .whileTrue(
             new ParallelDeadlineGroup(
-                new IntakeCoralCommand(m_collector),
-                DriveCommands.driveToGamePiece(
-                    m_drive,
-                    () -> -m_driverController.getLeftY(),
-                    () -> -m_driverController.getLeftX(),
-                    () -> m_vision.getTargetX(2).getRadians(),
-                    true)));
+                    new IntakeCoralCommand(m_collector),
+                    DriveCommands.driveToGamePiece(
+                        m_drive,
+                        () -> -m_driverController.getLeftY(),
+                        () -> -m_driverController.getLeftX(),
+                        () -> m_vision.getTargetX(2).getRadians(),
+                        true))
+                .deadlineFor(new RunCommand(() -> LEDSubsystem.setStates(LEDStates.INTAKE_RUNNING)))
+                .finallyDo(() -> LEDSubsystem.setStates(LEDStates.IDLE)));
 
     // SCORE CORAL
     m_driverController
