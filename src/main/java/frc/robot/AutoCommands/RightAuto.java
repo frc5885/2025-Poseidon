@@ -48,7 +48,7 @@ public class RightAuto extends SequentialCommandGroup {
             m_superStructure,
             m_endEffector,
             m_collector,
-            FieldConstants.Reef.branchPositions.get(10).get(ReefLevel.L4)),
+            () -> FieldConstants.Reef.branchPositions.get(10).get(ReefLevel.L4)),
         new AutoIntakeNewCoralCommand(
             m_drive, m_superStructure, m_collector, m_vision, startIntakingPose),
 
@@ -58,7 +58,7 @@ public class RightAuto extends SequentialCommandGroup {
             m_superStructure,
             m_endEffector,
             m_collector,
-            FieldConstants.Reef.branchPositions.get(11).get(ReefLevel.L4)),
+            () -> FieldConstants.Reef.branchPositions.get(11).get(ReefLevel.L4)),
         new AutoIntakeNewCoralCommand(
             m_drive, m_superStructure, m_collector, m_vision, startIntakingPose),
 
@@ -68,7 +68,7 @@ public class RightAuto extends SequentialCommandGroup {
             m_superStructure,
             m_endEffector,
             m_collector,
-            FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)),
+            () -> FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)),
         new AutoIntakeNewCoralCommand(
             m_drive, m_superStructure, m_collector, m_vision, startIntakingPose),
 
@@ -78,6 +78,6 @@ public class RightAuto extends SequentialCommandGroup {
             m_superStructure,
             m_endEffector,
             m_collector,
-            FieldConstants.Reef.branchPositions.get(1).get(ReefLevel.L4)));
+            () -> FieldConstants.Reef.branchPositions.get(1).get(ReefLevel.L4)));
   }
 }
