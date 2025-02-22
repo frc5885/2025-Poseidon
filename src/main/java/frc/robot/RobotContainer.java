@@ -384,10 +384,9 @@ public class RobotContainer {
                 .andThen(
                     new SuperStructureCommand(
                         m_superStructure, () -> SuperStructureState.INTAKE_CORAL))
-                .alongWith(
-                    new RunCommand(
-                        () -> LEDSubsystem.setStates(LEDStates.RESETTING_SUPERSTRUCTURE)))
-                .finallyDo(() -> LEDSubsystem.setStates(LEDStates.IDLE)));
+                .deadlineFor(
+                    new RunCommand(() -> LEDSubsystem.setStates(LEDStates.RESETTING_SUPERSTRUCTURE))
+                        .finallyDo(() -> LEDSubsystem.setStates(LEDStates.IDLE))));
 
     // INTAKE ALGAE
     m_driverController
