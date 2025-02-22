@@ -5,7 +5,6 @@
 package frc.robot.subsystems.LEDS;
 
 import static edu.wpi.first.units.Units.Seconds;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
@@ -34,8 +33,8 @@ public class LEDSubsystem {
     m_leds.start();
 
     states = LEDStates.IDLE;
-    m_left = m_buffer.createView(0, kLength / 2);
-    m_right = m_buffer.createView(kLength / 2, kLEDPort);
+    m_left = m_buffer.createView(0, kLength / 2 - 1);
+    m_right = m_buffer.createView(kLength / 2, kLength - 1);
   }
 
   public static LEDSubsystem getInstance() {
