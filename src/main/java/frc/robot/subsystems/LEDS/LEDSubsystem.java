@@ -32,6 +32,7 @@ public class LEDSubsystem {
   private static final int kLEDPort = 0;
 
   @Setter private boolean hasGamePiece = false;
+  @Setter private boolean seesGamePiece = false;
 
   private LEDSubsystem() {
     m_leds = new AddressableLED(kLEDPort);
@@ -67,6 +68,16 @@ public class LEDSubsystem {
     states.getPattern().applyTo(m_left);
     states.getPattern().applyTo(m_right);
 
+    if (states == LEDStates.INTAKE_RUNNING && seesGamePiece) {
+      setStates(LEDStates.INTAKE_RUNNING_SEES_PIECE);
+    } else if (states == LEDStates.INTAKE_RUNNING_SEES_PIECE && !seesGamePiece) {
+      setStates(LEDStates.INTAKE_RUNNING);
+    }
+
+    if (states == LEDStates.SCORED && !hasGamePiece) {
+      states = LEDStates.RESETTING_SUPERSTRUCTURE;
+    }
+
     Logger.recordOutput(
         "LED",
         IntStream.range(0, kLength / 2)
@@ -82,12 +93,12 @@ public class LEDSubsystem {
                 LEDPattern.steps(Map.of(0.5, Color.kWhite))
                     .scrollAtRelativeSpeed(Percent.per(Second).of(25.0)))),
     DISABLED(LEDPattern.rainbow(255, 255).scrollAtRelativeSpeed(Percent.per(Second).of(25))),
-    INTAKE_RUNNING(LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.5))),
-    INTAKE_RUNNING_SEES_PIECE(LEDPattern.solid(Color.kPurple).blink(Seconds.of(0.5))),
+    INTAKE_RUNNING(LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.1))),
+    INTAKE_RUNNING_SEES_PIECE(LEDPattern.solid(Color.kPurple).blink(Seconds.of(0.1))),
     CORAL_IN_FEEDER(LEDPattern.solid(Color.kYellow)),
     ALGAE_INTAKE_LINE_UP(LEDPattern.solid(Color.kCyan)),
     SCORING_LINE_UP(LEDPattern.solid(Color.kBlue)),
-    SCORED(LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.5))),
+    SCORED(LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.05))),
     HOLDING_PIECE(LEDPattern.solid(Color.kGreen).breathe(Seconds.of(2.0))),
     RESETTING_SUPERSTRUCTURE(LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0))),
     AUTO(

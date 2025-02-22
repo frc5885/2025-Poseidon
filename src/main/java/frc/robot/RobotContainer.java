@@ -360,6 +360,7 @@ public class RobotContainer {
                     m_drive,
                     () -> -m_driverController.getLeftY(),
                     () -> -m_driverController.getLeftX(),
+                    () -> -m_driverController.getRightX(),
                     () -> m_vision.getTargetX(2).getRadians(),
                     true)));
 
