@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
@@ -108,6 +109,10 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
   private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
+  private final Trigger m_algaeProcessorTrigger;
+  private final Trigger m_algaeNetTrigger;
+  private final Trigger m_algaeReefTrigger;
+  private final Trigger m_algaeFloorTrigger;
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
@@ -115,6 +120,19 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+    m_algaeNetTrigger =
+        m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(0));
+    m_algaeProcessorTrigger =
+        m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
+    m_algaeReefTrigger =
+        m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
+    m_algaeFloorTrigger =
+        m_driverController
+            .leftBumper()
+            .debounce(0.1)
+            .and(m_operatorPanel.getNegatedOverrideSwitch(1));
+
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -376,26 +394,22 @@ public class RobotContainer {
                 .unless(() -> !m_collector.isCollected()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
-    // INTAKE ALGAE
-    m_driverController
-        .leftBumper()
-        .debounce(0.1)
+    // INTAKE ALGAE REEF
+    m_algaeReefTrigger
         .whileTrue(
             new AutoIntakeAlgaeReefCommand(
                 m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE ALGAE PROCESSOR
-    m_driverController
-        .b()
+    m_algaeProcessorTrigger
         .whileTrue(
             new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector)
                 .unless(() -> !m_endEffector.isAlgaeHeld()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE ALGAE NET
-    m_driverController
-        .y()
+    m_algaeNetTrigger
         .whileTrue(
             new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector)
                 .unless(() -> !m_endEffector.isAlgaeHeld()))

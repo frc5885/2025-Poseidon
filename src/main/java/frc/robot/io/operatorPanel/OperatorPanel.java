@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 /** Interface for physical override switches on operator console. */
@@ -34,17 +35,24 @@ public class OperatorPanel {
   }
 
   /** Gets the state of a switch (0-7 from left to right). */
-  public boolean getOverrideSwitch(int index) {
+  public BooleanSupplier getOverrideSwitch(int index) {
     if (index < 0 || index > 7) {
       throw new RuntimeException(
           "Invalid driver override index " + Integer.toString(index) + ". Must be 0-7.");
     }
-    return joystick.getRawButton(index + 1);
+    return () -> joystick.getRawButton(index + 1);
+  }
+
+  public BooleanSupplier getNegatedOverrideSwitch(int index) {
+    return () -> {
+      System.out.println(!getOverrideSwitch(index).getAsBoolean());
+      return !getOverrideSwitch(index).getAsBoolean();
+    };
   }
 
   /** Returns a trigger for an switch (0-7 from left to right). */
   public Trigger overrideSwitch(int index) {
-    return new Trigger(() -> getOverrideSwitch(index));
+    return new Trigger(getOverrideSwitch(index));
   }
 
   /** Returns the reef level from 1 to 4 */
