@@ -80,8 +80,6 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -390,7 +388,7 @@ public class RobotContainer {
                     m_superStructure,
                     m_endEffector,
                     m_collector,
-                    FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4))
+                    m_operatorPanel::getTargetPose)
                 .unless(() -> !m_collector.isCollected()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 

@@ -331,7 +331,7 @@ def main():
                     for btn in buttons:
                         if btn.is_active:
                             connection_manager.sd.putNumber("ReefTargets", buttons.index(btn))
-                            connection_manager.sd.putNumber("ReefTargetsLevel",0)
+                            connection_manager.sd.putNumber("ReefTargetsLevel",1)
                     for btnl in levelButtons:
                         if btnl.is_active:
                             connection_manager.sd.putNumber("ReefTargetsLevel", 4 - levelButtons.index(btnl))

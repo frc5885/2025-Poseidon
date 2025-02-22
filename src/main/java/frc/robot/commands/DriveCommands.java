@@ -187,7 +187,7 @@ public class DriveCommands {
               }
               double omega =
                   angleController.calculate(
-                      visionRotSupplier.getAsDouble() + joystickRotSupplier.getAsDouble(), 0);
+                      visionRotSupplier.getAsDouble() - joystickRotSupplier.getAsDouble(), 0);
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =

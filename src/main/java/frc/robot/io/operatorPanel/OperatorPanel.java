@@ -7,11 +7,14 @@
 
 package frc.robot.io.operatorPanel;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 
@@ -58,12 +61,18 @@ public class OperatorPanel {
   /** Returns the reef level from 1 to 4 */
   @AutoLogOutput(key = "OperatorPanel/ReefLevel")
   public int getReefLevel() {
-    return m_networkTable.getEntry(NETWORK_ENTRY_level).getNumber(0).intValue();
+    return m_networkTable.getEntry(NETWORK_ENTRY_level).getNumber(1).intValue();
   }
 
   /** Returns the target reef branch from 0 to 11 */
   @AutoLogOutput(key = "OperatorPanel/ReefTarget")
   public int getReefTarget() {
     return m_networkTable.getEntry(NETWORK_ENTRY).getNumber(0).intValue();
+  }
+
+  public Pose3d getTargetPose() {
+    return FieldConstants.Reef.branchPositions
+        .get(getReefTarget())
+        .get(ReefLevel.values()[getReefLevel() - 1]);
   }
 }
