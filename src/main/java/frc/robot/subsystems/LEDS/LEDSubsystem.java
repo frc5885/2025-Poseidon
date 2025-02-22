@@ -4,12 +4,14 @@
 
 package frc.robot.subsystems.LEDS;
 
-import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.util.Color;
+import java.util.stream.IntStream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -48,25 +50,27 @@ public class LEDSubsystem {
     states.getPattern().applyTo(m_left);
     states.getPattern().applyTo(m_right);
 
-    Logger.recordOutput("LEDColor", m_left.getLED(0).toHexString());
+    Logger.recordOutput(
+        "LED",
+        IntStream.range(0, kLength / 2)
+            .mapToObj(i -> m_left.getLED(i).toHexString())
+            .toArray(String[]::new));
   }
 
   @RequiredArgsConstructor
   public static enum LEDStates {
-    IDLE(Color.kWhite, LEDPattern.solid(Color.kWhite)),
+    IDLE(LEDPattern.rainbow(255, 255).scrollAtRelativeSpeed(Percent.per(Second).of(25.0))),
     // DISABLED(Color.kBlue, null),
-    INTAKE_RUNNING(Color.kYellow, LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.5))),
-    INTAKE_RUNNING_SEES_PIECE(
-        Color.kPurple, LEDPattern.solid(Color.kPurple).blink(Seconds.of(0.5))),
-    CORAL_IN_FEEDER(Color.kYellow, LEDPattern.solid(Color.kYellow)),
-    SCORING_LINE_UP(Color.kBlue, LEDPattern.solid(Color.kBlue)),
-    SCORED(Color.kBlue, LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.5))),
-    HOLDING_PIECE(Color.kGreen, LEDPattern.solid(Color.kGreen).breathe(Seconds.of(2.0))),
-    RESETTING_SUPERSTRUCTURE(Color.kRed, LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0))),
+    INTAKE_RUNNING(LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.5))),
+    INTAKE_RUNNING_SEES_PIECE(LEDPattern.solid(Color.kPurple).blink(Seconds.of(0.5))),
+    CORAL_IN_FEEDER(LEDPattern.solid(Color.kYellow)),
+    SCORING_LINE_UP(LEDPattern.solid(Color.kBlue)),
+    SCORED(LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.5))),
+    HOLDING_PIECE(LEDPattern.solid(Color.kGreen).breathe(Seconds.of(2.0))),
+    RESETTING_SUPERSTRUCTURE(LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0)))
   // AUTO(Color.kBlue, null)
   ;
 
-    @Getter private final Color color;
     @Getter private final LEDPattern pattern;
   }
 }
