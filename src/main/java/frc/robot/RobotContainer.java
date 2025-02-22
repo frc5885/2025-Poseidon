@@ -397,6 +397,7 @@ public class RobotContainer {
         .y()
         .whileTrue(new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector))
         .onFalse(
+            // TODO temporary
             new ScoreAlgaeCommand(m_endEffector)
                 .andThen(new ResetSuperStructureCommand(m_drive, m_superStructure)));
 

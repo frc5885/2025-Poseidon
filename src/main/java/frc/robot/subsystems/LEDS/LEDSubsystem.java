@@ -33,6 +33,7 @@ public class LEDSubsystem {
 
   @Setter private boolean hasGamePiece = false;
   @Setter private boolean seesGamePiece = false;
+  @Setter private boolean isPhotonDied = false;
 
   private LEDSubsystem() {
     m_leds = new AddressableLED(kLEDPort);
@@ -68,14 +69,18 @@ public class LEDSubsystem {
     states.getPattern().applyTo(m_left);
     states.getPattern().applyTo(m_right);
 
-    if (states == LEDStates.INTAKE_RUNNING && seesGamePiece) {
-      setStates(LEDStates.INTAKE_RUNNING_SEES_PIECE);
-    } else if (states == LEDStates.INTAKE_RUNNING_SEES_PIECE && !seesGamePiece) {
-      setStates(LEDStates.INTAKE_RUNNING);
-    }
+    if (isPhotonDied) {
+      states = LEDStates.PHOTON_DIED;
+    } else {
+      if (states == LEDStates.INTAKE_RUNNING && seesGamePiece) {
+        setStates(LEDStates.INTAKE_RUNNING_SEES_PIECE);
+      } else if (states == LEDStates.INTAKE_RUNNING_SEES_PIECE && !seesGamePiece) {
+        setStates(LEDStates.INTAKE_RUNNING);
+      }
 
-    if (states == LEDStates.SCORED && !hasGamePiece) {
-      states = LEDStates.RESETTING_SUPERSTRUCTURE;
+      if (states == LEDStates.SCORED && !hasGamePiece) {
+        states = LEDStates.RESETTING_SUPERSTRUCTURE;
+      }
     }
 
     Logger.recordOutput(
@@ -92,6 +97,11 @@ public class LEDSubsystem {
             .mask(
                 LEDPattern.steps(Map.of(0.5, Color.kWhite))
                     .scrollAtRelativeSpeed(Percent.per(Second).of(25.0)))),
+    PHOTON_DIED(
+        LEDPattern.solid((Color.kRed))
+            .mask(
+                LEDPattern.steps(Map.of(0.5, Color.kRed))
+                    .scrollAtRelativeSpeed(Percent.per(Second).of(50.0)))),
     DISABLED(LEDPattern.rainbow(255, 255).scrollAtRelativeSpeed(Percent.per(Second).of(25))),
     INTAKE_RUNNING(LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.1))),
     INTAKE_RUNNING_SEES_PIECE(LEDPattern.solid(Color.kPurple).blink(Seconds.of(0.1))),

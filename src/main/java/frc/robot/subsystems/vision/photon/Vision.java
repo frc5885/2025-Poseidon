@@ -26,11 +26,13 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservation;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservationType;
 import frc.robot.subsystems.vision.photon.VisionIO.VisionIOInputs;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
@@ -176,6 +178,9 @@ public class Vision extends SubsystemBase {
                 m_inputs[cameraIndex].latestTargetObservation.ty().getRadians()));
       }
     }
+
+    boolean anyDisconnected = IntStream.range(0, m_io.length).anyMatch(i -> !m_inputs[i].connected);
+    LEDSubsystem.getInstance().setPhotonDied(anyDisconnected);
 
     // Log summary data
     Logger.recordOutput(

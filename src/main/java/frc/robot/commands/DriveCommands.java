@@ -169,48 +169,51 @@ public class DriveCommands {
 
     // Construct command
     return Commands.run(
-        () -> {
-          boolean seesGamePiece = visionRotSupplier.getAsDouble() != 0.0;
-          LEDSubsystem.getInstance().setSeesGamePiece(seesGamePiece);
+            () -> {
+              boolean seesGamePiece = visionRotSupplier.getAsDouble() != 0.0;
+              LEDSubsystem.getInstance().setSeesGamePiece(seesGamePiece);
 
-          // Get linear velocity
-          Translation2d linearVelocity;
-          if (humanOperated) {
-            linearVelocity =
-                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-          } else {
-            // divided by PI to slow it down, seems to work
-            double yVelocity = yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
-            linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
-          }
-          double omega =
-              angleController.calculate(
-                  visionRotSupplier.getAsDouble() + joystickRotSupplier.getAsDouble(), 0);
+              // Get linear velocity
+              Translation2d linearVelocity;
+              if (humanOperated) {
+                linearVelocity =
+                    getLinearVelocityFromJoysticks(
+                        xSupplier.getAsDouble(), ySupplier.getAsDouble());
+              } else {
+                // divided by PI to slow it down, seems to work
+                double yVelocity =
+                    yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
+                linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
+              }
+              double omega =
+                  angleController.calculate(
+                      visionRotSupplier.getAsDouble() + joystickRotSupplier.getAsDouble(), 0);
 
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega);
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
 
-          if (humanOperated) {
-            // field oriented (teleop)
-            boolean isFlipped =
-                DriverStation.getAlliance().isPresent()
-                    && DriverStation.getAlliance().get() == Alliance.Red;
-            drive.runVelocity(
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                    speeds,
-                    isFlipped
-                        ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                        : drive.getRotation()));
-          } else {
-            // robot oriented (auto)
-            drive.runVelocity(speeds);
-          }
-        },
-        drive);
+              if (humanOperated) {
+                // field oriented (teleop)
+                boolean isFlipped =
+                    DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == Alliance.Red;
+                drive.runVelocity(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds,
+                        isFlipped
+                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                            : drive.getRotation()));
+              } else {
+                // robot oriented (auto)
+                drive.runVelocity(speeds);
+              }
+            },
+            drive)
+        .finallyDo(() -> LEDSubsystem.getInstance().setSeesGamePiece(false));
   }
 
   /** Robot relative drive command for precise reef faces aligning. */
