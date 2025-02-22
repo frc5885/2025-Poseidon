@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
@@ -395,7 +397,11 @@ public class RobotContainer {
     // SCORE ALGAE NET
     m_driverController
         .y()
-        .whileTrue(new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector))
+        .whileTrue(
+            new SequentialCommandGroup(
+                new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector),
+                DriveCommands.joystickDrive(
+                    m_drive, () -> 0.0, () -> m_driverController.getLeftX(), () -> 0)))
         .onFalse(
             // TODO temporary
             new ScoreAlgaeCommand(m_endEffector)
