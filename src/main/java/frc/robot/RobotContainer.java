@@ -383,7 +383,11 @@ public class RobotContainer {
             new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                 .andThen(
                     new SuperStructureCommand(
-                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL))
+                .alongWith(
+                    new RunCommand(
+                        () -> LEDSubsystem.setStates(LEDStates.RESETTING_SUPERSTRUCTURE)))
+                .finallyDo(() -> LEDSubsystem.setStates(LEDStates.IDLE)));
 
     // INTAKE ALGAE
     m_driverController
