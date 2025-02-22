@@ -28,10 +28,12 @@ import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeAlgaeCommand;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
+import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
@@ -111,6 +113,9 @@ public class RobotContainer {
   private final Trigger m_algaeNetTrigger;
   private final Trigger m_algaeReefTrigger;
   private final Trigger m_algaeFloorTrigger;
+  private final Trigger m_manualTroughSuperStructureTrigger;
+  private final Trigger m_manualTroughScoreTrigger;
+  private final Trigger m_automaticCoralScoreTrigger;
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
@@ -130,6 +135,11 @@ public class RobotContainer {
             .leftBumper()
             .debounce(0.1)
             .and(m_operatorPanel.getNegatedOverrideSwitch(1));
+    m_manualTroughSuperStructureTrigger =
+        m_driverController.rightTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(3));
+    m_automaticCoralScoreTrigger =
+        m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
+    m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
 
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
@@ -380,8 +390,7 @@ public class RobotContainer {
                     true)));
 
     // SCORE CORAL
-    m_driverController
-        .rightTrigger(0.1)
+    m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
                     m_drive,
@@ -399,6 +408,15 @@ public class RobotContainer {
                 m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
+    // INTAKE ALGAE FLOOR
+    m_algaeFloorTrigger
+        .whileTrue(
+            new SuperStructureCommand(
+                    m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_FLOOR)
+                .alongWith(new IntakeAlgaeCommand(m_endEffector)))
+        .onFalse(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+
     // SCORE ALGAE PROCESSOR
     m_algaeProcessorTrigger
         .whileTrue(
@@ -412,6 +430,16 @@ public class RobotContainer {
             new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector)
                 .unless(() -> !m_endEffector.isAlgaeHeld()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+
+    // MANUAL TROUGH SUPERSTRUCTURE
+    m_manualTroughSuperStructureTrigger
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1))
+        .onFalse(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+
+    // MANUAL CORAL SCORE
+    m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector, m_collector));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
