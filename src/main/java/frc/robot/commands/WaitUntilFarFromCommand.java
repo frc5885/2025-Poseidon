@@ -14,8 +14,8 @@ public class WaitUntilFarFromCommand extends Command {
    * the command was initialized).
    */
   public WaitUntilFarFromCommand(Supplier<Pose2d> drivePoseSupplier, double minDistance) {
-    this.m_drivePoseSupplier = drivePoseSupplier;
-    this.m_minDistance = minDistance;
+    m_drivePoseSupplier = drivePoseSupplier;
+    m_minDistance = minDistance;
   }
 
   @Override

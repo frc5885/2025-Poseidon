@@ -29,6 +29,7 @@ import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ScoreAlgaeCommand;
+import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilFarFromCommand;
@@ -382,6 +383,7 @@ public class RobotContainer {
     // INTAKE ALGAE
     m_driverController
         .leftBumper()
+        .debounce(0.1)
         .whileTrue(
             new AutoIntakeAlgaeReefCommand(
                 m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
@@ -391,11 +393,22 @@ public class RobotContainer {
                     new SuperStructureCommand(
                         m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
 
-    // SCORE ALGAE TODO
+    // SCORE ALGAE PROCESSOR
     m_driverController
         .b()
         .whileTrue(new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector))
         .onFalse(new ScoreAlgaeCommand(m_endEffector));
+
+    // SCORE ALGAE NET
+    m_driverController
+        .y()
+        .whileTrue(new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector))
+        .onFalse(
+            new ScoreAlgaeCommand(m_endEffector)
+                .andThen(
+                    new WaitUntilFarFromCommand(m_drive::getPose, 0.3),
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL)));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
