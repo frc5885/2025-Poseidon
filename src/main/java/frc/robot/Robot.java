@@ -16,6 +16,8 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -105,12 +107,14 @@ public class Robot extends LoggedRobot {
     Threads.setCurrentThreadPriority(false, 10);
 
     GamePieceVisualizer.showHeldGamePieces();
+    LEDSubsystem.getInstance().periodic();
   }
 
   /** This function is called once when the robot is disabled. */
   @Override
   public void disabledInit() {
     m_robotContainer.resetSimulationField();
+    LEDSubsystem.getInstance().setStates(LEDStates.DISABLED);
   }
 
   /** This function is called periodically when disabled. */
@@ -126,6 +130,8 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+
+    LEDSubsystem.getInstance().setStates(LEDStates.AUTO);
   }
 
   /** This function is called periodically during autonomous. */
@@ -142,6 +148,8 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+
+    LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
   }
 
   /** This function is called periodically during operator control. */

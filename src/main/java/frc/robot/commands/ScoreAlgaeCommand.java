@@ -9,6 +9,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class ScoreAlgaeCommand extends Command {
@@ -26,6 +27,7 @@ public class ScoreAlgaeCommand extends Command {
     if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
       ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).simulateGamePieceOuttake(0.5);
     }
+    LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.SCORED);
   }
 
   @Override

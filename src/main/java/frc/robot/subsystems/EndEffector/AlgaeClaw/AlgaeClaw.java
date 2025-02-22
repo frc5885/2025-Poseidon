@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.Logger;
 
@@ -32,6 +33,7 @@ public class AlgaeClaw {
 
     // Update game piece visualizer
     GamePieceVisualizer.setHasAlgae(m_beamBreakInputs.state);
+    LEDSubsystem.getInstance().setHasGamePiece(m_beamBreakInputs.state);
   }
 
   public void runAlgaeClaw(double volt) {

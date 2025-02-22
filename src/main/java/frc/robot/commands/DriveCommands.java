@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import java.text.DecimalFormat;
@@ -162,48 +163,57 @@ public class DriveCommands {
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      DoubleSupplier rotationSupplier,
+      DoubleSupplier joystickRotSupplier,
+      DoubleSupplier visionRotSupplier,
       boolean humanOperated) {
 
     // Construct command
     return Commands.run(
-        () -> {
-          // Get linear velocity
-          Translation2d linearVelocity;
-          if (humanOperated) {
-            linearVelocity =
-                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
-          } else {
-            // divided by PI to slow it down, seems to work
-            double yVelocity = yController.calculate(rotationSupplier.getAsDouble() / Math.PI, 0);
-            linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
-          }
-          double omega = angleController.calculate(rotationSupplier.getAsDouble(), 0);
+            () -> {
+              boolean seesGamePiece = visionRotSupplier.getAsDouble() != 0.0;
+              LEDSubsystem.getInstance().setSeesGamePiece(seesGamePiece);
 
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega);
+              // Get linear velocity
+              Translation2d linearVelocity;
+              if (humanOperated) {
+                linearVelocity =
+                    getLinearVelocityFromJoysticks(
+                        xSupplier.getAsDouble(), ySupplier.getAsDouble());
+              } else {
+                // divided by PI to slow it down, seems to work
+                double yVelocity =
+                    yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
+                linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
+              }
+              double omega =
+                  angleController.calculate(
+                      visionRotSupplier.getAsDouble() + joystickRotSupplier.getAsDouble(), 0);
 
-          if (humanOperated) {
-            // field oriented (teleop)
-            boolean isFlipped =
-                DriverStation.getAlliance().isPresent()
-                    && DriverStation.getAlliance().get() == Alliance.Red;
-            drive.runVelocity(
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                    speeds,
-                    isFlipped
-                        ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                        : drive.getRotation()));
-          } else {
-            // robot oriented (auto)
-            drive.runVelocity(speeds);
-          }
-        },
-        drive);
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+
+              if (humanOperated) {
+                // field oriented (teleop)
+                boolean isFlipped =
+                    DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == Alliance.Red;
+                drive.runVelocity(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds,
+                        isFlipped
+                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                            : drive.getRotation()));
+              } else {
+                // robot oriented (auto)
+                drive.runVelocity(speeds);
+              }
+            },
+            drive)
+        .finallyDo(() -> LEDSubsystem.getInstance().setSeesGamePiece(false));
   }
 
   /** Robot relative drive command for precise reef faces aligning. */
