@@ -16,11 +16,13 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -109,12 +111,19 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
   private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
+  /** leftTrigger and button 1 false */
   private final Trigger m_algaeProcessorTrigger;
+  /** leftTrigger and button 1 true */
   private final Trigger m_algaeNetTrigger;
+  /** leftBumper and button 2 true */
   private final Trigger m_algaeReefTrigger;
+  /** left bumper and button 2 false */
   private final Trigger m_algaeFloorTrigger;
+  /** right trigger and button 2 true */
   private final Trigger m_manualTroughSuperStructureTrigger;
+  /** a and button 4 true */
   private final Trigger m_manualTroughScoreTrigger;
+  /** right trigger and button 4 false */
   private final Trigger m_automaticCoralScoreTrigger;
 
   // Dashboard inputs
@@ -390,6 +399,7 @@ public class RobotContainer {
                     true)));
 
     // SCORE CORAL
+    // right trigger and button 3 false
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
@@ -402,11 +412,15 @@ public class RobotContainer {
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // INTAKE ALGAE REEF
+
     m_algaeReefTrigger
         .whileTrue(
             new AutoIntakeAlgaeReefCommand(
                 m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
-        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+        .onFalse(
+            new ParallelDeadlineGroup(
+                new ResetSuperStructureCommand(m_drive, m_superStructure),
+                new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0)))));
 
     // INTAKE ALGAE FLOOR
     m_algaeFloorTrigger

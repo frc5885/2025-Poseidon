@@ -242,7 +242,8 @@ public class DriveCommands {
             () ->
                 xController.atSetpoint()
                     && yController.atSetpoint()
-                    && angleController.atSetpoint());
+                    && angleController.atSetpoint())
+        .finallyDo(drive::stop);
   }
 
   /**
