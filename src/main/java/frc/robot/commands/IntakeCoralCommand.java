@@ -32,6 +32,7 @@ public class IntakeCoralCommand extends Command {
   @Override
   public void execute() {
     m_collector.runIntake(12.0);
+    m_collector.runFeeder(12.0);
 
     // Simulate a coral being taken in
     if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {

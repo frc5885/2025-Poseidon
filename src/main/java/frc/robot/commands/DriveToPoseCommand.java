@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.AllianceFlipUtil;
 import java.util.function.Supplier;
 
 public class DriveToPoseCommand extends Command {
@@ -15,6 +16,7 @@ public class DriveToPoseCommand extends Command {
   private double m_distanceTolerance;
   private double m_rotationTolerance;
   private Command m_command;
+  private Pose2d flippedPose;
 
   private boolean distanceTooShort = false;
 
@@ -34,9 +36,9 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public void initialize() {
+    flippedPose = AllianceFlipUtil.apply(m_targetPose.get());
     // Pathplanner won't generate a path if the distance is less than 0.6m
-    if (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
-        < 0.61) {
+    if (m_drive.getPose().getTranslation().getDistance(flippedPose.getTranslation()) < 0.61) {
       distanceTooShort = true;
     } else {
       // need to add this or it never gets reset
@@ -58,9 +60,10 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
+
+    return (m_drive.getPose().getTranslation().getDistance(flippedPose.getTranslation())
                 < m_distanceTolerance
-            && m_drive.getPose().getRotation().minus(m_targetPose.get().getRotation()).getDegrees()
+            && m_drive.getPose().getRotation().minus(flippedPose.getRotation()).getDegrees()
                 < m_rotationTolerance)
         || distanceTooShort;
   }

@@ -4,6 +4,8 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -19,6 +21,10 @@ public class ScoreAlgaeProcessor extends SequentialCommandGroup {
   public ScoreAlgaeProcessor(Drive drive, SuperStructure superStructure, EndEffector endEffector) {
     addCommands(
         new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.SCORING_LINE_UP)),
+        drive.getDriveToPoseCommand(
+            () ->
+                FieldConstants.Processor.centerFace.transformBy(
+                    new Transform2d(-0.6, 0.0, new Rotation2d()))),
         new ParallelCommandGroup(
             new SuperStructureCommand(
                 superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR),

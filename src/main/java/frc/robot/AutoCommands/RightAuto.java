@@ -16,6 +16,7 @@ import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.photon.Vision;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 
@@ -23,7 +24,8 @@ import frc.robot.util.FieldConstants.ReefLevel;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class RightAuto extends SequentialCommandGroup {
-  Pose2d startIntakingPose = new Pose2d(2.6, 2.2, Rotation2d.fromRadians(0.85));
+  private Pose2d startIntakingPose = new Pose2d(2.6, 2.2, Rotation2d.fromRadians(0.85));
+  private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
   /** Creates a new RightAuto. */
   public RightAuto(
       Drive m_drive,
@@ -36,8 +38,9 @@ public class RightAuto extends SequentialCommandGroup {
         // setup for sim
         new InstantCommand(
             () -> {
+              startIntakingPose = AllianceFlipUtil.apply(startIntakingPose);
               if (Constants.kCurrentMode.equals(Mode.SIM)) {
-                m_drive.setPose(new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI)));
+                m_drive.setPose(AllianceFlipUtil.apply(initialPose));
                 ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(0.0);
               }
             }),
