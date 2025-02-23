@@ -63,7 +63,8 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                 drive,
                 () -> transitionPose2d,
                 DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance)),
+                DriveConstants.kRotationTolerance,
+                false)),
         DriveCommands.preciseChassisAlign(drive, () -> targetPose.get().toPose2d()),
         new ScoreCoralCommand(endEffector));
   }

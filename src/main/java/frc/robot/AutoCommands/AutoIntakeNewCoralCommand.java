@@ -41,7 +41,8 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
                 drive,
                 () -> startIntakingPose,
                 DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance),
+                DriveConstants.kRotationTolerance,
+                false),
             new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
                 .andThen(
                     new SuperStructureCommand(

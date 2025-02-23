@@ -17,6 +17,7 @@ public class DriveToPoseCommand extends Command {
   private double m_rotationTolerance;
   private Command m_command;
   private Pose2d flippedPose;
+  private boolean m_doNotFlip = false;
 
   private boolean distanceTooShort = false;
 
@@ -25,11 +26,13 @@ public class DriveToPoseCommand extends Command {
       Drive drive,
       Supplier<Pose2d> targetPose,
       double distanceToleranceMeters,
-      double rotationToleranceDegrees) {
+      double rotationToleranceDegrees,
+      boolean doNotFlip) {
     m_drive = drive;
     m_targetPose = targetPose;
     m_distanceTolerance = distanceToleranceMeters;
     m_rotationTolerance = rotationToleranceDegrees;
+    m_doNotFlip = doNotFlip;
 
     addRequirements(m_drive);
   }
@@ -44,7 +47,7 @@ public class DriveToPoseCommand extends Command {
       // need to add this or it never gets reset
       distanceTooShort = false;
     }
-    m_command = m_drive.getDriveToPoseCommand(m_targetPose);
+    m_command = m_drive.getDriveToPoseCommand(m_targetPose, m_doNotFlip);
     m_command.initialize();
   }
 
@@ -60,11 +63,26 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-
-    return (m_drive.getPose().getTranslation().getDistance(flippedPose.getTranslation())
-                < m_distanceTolerance
-            && m_drive.getPose().getRotation().minus(flippedPose.getRotation()).getDegrees()
-                < m_rotationTolerance)
-        || distanceTooShort;
+    boolean isFinished;
+    if (m_doNotFlip) {
+      isFinished =
+          (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
+                      < m_distanceTolerance
+                  && m_drive
+                          .getPose()
+                          .getRotation()
+                          .minus(m_targetPose.get().getRotation())
+                          .getDegrees()
+                      < m_rotationTolerance)
+              || distanceTooShort;
+    } else {
+      isFinished =
+          (m_drive.getPose().getTranslation().getDistance(flippedPose.getTranslation())
+                      < m_distanceTolerance
+                  && m_drive.getPose().getRotation().minus(flippedPose.getRotation()).getDegrees()
+                      < m_rotationTolerance)
+              || distanceTooShort;
+    }
+    return isFinished;
   }
 }

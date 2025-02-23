@@ -316,8 +316,18 @@ public class Drive extends SubsystemBase {
     return m_kinematics.toChassisSpeeds(getModuleStates());
   }
 
-  public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
-    return AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
+  /**
+   * if {@code doNotFlip} is true, the robot will not flip the path when generating a path to a
+   * pose.
+   *
+   * @param pose
+   * @param doNotFlip
+   * @return The command to drive to the specified pose.
+   */
+  public Command getDriveToPoseCommand(Supplier<Pose2d> pose, boolean doNotFlip) {
+    return doNotFlip
+        ? AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast)
+        : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
   }
 
   /** Returns the position of each module in radians. */
