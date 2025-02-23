@@ -4,6 +4,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.Logger;
 
 public class CoralEjector {
@@ -22,13 +24,16 @@ public class CoralEjector {
 
   public void periodic() {
     m_coralEjectorIO.updateInputs(m_inputs);
-    Logger.processInputs("EndEffector/CoralEjector", m_inputs);
-
     m_beamBreakIO.updateInputs(m_beamBreakInputs);
+    Logger.processInputs("EndEffector/CoralEjector", m_inputs);
     Logger.processInputs("EndEffector/CoralEjector/BeamBreak", m_beamBreakInputs);
 
     // Update alerts
     m_coralEjectorDisconnectedAlert.set(!m_inputs.coralEjectorConnected);
+
+    // Update game piece visualizer
+    GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
+    LEDSubsystem.getInstance().setHasGamePiece(m_beamBreakInputs.state);
   }
 
   public void runCoralEjector(double volts) {
@@ -39,11 +44,11 @@ public class CoralEjector {
     m_coralEjectorIO.setVoltage(0.0);
   }
 
-  public BeamBreakIO getBeamBreakIO() {
-    return m_beamBreakIO;
-  }
-
   public boolean isBeamBreakTriggered() {
     return m_beamBreakInputs.state;
+  }
+
+  public BeamBreakIO getBeamBreakIO() {
+    return m_beamBreakIO;
   }
 }

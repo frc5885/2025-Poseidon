@@ -7,18 +7,21 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.Collector.Collector;
+import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class IntakeCoralCommand extends Command {
   private Collector m_collector;
+  private EndEffector m_endEffector;
 
   /**
    * A command that intakes a coral (extends the intake, runs the intake, and retracts the intake).
    * Ends when the coral is collected.
    */
-  public IntakeCoralCommand(Collector collector) {
+  public IntakeCoralCommand(Collector collector, EndEffector endEffector) {
     m_collector = collector;
+    m_endEffector = endEffector;
 
     addRequirements(m_collector);
   }
@@ -35,9 +38,9 @@ public class IntakeCoralCommand extends Command {
     m_collector.runFeeder(12.0);
 
     // Simulate a coral being taken in
-    if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
+    if (m_endEffector.getCoralBeamBreakIO() instanceof BeamBreakIOSim) {
       if (m_collector.getMapleIntakeSim().getGamePiecesAmount() > 0) {
-        ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(0.5);
+        ((BeamBreakIOSim) m_endEffector.getCoralBeamBreakIO()).simulateGamePieceIntake(0.5);
         m_collector
             .getMapleIntakeSim()
             .obtainGamePieceFromIntake(); // remove the coral from the intake
@@ -53,8 +56,8 @@ public class IntakeCoralCommand extends Command {
 
     // Don't simulate a successful intake if the command was interrupted
     if (interrupted) {
-      if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-        ((BeamBreakIOSim) m_collector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
+      if (m_endEffector.getCoralBeamBreakIO() instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_endEffector.getCoralBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
       LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.IDLE);
     } else {
@@ -64,6 +67,6 @@ public class IntakeCoralCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return m_collector.isCollected();
+    return m_endEffector.isCoralHeld();
   }
 }

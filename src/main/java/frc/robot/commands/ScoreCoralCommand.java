@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIOSim;
-import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
@@ -16,14 +15,12 @@ import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class ScoreCoralCommand extends Command {
   private final EndEffector m_endEffector;
-  private final Collector m_collector;
   /**
    * A command that scores a coral. Ends when the coral exits the end effector and un-triggers the
    * beambreak.
    */
-  public ScoreCoralCommand(EndEffector endEffector, Collector collector) {
+  public ScoreCoralCommand(EndEffector endEffector) {
     m_endEffector = endEffector;
-    m_collector = collector;
 
     addRequirements(m_endEffector);
   }
@@ -31,8 +28,8 @@ public class ScoreCoralCommand extends Command {
   @Override
   public void initialize() {
     // Simulate a coral being scored
-    if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-      ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceOuttake(0.5);
+    if (m_endEffector.getCoralBeamBreakIO() instanceof BeamBreakIOSim) {
+      ((BeamBreakIOSim) m_endEffector.getCoralBeamBreakIO()).simulateGamePieceOuttake(0.5);
     }
     LEDSubsystem.getInstance().setStates(LEDStates.SCORED);
   }
@@ -48,8 +45,8 @@ public class ScoreCoralCommand extends Command {
 
     // Don't simulate a successful outtake if the command was interrupted
     if (interrupted) {
-      if (m_collector.getBeamBreakIO() instanceof BeamBreakIOSim) {
-        ((BeamBreakIOSim) m_collector.getBeamBreakIO()).cancelSimulatedGamePieceChange();
+      if (m_endEffector.getCoralBeamBreakIO() instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_endEffector.getCoralBeamBreakIO()).cancelSimulatedGamePieceChange();
       }
     } else {
       if (Constants.kCurrentMode != Mode.REAL) {
@@ -60,6 +57,6 @@ public class ScoreCoralCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return !m_collector.isCollected();
+    return !m_endEffector.isCoralHeld();
   }
 }

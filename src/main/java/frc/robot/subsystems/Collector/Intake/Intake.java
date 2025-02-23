@@ -4,8 +4,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
-import frc.robot.subsystems.LEDS.LEDSubsystem;
-import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.Logger;
 
@@ -39,8 +37,8 @@ public class Intake {
     m_motor2DisconnectedAlert.set(!m_intakeInputs.motor2Connected);
 
     // Update game piece visualizer
-    GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
-    LEDSubsystem.getInstance().setHasGamePiece(m_beamBreakInputs.state);
+    // GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
+    // LEDSubsystem.getInstance().setHasGamePiece(m_beamBreakInputs.state);
   }
 
   public void runIntake(double volts) {

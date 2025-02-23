@@ -21,8 +21,10 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -39,6 +41,7 @@ import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -60,6 +63,8 @@ import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
 import frc.robot.subsystems.EndEffector.EndEffectorConstants.CoralEjectorConstants;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
@@ -401,7 +406,7 @@ public class RobotContainer {
         // when we test on the robot
         .whileTrue(
             new ParallelDeadlineGroup(
-                new IntakeCoralCommand(m_collector),
+                new IntakeCoralCommand(m_collector, m_endEffector),
                 DriveCommands.driveToGamePiece(
                     m_drive,
                     () -> -m_driverController.getLeftY(),
@@ -419,24 +424,24 @@ public class RobotContainer {
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
-                    m_drive,
-                    m_superStructure,
-                    m_endEffector,
-                    m_collector,
-                    m_operatorPanel::getTargetPose)
-                .unless(() -> !m_collector.isCollected()))
+                    m_drive, m_superStructure, m_endEffector, m_operatorPanel::getTargetPose)
+                .unless(() -> !m_endEffector.isCoralHeld()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // INTAKE ALGAE REEF
-
     m_algaeReefTrigger
         .whileTrue(
             new AutoIntakeAlgaeReefCommand(
                 m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
         .onFalse(
-            new ParallelDeadlineGroup(
-                new ResetSuperStructureCommand(m_drive, m_superStructure),
-                new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0)))));
+            new SequentialCommandGroup(
+                new InstantCommand(
+                    () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
+                new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                    .deadlineFor(
+                        new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0)))),
+                new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
+                new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 
     // INTAKE ALGAE FLOOR
     m_algaeFloorTrigger
@@ -469,7 +474,7 @@ public class RobotContainer {
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
 
     // MANUAL CORAL SCORE
-    m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector, m_collector));
+    m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^

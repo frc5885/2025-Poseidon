@@ -28,11 +28,11 @@ public class RightAuto extends SequentialCommandGroup {
   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
   /** Creates a new RightAuto. */
   public RightAuto(
-      Drive m_drive,
-      SuperStructure m_superStructure,
-      EndEffector m_endEffector,
-      Collector m_collector,
-      Vision m_vision) {
+      Drive drive,
+      SuperStructure superStructure,
+      EndEffector endEffector,
+      Collector collector,
+      Vision vision) {
 
     addCommands(
         // setup for sim
@@ -40,47 +40,43 @@ public class RightAuto extends SequentialCommandGroup {
             () -> {
               startIntakingPose = AllianceFlipUtil.apply(startIntakingPose);
               if (Constants.kCurrentMode.equals(Mode.SIM)) {
-                m_drive.setPose(AllianceFlipUtil.apply(initialPose));
-                ((BeamBreakIOSim) m_collector.getBeamBreakIO()).simulateGamePieceIntake(0.0);
+                drive.setPose(AllianceFlipUtil.apply(initialPose));
+                ((BeamBreakIOSim) endEffector.getCoralBeamBreakIO()).simulateGamePieceIntake(0.0);
               }
             }),
 
         // score first coral
         new AutoScoreCoralAtBranchCommand(
-            m_drive,
-            m_superStructure,
-            m_endEffector,
-            m_collector,
+            drive,
+            superStructure,
+            endEffector,
             () -> FieldConstants.Reef.branchPositions.get(10).get(ReefLevel.L4)),
         new AutoIntakeNewCoralCommand(
-            m_drive, m_superStructure, m_collector, m_vision, startIntakingPose),
+            drive, superStructure, collector, endEffector, vision, startIntakingPose),
 
         // score second coral
         new AutoScoreCoralAtBranchCommand(
-            m_drive,
-            m_superStructure,
-            m_endEffector,
-            m_collector,
+            drive,
+            superStructure,
+            endEffector,
             () -> FieldConstants.Reef.branchPositions.get(11).get(ReefLevel.L4)),
         new AutoIntakeNewCoralCommand(
-            m_drive, m_superStructure, m_collector, m_vision, startIntakingPose),
+            drive, superStructure, collector, endEffector, vision, startIntakingPose),
 
         // score third coral
         new AutoScoreCoralAtBranchCommand(
-            m_drive,
-            m_superStructure,
-            m_endEffector,
-            m_collector,
+            drive,
+            superStructure,
+            endEffector,
             () -> FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)),
         new AutoIntakeNewCoralCommand(
-            m_drive, m_superStructure, m_collector, m_vision, startIntakingPose),
+            drive, superStructure, collector, endEffector, vision, startIntakingPose),
 
         // score fourth coral
         new AutoScoreCoralAtBranchCommand(
-            m_drive,
-            m_superStructure,
-            m_endEffector,
-            m_collector,
+            drive,
+            superStructure,
+            endEffector,
             () -> FieldConstants.Reef.branchPositions.get(1).get(ReefLevel.L4)));
   }
 }
