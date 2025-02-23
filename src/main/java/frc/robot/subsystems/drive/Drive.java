@@ -317,8 +317,7 @@ public class Drive extends SubsystemBase {
   }
 
   public Command getDriveToPoseCommand(Supplier<Pose2d> pose) {
-    Logger.recordOutput("Odometry/TargetPose", pose.get());
-    return AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast);
+    return AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
   }
 
   /** Returns the position of each module in radians. */
