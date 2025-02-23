@@ -30,13 +30,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.AllianceFlipUtil;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
@@ -222,8 +222,7 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
-              Pose2d targetPoseValue = targetPose.get();
-              Logger.recordOutput("Odometry/TargetPose", targetPoseValue);
+              Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
               double vxMetersPerSecond =
                   xController.calculate(drive.getPose().getX(), targetPoseValue.getX());
               double vyMetersPerSecond =

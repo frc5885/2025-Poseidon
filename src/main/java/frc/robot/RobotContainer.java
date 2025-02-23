@@ -30,9 +30,11 @@ import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.EjectIntakeCommand;
 import frc.robot.commands.IntakeAlgaeCommand;
 import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
+import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
@@ -407,6 +409,10 @@ public class RobotContainer {
                     () -> -m_driverController.getRightX(),
                     () -> m_vision.getTargetX(2).getRadians(),
                     true)));
+
+    m_driverController.b().whileTrue(new EjectIntakeCommand(m_collector));
+
+    m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
     // SCORE CORAL
     // right trigger and button 3 false
