@@ -47,10 +47,7 @@ public class OperatorPanel {
   }
 
   public BooleanSupplier getNegatedOverrideSwitch(int index) {
-    return () -> {
-      System.out.println(!getOverrideSwitch(index).getAsBoolean());
-      return !getOverrideSwitch(index).getAsBoolean();
-    };
+    return () -> !getOverrideSwitch(index).getAsBoolean();
   }
 
   /** Returns a trigger for an switch (0-7 from left to right). */

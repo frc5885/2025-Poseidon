@@ -10,6 +10,7 @@ package frc.robot.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -33,7 +34,8 @@ public class FieldConstants {
 
   // Add static initializer block
   static {
-    AprilTagFieldLayout layout = AprilTagLayoutType.OFFICIAL.getLayout();
+    // this fixed the crash when doing algae first, don't know why
+    AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
     fieldLength = layout.getFieldLength();
     fieldWidth = layout.getFieldWidth();
   }
@@ -43,13 +45,17 @@ public class FieldConstants {
   public static final double algaeDiameter = Units.inchesToMeters(16);
 
   public static class Processor {
-    public static final Pose2d centerFace =
-        AprilTagLayoutType.OFFICIAL
-            .getLayout()
-            .getTagPose(16)
-            .get()
-            .toPose2d()
-            .plus(new Transform2d(0.9, 0.0, new Rotation2d(Math.PI)));
+    public static final Pose2d centerFace;
+
+    static {
+      var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
+      centerFace =
+          aprilTagLayout
+              .getTagPose(16)
+              .get()
+              .toPose2d()
+              .plus(new Transform2d(0.9, 0.0, new Rotation2d(Math.PI)));
+    }
   }
 
   public static class Barge {
