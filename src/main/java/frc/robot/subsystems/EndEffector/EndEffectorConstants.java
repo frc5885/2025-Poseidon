@@ -6,6 +6,7 @@ public class EndEffectorConstants {
     public static final boolean kInverted = false;
     public static final int kCurrentLimit = 40;
     public static final double kGearRatio = 1.0;
+    public static final int kBeamBreakId = 2;
   }
 
   public static class AlgaeClawConstants {
