@@ -14,6 +14,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.AllianceFlipUtil;
 
 public class ScoreAlgaeNet extends SequentialCommandGroup {
   public ScoreAlgaeNet(Drive drive, SuperStructure superStructure, EndEffector endEffector) {
@@ -23,12 +24,16 @@ public class ScoreAlgaeNet extends SequentialCommandGroup {
         // TODO requires elevator stability
         new DriveToPoseCommand(
             drive,
-            () -> new Pose2d(7.0, drive.getPose().getY(), new Rotation2d()),
+            () ->
+                new Pose2d(7.0, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d()),
             DriveConstants.kDistanceTolerance,
-            DriveConstants.kRotationTolerance),
+            DriveConstants.kRotationTolerance,
+            false),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
         DriveCommands.preciseChassisAlign(
-            drive, () -> new Pose2d(7.8, drive.getPose().getY(), new Rotation2d())),
+            drive,
+            () ->
+                new Pose2d(7.8, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d())),
         new ScoreAlgaeCommand(endEffector));
   }
 }
