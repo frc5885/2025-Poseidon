@@ -60,6 +60,9 @@ public class SuperStructure extends SubsystemBase {
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
 
+  private Runnable m_extendIntakeCmd = null;
+  private Runnable m_retractIntakeCmd = null;
+
   public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
@@ -114,6 +117,11 @@ public class SuperStructure extends SubsystemBase {
   @AutoLogOutput(key = "SuperStructure/Goal")
   public SuperStructureState getSuperStructureGoal() {
     return m_state;
+  }
+
+  public void setIntakeFunctions(Runnable extendIntake, Runnable retractIntake) {
+    m_extendIntakeCmd = extendIntake;
+    m_retractIntakeCmd = retractIntake;
   }
 
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
@@ -189,6 +197,24 @@ public class SuperStructure extends SubsystemBase {
   }
 
   private Command setSingleState(SuperStructureState goal) {
+    // If goal is either STOWING or UNSTOWING, run the intake commands around the state command.
+    if (goal == SuperStructureState.STOWING || goal == SuperStructureState.UNSTOWING) {
+      return Commands.sequence(
+          runIfNotNull(m_extendIntakeCmd),
+          createStateCommand(goal),
+          runIfNotNull(m_retractIntakeCmd));
+    }
+    // Otherwise, just run the state command.
+    return createStateCommand(goal);
+  }
+
+  // Helper that returns a runOnce command if the provided command is non-null, or a no-op command.
+  private Command runIfNotNull(Runnable cmd) {
+    return cmd != null ? Commands.runOnce(cmd::run) : Commands.none();
+  }
+
+  // Creates a command that sets the elevator, arm, and wrist to the specified goal state.
+  private Command createStateCommand(SuperStructureState goal) {
     return Commands.run(
             () -> {
               m_elevator.setGoal(goal.elevatorGoal);
@@ -196,11 +222,8 @@ public class SuperStructure extends SubsystemBase {
               m_wrist.setGoal(goal.wristGoal);
             },
             this)
-        .until(() -> isGoalAchieved())
-        .finallyDo(
-            () -> {
-              m_state = goal;
-            });
+        .until(this::isGoalAchieved)
+        .finallyDo(() -> m_state = goal);
   }
 
   // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal

@@ -269,6 +269,8 @@ public class RobotContainer {
     }
 
     m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
+    m_superStructure.setIntakeFunctions(
+        () -> m_collector.extendIntake(), () -> m_collector.retractIntake());
 
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
