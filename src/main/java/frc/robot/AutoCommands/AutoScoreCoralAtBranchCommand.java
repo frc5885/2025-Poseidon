@@ -11,7 +11,6 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
-import frc.robot.subsystems.Collector.Collector;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
@@ -38,7 +37,6 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
       Drive drive,
       SuperStructure superStructure,
       EndEffector endEffector,
-      Collector collector,
       Supplier<Pose3d> targetPose) {
 
     addCommands(
@@ -65,8 +63,9 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                 drive,
                 () -> transitionPose2d,
                 DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance)),
+                DriveConstants.kRotationTolerance,
+                false)),
         DriveCommands.preciseChassisAlign(drive, () -> targetPose.get().toPose2d()),
-        new ScoreCoralCommand(endEffector, collector));
+        new ScoreCoralCommand(endEffector));
   }
 }

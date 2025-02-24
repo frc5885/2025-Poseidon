@@ -24,7 +24,8 @@ public class ScoreAlgaeProcessor extends SequentialCommandGroup {
         drive.getDriveToPoseCommand(
             () ->
                 FieldConstants.Processor.centerFace.transformBy(
-                    new Transform2d(-0.6, 0.0, new Rotation2d()))),
+                    new Transform2d(-0.6, 0.0, new Rotation2d())),
+            false),
         new ParallelCommandGroup(
             new SuperStructureCommand(
                 superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR),

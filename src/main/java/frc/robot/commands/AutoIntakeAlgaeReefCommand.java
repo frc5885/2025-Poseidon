@@ -17,13 +17,14 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
-  private final double kTransitionDistance = 0.3;
+  private final double kTransitionDistance = 0.4;
   private Pose2d targetPose;
   private Pose2d transitionPose2d;
   private Supplier<SuperStructureState> stateSupplier;
@@ -42,7 +43,12 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
         // Fake initializer to calculate target pose and state
         new InstantCommand(
             () -> {
-              targetPose = drivePose.get().nearest(List.of(FieldConstants.Reef.centerFaces));
+              List<Pose2d> faces =
+                  List.of(
+                      IntStream.range(0, FieldConstants.Reef.centerFaces.length)
+                          .mapToObj(i -> AllianceFlipUtil.apply(FieldConstants.Reef.centerFaces[i]))
+                          .toArray(Pose2d[]::new));
+              targetPose = drivePose.get().nearest(faces);
               transitionPose2d =
                   targetPose.transformBy(
                       new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
@@ -56,8 +62,9 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
                 drive,
                 () -> transitionPose2d,
                 DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance)),
-        DriveCommands.preciseChassisAlign(drive, () -> targetPose),
+                DriveConstants.kRotationTolerance,
+                true)),
+        DriveCommands.preciseChassisAlign(drive, () -> AllianceFlipUtil.apply(targetPose)),
         new IntakeAlgaeCommand(endEffector));
   }
 

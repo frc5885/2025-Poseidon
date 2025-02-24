@@ -12,9 +12,12 @@ public class EndEffector extends SubsystemBase {
   private CoralEjector m_coralEjector;
 
   public EndEffector(
-      AlgaeClawIO algaeClawIO, CoralEjectorIO coralEjectorIO, BeamBreakIO beamBreakIO) {
-    m_algaeClaw = new AlgaeClaw(algaeClawIO, beamBreakIO);
-    m_coralEjector = new CoralEjector(coralEjectorIO);
+      AlgaeClawIO algaeClawIO,
+      CoralEjectorIO coralEjectorIO,
+      BeamBreakIO beamBreakAlgaeIO,
+      BeamBreakIO beamBreakCoralIO) {
+    m_algaeClaw = new AlgaeClaw(algaeClawIO, beamBreakAlgaeIO);
+    m_coralEjector = new CoralEjector(coralEjectorIO, beamBreakCoralIO);
   }
 
   @Override
@@ -37,6 +40,14 @@ public class EndEffector extends SubsystemBase {
 
   public BeamBreakIO getAlgaeBeamBreakIO() {
     return m_algaeClaw.getBeamBreakIO();
+  }
+
+  public boolean isCoralHeld() {
+    return m_coralEjector.isBeamBreakTriggered();
+  }
+
+  public BeamBreakIO getCoralBeamBreakIO() {
+    return m_coralEjector.getBeamBreakIO();
   }
 
   public void stopCoralEjector() {

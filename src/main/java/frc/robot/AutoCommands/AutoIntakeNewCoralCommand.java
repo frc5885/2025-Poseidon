@@ -10,6 +10,7 @@ import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.subsystems.Collector.Collector;
+import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
@@ -30,6 +31,7 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
       Drive drive,
       SuperStructure superStructure,
       Collector collector,
+      EndEffector endEffector,
       Vision vision,
       Pose2d startIntakingPose) {
 
@@ -39,13 +41,14 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
                 drive,
                 () -> startIntakingPose,
                 DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance),
+                DriveConstants.kRotationTolerance,
+                false),
             new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
                 .andThen(
                     new SuperStructureCommand(
                         superStructure, () -> SuperStructureState.INTAKE_CORAL))),
         new ParallelDeadlineGroup(
-            new IntakeCoralCommand(collector),
+            new IntakeCoralCommand(collector, endEffector),
             DriveCommands.driveToGamePiece(
                 drive,
                 TunableDouble.register("Drive/AimingSpeed", kDriveSpeed),
