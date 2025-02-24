@@ -36,25 +36,29 @@ public class AutoIntakeNewCoralCommand extends SequentialCommandGroup {
       Pose2d startIntakingPose) {
 
     addCommands(
-        new ParallelCommandGroup(
-            new DriveToPoseCommand(
-                drive,
-                () -> startIntakingPose,
-                DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance,
-                false),
-            new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
-                .andThen(
-                    new SuperStructureCommand(
-                        superStructure, () -> SuperStructureState.INTAKE_CORAL))),
         new ParallelDeadlineGroup(
             new IntakeCoralCommand(collector, endEffector),
-            DriveCommands.driveToGamePiece(
-                drive,
-                TunableDouble.register("Drive/AimingSpeed", kDriveSpeed),
-                () -> 0.0,
-                () -> 0.0,
-                () -> vision.getTargetX(2).getRadians(),
-                false)));
+            new ParallelCommandGroup(
+                // Start WaitUntilFarFrom immediately, then lower superstructure as soon as it
+                // finishes.
+                new WaitUntilFarFromCommand(drive::getPose, kDistanceBeforeLowerSuperStructure)
+                    .andThen(
+                        new SuperStructureCommand(
+                            superStructure, () -> SuperStructureState.INTAKE_CORAL)),
+                // Sequentially drive to the starting pose then drive to the game piece.
+                new SequentialCommandGroup(
+                    new DriveToPoseCommand(
+                        drive,
+                        () -> startIntakingPose,
+                        DriveConstants.kDistanceTolerance,
+                        DriveConstants.kRotationTolerance,
+                        false),
+                    DriveCommands.driveToGamePiece(
+                        drive,
+                        TunableDouble.register("Drive/AimingSpeed", kDriveSpeed),
+                        () -> 0.0,
+                        () -> 0.0,
+                        () -> vision.getTargetX(2).getRadians(),
+                        false)))));
   }
 }

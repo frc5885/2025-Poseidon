@@ -13,14 +13,20 @@
 
 package frc.robot.commands;
 
+import static frc.robot.subsystems.drive.DriveConstants.kMaxAccelerationMetersPerSecSq;
+import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
+import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
+import static frc.robot.subsystems.drive.DriveConstants.kMaxSpeedMetersPerSec;
+
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -37,28 +43,44 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 2.0;
   private static final double kAngleKd = 0.2;
-  private static final double kTranslateKp = 3.0;
-  private static final double kTranslateKd = 0.5;
+  private static final double kTranslateKp = 5.0;
+  private static final double kTranslateKd = 0.8;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
 
   // Create PID controllers
-  private static PIDController angleController;
-  private static PIDController xController;
-  private static PIDController yController;
+  private static ProfiledPIDController angleController;
+  private static ProfiledPIDController xController;
+  private static ProfiledPIDController yController;
   // Static initialization block
   static {
-    angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
+    angleController =
+        new ProfiledPIDController(
+            kAngleKp,
+            0.0,
+            kAngleKd,
+            new Constraints(kMaxAngularSpeedRadiansPerSec, kMaxAngularAccelerationRadiansPerSecSq));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
-    xController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
-    yController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
+    xController =
+        new ProfiledPIDController(
+            kTranslateKp,
+            0.0,
+            kTranslateKd,
+            new Constraints(kMaxSpeedMetersPerSec, kMaxAccelerationMetersPerSecSq));
+    yController =
+        new ProfiledPIDController(
+            kTranslateKp,
+            0.0,
+            kTranslateKd,
+            new Constraints(kMaxSpeedMetersPerSec, kMaxAccelerationMetersPerSecSq));
   }
 
   private DriveCommands() {}
@@ -129,33 +151,34 @@ public class DriveCommands {
 
     // Construct command
     return Commands.run(
-        () -> {
-          // Get linear velocity
-          Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+            () -> {
+              // Get linear velocity
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-          // Calculate angular speed
-          double omega =
-              angleController.calculate(
-                  drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+              // Calculate angular speed
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
 
-          // Convert to field relative speeds & send command
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega);
-          boolean isFlipped =
-              DriverStation.getAlliance().isPresent()
-                  && DriverStation.getAlliance().get() == Alliance.Red;
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds,
-                  isFlipped
-                      ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                      : drive.getRotation()));
-        },
-        drive);
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+              boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      isFlipped
+                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                          : drive.getRotation()));
+            },
+            drive)
+        .beforeStarting(() -> resetAngleController(drive));
   }
 
   /** Robot relative drive command using PID for angular control. */
@@ -182,8 +205,8 @@ public class DriveCommands {
               } else {
                 // divided by PI to slow it down, seems to work
                 double yVelocity =
-                    yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
-                linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
+                    yController.calculate(-visionRotSupplier.getAsDouble() / Math.PI, 0);
+                linearVelocity = new Translation2d(xSupplier.getAsDouble(), yVelocity);
               }
               double omega =
                   angleController.calculate(
@@ -213,6 +236,7 @@ public class DriveCommands {
               }
             },
             drive)
+        .beforeStarting(() -> zeroAllControllers())
         .finallyDo(() -> LEDSubsystem.getInstance().setSeesGamePiece(false));
   }
 
@@ -237,11 +261,8 @@ public class DriveCommands {
               drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
             },
             drive)
-        .until(
-            () ->
-                xController.atSetpoint()
-                    && yController.atSetpoint()
-                    && angleController.atSetpoint())
+        .until(() -> xController.atGoal() && yController.atGoal() && angleController.atGoal())
+        .beforeStarting(() -> resetAllControllers(drive))
         .finallyDo(drive::stop);
   }
 
@@ -432,5 +453,23 @@ public class DriveCommands {
   private static class MaxTurnVelocityState {
     // Array for 4 modules. Initialized to 0.
     public double[] maxVelocities = new double[4];
+  }
+
+  private static void resetAngleController(Drive drive) {
+    angleController.reset(
+        drive.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
+  }
+
+  private static void resetAllControllers(Drive drive) {
+    angleController.reset(
+        drive.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
+    xController.reset(drive.getPose().getX(), drive.getChassisSpeeds().vxMetersPerSecond);
+    yController.reset(drive.getPose().getY(), drive.getChassisSpeeds().vyMetersPerSecond);
+  }
+
+  private static void zeroAllControllers() {
+    angleController.reset(0.0);
+    xController.reset(0.0);
+    yController.reset(0.0);
   }
 }

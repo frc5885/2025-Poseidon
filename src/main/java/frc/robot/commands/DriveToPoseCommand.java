@@ -63,26 +63,28 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    boolean isFinished;
-    if (m_doNotFlip) {
-      isFinished =
-          (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
-                      < m_distanceTolerance
-                  && m_drive
-                          .getPose()
-                          .getRotation()
-                          .minus(m_targetPose.get().getRotation())
-                          .getDegrees()
-                      < m_rotationTolerance)
-              || distanceTooShort;
-    } else {
-      isFinished =
-          (m_drive.getPose().getTranslation().getDistance(flippedPose.getTranslation())
-                      < m_distanceTolerance
-                  && m_drive.getPose().getRotation().minus(flippedPose.getRotation()).getDegrees()
-                      < m_rotationTolerance)
-              || distanceTooShort;
-    }
-    return isFinished;
+    // boolean isFinished;
+    // if (m_doNotFlip) {
+    //   isFinished =
+    //       (m_drive.getPose().getTranslation().getDistance(m_targetPose.get().getTranslation())
+    //                   < m_distanceTolerance
+    //               && m_drive
+    //                       .getPose()
+    //                       .getRotation()
+    //                       .minus(m_targetPose.get().getRotation())
+    //                       .getDegrees()
+    //                   < m_rotationTolerance)
+    //           || distanceTooShort;
+    // } else {
+    //   isFinished =
+    //       (m_drive.getPose().getTranslation().getDistance(flippedPose.getTranslation())
+    //                   < m_distanceTolerance
+    //               &&
+    // m_drive.getPose().getRotation().minus(flippedPose.getRotation()).getDegrees()
+    //                   < m_rotationTolerance)
+    //           || distanceTooShort;
+    // }
+    // return isFinished;
+    return m_command.isFinished();
   }
 }
