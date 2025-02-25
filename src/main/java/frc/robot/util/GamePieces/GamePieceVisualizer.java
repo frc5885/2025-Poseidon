@@ -78,7 +78,6 @@ public class GamePieceVisualizer {
   public static void respawnCoral() {
     List<Pose2d> basePositions = CoralTargetModel.getCoralPositions();
     for (int i = 0; i < basePositions.size(); i++) {
-      Logger.recordOutput("Respawn", i);
       Pose2d coralPose = basePositions.get(i);
       boolean found =
           SimulatedArena.getInstance().getGamePiecesByType("Coral").stream()
@@ -92,7 +91,6 @@ public class GamePieceVisualizer {
         // Generate a new candidate for the missing coral using the CoralTargetModel generation
         List<Pose2d> newPositions = CoralTargetModel.getCoralPositions();
         Pose2d newRespawnPose = newPositions.get(i);
-        Logger.recordOutput("Respawn", newRespawnPose);
         Commands.waitSeconds(3)
             .andThen(
                 () ->
