@@ -77,10 +77,10 @@ public class SuperStructureConstants {
     public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = 100; // TBD
+    public static final double kArmMaxVelocity = 6.0; // from sim, TBD
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = 100; // TBD
-    public static final double kArmMotorReduction = 26.2; // real
+    public static final double kArmMaxAcceleration = 6.5; // from sim, TBD
+    public static final double kArmMotorReduction = 26.2 * 7.0; // real
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec
@@ -92,8 +92,8 @@ public class SuperStructureConstants {
     public static final double kArmKp = 0.0;
     public static final double kArmKd = 0.0;
 
-    public static final double kArmSimKv = 4.7706;
-    public static final double kArmSimKg = 2.6085;
+    public static final double kArmSimKv = 1.887;
+    public static final double kArmSimKg = 2.575;
     public static final double kArmSimKp = 1.0;
     public static final double kArmSimKd = 0.0;
 
@@ -125,9 +125,9 @@ public class SuperStructureConstants {
     public static final double kWristMaxAngleRads = Units.degreesToRadians(180);
 
     // In Rad/Sec
-    public static final double kWristMaxVelocity = 100; // TBD
+    public static final double kWristMaxVelocity = 1.86; // from sim, TBD
     // In Rad/SecSq
-    public static final double kWristMaxAcceleration = 100; // TBD
+    public static final double kWristMaxAcceleration = 3.1; // from sim, TBD
     public static final double kWristMotorReduction = 116.67; // real
     // Motor Rotations -> Wrist Radians
     public static final double kWristEncoderPositionFactor = 2 * Math.PI / kWristMotorReduction;
@@ -141,8 +141,8 @@ public class SuperStructureConstants {
     public static final double kWristKp = 0.0;
     public static final double kWristKd = 0.0;
 
-    public static final double kWristSimKv = 0.85;
-    public static final double kWristSimKg = 5.0;
+    public static final double kWristSimKv = 1.2031;
+    public static final double kWristSimKg = 2.3423;
     public static final double kWristSimKp = 1.0;
     public static final double kWristSimKd = 2.0;
 

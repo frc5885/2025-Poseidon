@@ -153,8 +153,8 @@ public class Arm {
     m_sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                null,
-                null,
+                Volts.of(0.7).per(Second),
+                Volts.of(5),
                 null,
                 (state) ->
                     Logger.recordOutput("SuperStructure/Arm/ArmSysIDState", state.toString())),

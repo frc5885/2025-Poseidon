@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -396,13 +395,20 @@ public class RobotContainer {
     //             .ignoringDisable(true));
 
     // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
-    m_driverController
-        .y()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runElevatorOpenLoop(12),
-                () -> m_superStructure.runElevatorOpenLoop(0),
-                m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runWristOpenLoop(12),
+    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runWristOpenLoop(-12),
+    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             m_superStructure));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
