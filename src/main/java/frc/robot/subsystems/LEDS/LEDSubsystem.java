@@ -31,7 +31,8 @@ public class LEDSubsystem {
   private static final int kLength = 60;
   private static final int kLEDPort = 0;
 
-  @Setter private boolean hasGamePiece = false;
+  @Setter @Getter private boolean coralHeld = false;
+  @Setter @Getter private boolean algaeHeld = false;
   @Setter private boolean seesGamePiece = false;
   @Setter private boolean isPhotonDied = false;
 
@@ -56,11 +57,11 @@ public class LEDSubsystem {
 
   public void setStates(LEDStates newState) {
     if (!DriverStation.isAutonomous() || newState == LEDStates.AUTO) {
-      this.states = newState;
-      if (newState == LEDStates.IDLE && hasGamePiece) {
-        this.states = LEDStates.HOLDING_PIECE;
+      states = newState;
+      if (newState == LEDStates.IDLE && (coralHeld || algaeHeld)) {
+        states = LEDStates.HOLDING_PIECE;
       } else {
-        this.states = newState;
+        states = newState;
       }
     }
   }
@@ -78,7 +79,7 @@ public class LEDSubsystem {
         setStates(LEDStates.INTAKE_RUNNING);
       }
 
-      if (states == LEDStates.SCORED && !hasGamePiece) {
+      if (states == LEDStates.SCORED && (!coralHeld || !algaeHeld)) {
         states = LEDStates.RESETTING_SUPERSTRUCTURE;
       }
     }

@@ -33,7 +33,7 @@ public class CoralEjector {
 
     // Update game piece visualizer
     GamePieceVisualizer.setHasCoral(m_beamBreakInputs.state);
-    LEDSubsystem.getInstance().setHasGamePiece(m_beamBreakInputs.state);
+    LEDSubsystem.getInstance().setCoralHeld(m_beamBreakInputs.state);
   }
 
   public void runCoralEjector(double volts) {

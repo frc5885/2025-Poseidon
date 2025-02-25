@@ -99,6 +99,7 @@ public class SuperStructureConstants {
 
     @AllArgsConstructor
     public static enum ArmGoals {
+      IDLE(TunableDouble.register("Arm/IDLE", 50.0)),
       STOW(() -> 90.0),
       INTAKE(() -> 0.0),
       REEF(TunableDouble.register("Arm/REEF", 45.0)),
