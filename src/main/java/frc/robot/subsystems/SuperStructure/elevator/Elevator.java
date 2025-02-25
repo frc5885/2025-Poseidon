@@ -82,9 +82,8 @@ public class Elevator {
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
     // TODO comment this out for SysId
-    // runElevatorSetpoint(
-    //     m_elevatorGoal != null ? m_elevatorGoal.setpointMeters.getAsDouble() :
-    // getPositionMeters());
+    runElevatorSetpoint(
+        m_elevatorGoal != null ? m_elevatorGoal.setpointMeters.getAsDouble() : getPositionMeters());
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);

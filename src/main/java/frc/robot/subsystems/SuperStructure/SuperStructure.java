@@ -270,6 +270,18 @@ public class SuperStructure extends SubsystemBase {
     return m_wrist.getSysIdDynamic(direction);
   }
 
+  public void runElevatorOpenLoop(double voltage) {
+    m_elevator.runElevatorOpenLoop(voltage);
+  }
+
+  public void runArmOpenLoop(double voltage) {
+    m_arm.runArmOpenLoop(voltage);
+  }
+
+  public void runWristOpenLoop(double voltage) {
+    m_wrist.runWristOpenLoop(voltage);
+  }
+
   private void visualizationSetup() {
     m_canvas = new LoggedMechanism2d(m_canvasWidth, 3.0);
     m_elevatorRoot =
