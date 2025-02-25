@@ -12,9 +12,9 @@ public class SuperStructureConstants {
     public static final int kElevatorSparkId2 = 41;
     public static final boolean kElevatorM1Inverted = false;
     public static final boolean kElevatorM2Inverted = !kElevatorM1Inverted;
-    public static final int kElevatorMotorCurrentLimit = 40;
+    public static final int kElevatorMotorCurrentLimit = 20;
 
-    public static final double kElevatorMassKg = 4.0;
+    public static final double kElevatorMassKg = 12.0; // from CAD, elevator + arm + wrist
     public static final double kElevatorStartingPositionMeters = 0.0;
     public static final double kElevatorMinHeightMeters = 0.0;
     public static final double kElevatorMaxHeightMeters = Units.inchesToMeters(56.625);
@@ -25,11 +25,11 @@ public class SuperStructureConstants {
         new Translation2d(Units.inchesToMeters(9.5), 0.0);
 
     // In Meters/Sec
-    public static final double kElevatorMaxVelocity = 1.54;
+    public static final double kElevatorMaxVelocity = 100; // TBD
     // In Meters/SecSq
-    public static final double kElevatorMaxAcceleration = 29;
-    public static final double kElevatorMotorReduction = 10.0;
-    public static final double kElevatorWheelRadiusMeters = Units.inchesToMeters(2.0);
+    public static final double kElevatorMaxAcceleration = 100; // TBD
+    public static final double kElevatorMotorReduction = 35.0; // real
+    public static final double kElevatorWheelRadiusMeters = 0.045; // real
     // Motor Rotations -> Elevator Meters
     public static final double kElevatorEncoderPositionFactor =
         Math.PI * 2 * kElevatorWheelRadiusMeters / kElevatorMotorReduction;
@@ -67,18 +67,20 @@ public class SuperStructureConstants {
   public static class ArmConstants {
     public static final int kArmSparkId = 42;
     public static final boolean kArmInverted = false;
-    public static final int kArmMotorCurrentLimit = 40;
+    public static final int kArmMotorCurrentLimit = 20;
 
     public static final double kArmLengthMeters = Units.inchesToMeters(14.0);
+    public static final double kArmMOI_kgm2 =
+        (0.442 + 1.404) / 2.0; // with gripper in vs out, average for approximation
     public static final double kArmStartingPositionRadians = Units.degreesToRadians(90);
     public static final double kArmMinAngleRads = Units.degreesToRadians(-45);
     public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = Units.degreesToRadians(2500.0);
+    public static final double kArmMaxVelocity = 100; // TBD
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = Units.degreesToRadians(5000.0);
-    public static final double kArmMotorReduction = 240.0;
+    public static final double kArmMaxAcceleration = 100; // TBD
+    public static final double kArmMotorReduction = 26.2; // real
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec
@@ -112,9 +114,10 @@ public class SuperStructureConstants {
   public static class WristConstants {
     public static final int kWristSparkId = 43;
     public static final boolean kWristInverted = false;
-    public static final int kWristMotorCurrentLimit = 40;
+    public static final int kWristMotorCurrentLimit = 20;
 
     public static final double kWristLengthMeters = Units.inchesToMeters(8.5);
+    public static final double kWristMOI_kgm2 = 0.324;
     // real world angle
     public static final double kWristStartingPositionRadians = Units.degreesToRadians(270);
     // relative to arm
@@ -122,10 +125,10 @@ public class SuperStructureConstants {
     public static final double kWristMaxAngleRads = Units.degreesToRadians(180);
 
     // In Rad/Sec
-    public static final double kWristMaxVelocity = Units.degreesToRadians(2500.0);
+    public static final double kWristMaxVelocity = 100; // TBD
     // In Rad/SecSq
-    public static final double kWristMaxAcceleration = Units.degreesToRadians(5000.0);
-    public static final double kWristMotorReduction = 50.0;
+    public static final double kWristMaxAcceleration = 100; // TBD
+    public static final double kWristMotorReduction = 116.67; // real
     // Motor Rotations -> Wrist Radians
     public static final double kWristEncoderPositionFactor = 2 * Math.PI / kWristMotorReduction;
     // Motor RPM -> Wrist Rad/Sec

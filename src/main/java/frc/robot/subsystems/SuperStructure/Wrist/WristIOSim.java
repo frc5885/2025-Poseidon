@@ -16,9 +16,9 @@ public class WristIOSim implements WristIO {
   public WristIOSim() {
     m_wristSim =
         new MovingFrameSingleJointedArmSim(
-            DCMotor.getNEO(1),
+            DCMotor.getNeo550(1),
             kWristMotorReduction,
-            0.7,
+            kWristMOI_kgm2,
             kWristLengthMeters,
             kWristMinAngleRads,
             kWristMaxAngleRads,
