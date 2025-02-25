@@ -185,9 +185,15 @@ public class DriveCommands {
                     yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
                 linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
               }
-              double omega =
-                  angleController.calculate(
-                      visionRotSupplier.getAsDouble() - joystickRotSupplier.getAsDouble(), 0);
+              double omega;
+              if (DriverStation.isTest()) {
+                // no auto align in test
+                omega = joystickRotSupplier.getAsDouble();
+              } else {
+                omega =
+                    angleController.calculate(
+                        visionRotSupplier.getAsDouble() - joystickRotSupplier.getAsDouble(), 0);
+              }
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =

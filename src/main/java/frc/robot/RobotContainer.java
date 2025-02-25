@@ -17,6 +17,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -423,10 +424,11 @@ public class RobotContainer {
         .b()
         .whileTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                .andThen(new EjectIntakeCommand(m_collector)));
+                .andThen(new EjectIntakeCommand(m_collector)))
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
     m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
-    // SCORE CORALx
+    // SCORE CORAL
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
@@ -445,7 +447,8 @@ public class RobotContainer {
                     () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
                 new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                     .deadlineFor(
-                        new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0)))),
+                        new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
+                    .unless(() -> DriverStation.isTest()),
                 new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
                 new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 

@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
@@ -13,7 +14,7 @@ public class ResetSuperStructureCommand extends SequentialCommandGroup {
     addCommands(
         new InstantCommand(
             () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
-        new WaitUntilFarFromCommand(drive::getPose, 0.5),
+        new WaitUntilFarFromCommand(drive::getPose, 0.5).unless(() -> DriverStation.isTest()),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE),
         new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
   }
