@@ -41,6 +41,10 @@ public class Wrist {
   private DoubleSupplier m_armAngleRadSupplier = () -> kArmStartingPositionRadians;
   private DoubleSupplier m_armAngularVelocitySupplier = () -> 0.0;
 
+  // Add variables to track arm motion for acceleration calculation
+  private double m_lastArmVelocity = 0.0;
+  private double m_armAcceleration = 0.0;
+
   public Wrist(WristIO io) {
     m_io = io;
 
@@ -84,6 +88,11 @@ public class Wrist {
   }
 
   public void periodic() {
+    double currentArmVelocity = m_armAngularVelocitySupplier.getAsDouble();
+    // Calculate arm acceleration (rad/s^2)
+    m_armAcceleration = (currentArmVelocity - m_lastArmVelocity) / 0.02;
+    m_lastArmVelocity = currentArmVelocity;
+
     m_io.updateInputs(m_inputs, m_armAngleRadSupplier);
     Logger.processInputs("SuperStructure/Wrist", m_inputs);
 
@@ -119,24 +128,81 @@ public class Wrist {
     if (m_goal.position != setpointRadians) {
       m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
     }
+
     TrapezoidProfile.State current = getCurrentState();
     TrapezoidProfile.State setpoint = m_wristProfile.calculate(0.02, current, m_goal);
 
-    // scale kV based on how fast the arm is moving
+    // Get arm motion values
     double armVelocity = m_armAngularVelocitySupplier.getAsDouble();
     double armVelocityAbs = Math.abs(armVelocity);
-    if (armVelocityAbs > 0.1) {
-      // increase kv if arm is moving in opposite direction
-      double sign = -Math.signum(armVelocity * m_inputs.wristVelocityRadPerSec);
-      double scaledKV = m_wristBaseKV + sign * 0.08 * (armVelocityAbs / kArmMaxVelocity);
-      // this constant is very finicky ^^^
-      m_wristFeedforward.setKv(scaledKV);
-    } else {
-      m_wristFeedforward.setKv(m_wristBaseKV);
+    double wristVelocity = m_inputs.wristVelocityRadPerSec;
+
+    // Calculate compensations for arm movement
+    double velocityCompensation = 0.0;
+    double accelerationCompensation = 0.0;
+
+    // Velocity-based compensation (improved from original)
+    if (armVelocityAbs > 0.05) { // Lower threshold to respond to smaller arm movements
+      // Determine if the wrist needs to work against or with arm motion
+      // Negative sign when arm and wrist move in opposite directions
+      double relativeDirection = -Math.signum(armVelocity * wristVelocity);
+
+      // Scale compensation based on arm velocity as a percentage of max
+      double velocityRatio = armVelocityAbs / kArmMaxVelocity;
+
+      // More aggressive compensation (0.12 instead of 0.08)
+      velocityCompensation = relativeDirection * 0.12 * velocityRatio * m_wristBaseKV;
+
+      // Add specific compensation for holding position against arm motion
+      if (Math.abs(wristVelocity) < 0.1 && Math.abs(setpoint.velocity) < 0.1) {
+        // Extra compensation when trying to hold position during arm movement
+        velocityCompensation += Math.signum(armVelocity) * 0.08 * velocityRatio * m_wristBaseKV;
+      }
     }
 
+    // Acceleration-based compensation
+    double armAccelAbs = Math.abs(m_armAcceleration);
+    if (armAccelAbs > 0.5) { // Only compensate for significant acceleration
+      // Calculate how much the acceleration affects the wrist
+      // For a rapid arm deceleration, the wrist will want to continue moving
+      double accelScale = 0.05; // Tunable parameter
+      accelerationCompensation =
+          -Math.signum(m_armAcceleration)
+              * accelScale
+              * (armAccelAbs / (kWristMaxAcceleration / 2))
+              * m_wristBaseKV;
+
+      // Log the acceleration compensation
+      Logger.recordOutput(
+          "SuperStructure/Wrist/AccelerationCompensation", accelerationCompensation);
+    }
+
+    // Apply combined compensations
+    double adjustedKV = m_wristBaseKV + velocityCompensation + accelerationCompensation;
+
+    // Ensure kV doesn't go negative or get too large
+    adjustedKV = Math.max(m_wristBaseKV * 0.5, Math.min(m_wristBaseKV * 2.0, adjustedKV));
+
+    // Apply the compensation to the feedforward
+    m_wristFeedforward.setKv(adjustedKV);
+
+    // Log the adjusted kV value
+    Logger.recordOutput("SuperStructure/Wrist/AdjustedKV", adjustedKV);
+    Logger.recordOutput("SuperStructure/Wrist/ArmAcceleration", m_armAcceleration);
+
+    // Calculate control outputs
     double ffVoltage = m_wristFeedforward.calculate(setpoint.position, setpoint.velocity);
     double pidVoltage = m_wristController.calculate(current.position, setpoint.position);
+
+    // Add a direct acceleration compensation term when arm is accelerating rapidly
+    if (armAccelAbs > 2.0) {
+      // Direct compensation voltage based on arm acceleration direction
+      double directCompVoltage =
+          -Math.signum(m_armAcceleration) * Math.min(0.5, armAccelAbs * 0.04); // Limit to 0.5V max
+      ffVoltage += directCompVoltage;
+      Logger.recordOutput("SuperStructure/Wrist/DirectAccelCompVoltage", directCompVoltage);
+    }
+
     Logger.recordOutput("SuperStructure/Wrist/FFVoltage", ffVoltage);
     Logger.recordOutput("SuperStructure/Wrist/PIDVoltage", pidVoltage);
     Logger.recordOutput("SuperStructure/Wrist/GoalPosition", setpointRadians);
