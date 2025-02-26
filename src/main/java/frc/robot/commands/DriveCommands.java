@@ -173,26 +173,38 @@ public class DriveCommands {
               boolean seesGamePiece = visionRotSupplier.getAsDouble() != 0.0;
               LEDSubsystem.getInstance().setSeesGamePiece(seesGamePiece);
 
-              // Get linear velocity
+              // Get linear velocity based on control mode
               Translation2d linearVelocity;
               if (humanOperated) {
+                // Use joystick input for manual control
                 linearVelocity =
                     getLinearVelocityFromJoysticks(
                         xSupplier.getAsDouble(), ySupplier.getAsDouble());
               } else {
-                // divided by PI to slow it down, seems to work
+                // Use vision feedback for autonomous control
+                // Scale vision input down by dividing by PI to reduce sensitivity
                 double yVelocity =
                     yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
                 linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
               }
+
+              // Process rotation input from joystick
+              double joystickOmega =
+                  MathUtil.applyDeadband(joystickRotSupplier.getAsDouble(), kDeadband);
+              joystickOmega =
+                  Math.copySign(
+                      joystickOmega * joystickOmega, joystickOmega); // Square for fine control
+              joystickOmega *= drive.getMaxAngularSpeedRadPerSec();
+
+              // Calculate final rotation speed
               double omega;
               if (DriverStation.isTest()) {
-                // no auto align in test
-                omega = joystickRotSupplier.getAsDouble();
+                // Use direct joystick control in test mode
+                omega = joystickOmega;
               } else {
+                // Use vision-based alignment with joystick offset
                 omega =
-                    angleController.calculate(
-                        visionRotSupplier.getAsDouble() - joystickRotSupplier.getAsDouble(), 0);
+                    angleController.calculate(visionRotSupplier.getAsDouble() - joystickOmega, 0);
               }
 
               // Convert to field relative speeds & send command
