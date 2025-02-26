@@ -203,10 +203,13 @@ public class SuperStructure extends SubsystemBase {
   private Command setSingleState(SuperStructureState goal) {
     // If goal is either STOWING or UNSTOWING, run the intake commands around the state command.
     if (goal == SuperStructureState.STOWING || goal == SuperStructureState.UNSTOWING) {
+      // Only retract if the final goal is not INTAKE_CORAL
+      boolean shouldRetract = m_finalGoal != SuperStructureState.INTAKE_CORAL;
+
       return Commands.sequence(
           runIfNotNull(m_extendIntakeCmd),
           createStateCommand(goal),
-          runIfNotNull(m_retractIntakeCmd));
+          shouldRetract ? runIfNotNull(m_retractIntakeCmd) : Commands.none());
     }
     // Otherwise, just run the state command.
     return createStateCommand(goal);
