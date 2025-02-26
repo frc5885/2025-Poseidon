@@ -89,6 +89,8 @@ public class SuperStructure extends SubsystemBase {
   public ElevatorLevel getElevatorGoal() {
     ElevatorLevel goal = m_elevator.getGoal();
     Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
+    Logger.recordOutput(
+        "SuperStructure/Elevator/SetPointPosition", m_elevator.getSetpointRadians());
     return goal;
   }
 
@@ -102,6 +104,7 @@ public class SuperStructure extends SubsystemBase {
     Logger.recordOutput(
         "SuperStructure/Arm/GoalPosition",
         Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
+    Logger.recordOutput("SuperStructure/Arm/SetPointPosition", m_arm.getSetpointRadians());
     return goal;
   }
 
@@ -111,6 +114,7 @@ public class SuperStructure extends SubsystemBase {
     Logger.recordOutput(
         "SuperStructure/Wrist/GoalPosition",
         Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
+    Logger.recordOutput("SuperStructure/Wrist/SetPointPosition", m_wrist.getSetpointRadians());
     return goal;
   }
 

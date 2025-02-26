@@ -162,6 +162,10 @@ public class Wrist {
     return m_wristGoal;
   }
 
+  public double getSetpointRadians() {
+    return m_wristController.getSetpoint();
+  }
+
   @AutoLogOutput(key = "SuperStructure/Wrist/SetpointAchieved")
   public boolean isSetpointAchieved() {
     // always return true if setpoint is lock

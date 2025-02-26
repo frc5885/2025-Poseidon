@@ -159,6 +159,10 @@ public class Elevator {
     return m_elevatorGoal;
   }
 
+  public double getSetpointRadians() {
+    return m_elevatorController.getSetpoint();
+  }
+
   @AutoLogOutput(key = "SuperStructure/Elevator/SetpointAchieved")
   public boolean isSetpointAchieved() {
     return (Math.abs(m_goal.position - getPositionMeters()) < kElevatorErrorToleranceMeters)

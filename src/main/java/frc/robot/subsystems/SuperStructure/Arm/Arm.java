@@ -142,6 +142,10 @@ public class Arm {
     return m_armGoal;
   }
 
+  public double getSetpointRadians() {
+    return m_armController.getSetpoint();
+  }
+
   @AutoLogOutput(key = "SuperStructure/Arm/SetpointAchieved")
   public boolean isSetpointAchieved() {
     return (Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads)
