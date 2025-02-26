@@ -125,9 +125,9 @@ public class SuperStructureConstants {
     public static final double kWristMaxAngleRads = Units.degreesToRadians(180);
 
     // In Rad/Sec
-    public static final double kWristMaxVelocity = 3.0; // from sim, TBD
+    public static final double kWristMaxVelocity = 6.0; // from sim, TBD
     // In Rad/SecSq
-    public static final double kWristMaxAcceleration = 7.5; // from sim, TBD
+    public static final double kWristMaxAcceleration = 30; // from sim, TBD
     public static final double kWristMotorReduction = 116.67; // real
     // Motor Rotations -> Wrist Radians
     public static final double kWristEncoderPositionFactor = 2 * Math.PI / kWristMotorReduction;
@@ -143,7 +143,8 @@ public class SuperStructureConstants {
 
     public static final double kWristSimKv = 1.2031;
     public static final double kWristSimKg = 2.3423;
-    public static final double kWristSimKp = 5.0;
+    // public static final double kWristSimKa = 2.5; // might need?
+    public static final double kWristSimKp = 1.0;
     public static final double kWristSimKd = 0.2;
 
     public static final double kWristErrorToleranceRads = Units.degreesToRadians(1.5);

@@ -67,7 +67,7 @@ public class SuperStructure extends SubsystemBase {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
     m_wrist = new Wrist(wristIO);
-    m_wrist.setArmAngleSupplier(m_arm::getPositionRadians);
+    m_wrist.setArmAngleSuppliers(m_arm::getPositionRadians, m_arm::getVelocityRadPerSec);
 
     visualizationSetup();
 

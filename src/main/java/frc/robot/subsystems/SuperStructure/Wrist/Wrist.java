@@ -1,6 +1,7 @@
 package frc.robot.subsystems.SuperStructure.Wrist;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.kArmMaxVelocity;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.kArmStartingPositionRadians;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.*;
 
@@ -31,12 +32,14 @@ public class Wrist {
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
   private TunablePIDController m_wristController;
   private ArmFeedforward m_wristFeedforward;
+  private double m_wristBaseKV = 0.0;
   private SysIdRoutine m_sysIdRoutine;
 
   private WristGoals m_wristGoal = WristGoals.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
   private DoubleSupplier m_armAngleRadSupplier = () -> kArmStartingPositionRadians;
+  private DoubleSupplier m_armAngularVelocitySupplier = () -> 0.0;
 
   public Wrist(WristIO io) {
     m_io = io;
@@ -47,18 +50,21 @@ public class Wrist {
             new TunablePIDController(
                 kWristKp, 0.0, kWristKd, kWristErrorToleranceRads, "WristPID", true);
         m_wristFeedforward = new ArmFeedforward(kWristKs, kWristKg, kWristKv);
+        m_wristBaseKV = kWristKv;
         break;
       case SIM:
         m_wristController =
             new TunablePIDController(
                 kWristSimKp, 0.0, kWristSimKd, kWristErrorToleranceRads, "WristSimPID", true);
         m_wristFeedforward = new ArmFeedforward(0.0, kWristSimKg, kWristSimKv);
+        m_wristBaseKV = kWristSimKv;
         break;
       case REPLAY:
         m_wristController =
             new TunablePIDController(
                 kWristSimKp, 0.0, kWristSimKd, kWristErrorToleranceRads, "WristSimPID", true);
         m_wristFeedforward = new ArmFeedforward(0.0, kWristSimKg, kWristSimKv);
+        m_wristBaseKV = kWristSimKv;
         break;
       default:
         m_wristController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
@@ -71,8 +77,10 @@ public class Wrist {
 
   // set the supplier to pass the arm angle to the wrist
   // needs to be called right after creating the wrist subsystem
-  public void setArmAngleSupplier(DoubleSupplier armAngleRadSupplier) {
+  public void setArmAngleSuppliers(
+      DoubleSupplier armAngleRadSupplier, DoubleSupplier armAngularVelocitySupplier) {
     m_armAngleRadSupplier = armAngleRadSupplier;
+    m_armAngularVelocitySupplier = armAngularVelocitySupplier;
   }
 
   public void periodic() {
@@ -103,18 +111,37 @@ public class Wrist {
 
   public void runWristSetpoint(double setpointRadians) {
     if (setpointRadians == Units.degreesToRadians(WristGoals.LOCK.setpointDegrees.getAsDouble())) {
-      // lock the motor if the setpoint is LOCK
+      // LOCK
       stop();
       return;
     }
+
     if (m_goal.position != setpointRadians) {
       m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
     }
     TrapezoidProfile.State current = getCurrentState();
     TrapezoidProfile.State setpoint = m_wristProfile.calculate(0.02, current, m_goal);
-    m_io.setVoltage(
-        m_wristFeedforward.calculate(setpoint.position, setpoint.velocity)
-            + m_wristController.calculate(current.position, setpoint.position));
+
+    // scale kV based on how fast the arm is moving
+    double armVelocity = m_armAngularVelocitySupplier.getAsDouble();
+    double armVelocityAbs = Math.abs(armVelocity);
+    if (armVelocityAbs > 0.1) {
+      // increase kv if arm is moving in opposite direction
+      double sign = -Math.signum(armVelocity * m_inputs.wristVelocityRadPerSec);
+      double scaledKV = m_wristBaseKV + sign * 0.08 * (armVelocityAbs / kArmMaxVelocity);
+      // this constant is very finicky ^^^
+      m_wristFeedforward.setKv(scaledKV);
+    } else {
+      m_wristFeedforward.setKv(m_wristBaseKV);
+    }
+
+    double ffVoltage = m_wristFeedforward.calculate(setpoint.position, setpoint.velocity);
+    double pidVoltage = m_wristController.calculate(current.position, setpoint.position);
+    Logger.recordOutput("SuperStructure/Wrist/FFVoltage", ffVoltage);
+    Logger.recordOutput("SuperStructure/Wrist/PIDVoltage", pidVoltage);
+    Logger.recordOutput("SuperStructure/Wrist/GoalPosition", setpointRadians);
+    Logger.recordOutput("SuperStructure/Wrist/SetpointPosition", setpoint.position);
+    m_io.setVoltage(ffVoltage + pidVoltage);
   }
 
   public void runCharacterization(double outputVolts) {
