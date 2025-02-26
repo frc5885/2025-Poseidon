@@ -284,6 +284,8 @@ public class RobotContainer {
     }
 
     m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
+    m_superStructure.setIntakeFunctions(
+        () -> m_collector.extendIntake(), () -> m_collector.retractIntake());
 
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -400,27 +402,31 @@ public class RobotContainer {
     // INTAKE CORAL
     m_driverController
         .rightBumper()
-        .onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL))
-        // separating the move superstructure and intake commands because it was locking up
-        // the drivetrain until the superstructure was lowered, this might still have to be changed
-        // when we test on the robot
         .whileTrue(
-            new ParallelDeadlineGroup(
-                new IntakeCoralCommand(m_collector, m_endEffector),
-                DriveCommands.driveToGamePiece(
-                    m_drive,
-                    () -> -m_driverController.getLeftY(),
-                    () -> -m_driverController.getLeftX(),
-                    () -> -m_driverController.getRightX(),
-                    () -> m_vision.getTargetX(2).getRadians(),
-                    true)));
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+                .andThen(
+                    new ParallelDeadlineGroup(
+                        new IntakeCoralCommand(m_collector, m_endEffector),
+                        DriveCommands.driveToGamePiece(
+                            m_drive,
+                            () -> -m_driverController.getLeftY(),
+                            () -> -m_driverController.getLeftX(),
+                            () -> -m_driverController.getRightX(),
+                            () -> m_vision.getTargetX(2).getRadians(),
+                            true)),
+                    new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE))
+                .unless(m_endEffector::isCoralHeld))
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
-    m_driverController.b().whileTrue(new EjectIntakeCommand(m_collector));
-
+    // EJECT GAME PIECE
+    m_driverController
+        .b()
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+                .andThen(new EjectIntakeCommand(m_collector)));
     m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
-    // SCORE CORAL
-    // right trigger and button 3 false
+    // SCORE CORALx
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
@@ -449,8 +455,7 @@ public class RobotContainer {
             new SuperStructureCommand(
                     m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_FLOOR)
                 .alongWith(new IntakeAlgaeCommand(m_endEffector)))
-        .onFalse(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
     // SCORE ALGAE PROCESSOR
     m_algaeProcessorTrigger
@@ -470,8 +475,7 @@ public class RobotContainer {
     m_manualTroughSuperStructureTrigger
         .whileTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1))
-        .onFalse(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
     // MANUAL CORAL SCORE
     m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector));
