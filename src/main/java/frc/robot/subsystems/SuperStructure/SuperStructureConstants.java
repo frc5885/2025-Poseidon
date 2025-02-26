@@ -25,9 +25,9 @@ public class SuperStructureConstants {
         new Translation2d(Units.inchesToMeters(9.5), 0.0);
 
     // In Meters/Sec
-    public static final double kElevatorMaxVelocity = 1.4; // from sim, TBD
+    public static final double kElevatorMaxVelocity = 1.5; // from sim, TBD
     // In Meters/SecSq
-    public static final double kElevatorMaxAcceleration = 20; // from sim, TBD
+    public static final double kElevatorMaxAcceleration = 5.5; // from sim, TBD
     public static final double kElevatorMotorReduction = 35.0; // real
     public static final double kElevatorWheelRadiusMeters = 0.045; // real
     // Motor Rotations -> Elevator Meters
