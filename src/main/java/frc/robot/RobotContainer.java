@@ -416,20 +416,23 @@ public class RobotContainer {
 
     // INTAKE CORAL
     m_driverController
+        // this is still not perfect but good enough for now
+        // the arm transitioning to INTAKE should finish before a coral could possibly be intaked
+        // fully
         .rightBumper()
-        .whileTrue(
+        .onTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                .andThen(
-                    new ParallelDeadlineGroup(
-                        new IntakeCoralCommand(m_collector, m_endEffector),
-                        DriveCommands.driveToGamePiece(
-                            m_drive,
-                            () -> -m_driverController.getLeftY(),
-                            () -> -m_driverController.getLeftX(),
-                            () -> -m_driverController.getRightX(),
-                            () -> m_vision.getTargetX(2).getRadians(),
-                            true)),
-                    new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE))
+                .unless(m_endEffector::isCoralHeld))
+        .whileTrue(
+            new ParallelDeadlineGroup(
+                    new IntakeCoralCommand(m_collector, m_endEffector),
+                    DriveCommands.driveToGamePiece(
+                        m_drive,
+                        () -> -m_driverController.getLeftY(),
+                        () -> -m_driverController.getLeftX(),
+                        () -> -m_driverController.getRightX(),
+                        () -> m_vision.getTargetX(2).getRadians(),
+                        true))
                 .unless(m_endEffector::isCoralHeld))
         .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
