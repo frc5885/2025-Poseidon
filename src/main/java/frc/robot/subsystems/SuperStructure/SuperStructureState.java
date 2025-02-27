@@ -23,7 +23,9 @@ public enum SuperStructureState {
   // while the arm is swinging in/out of stowed state (to/from intake state), lock the wrist to
   // prevent it from crashing
   STOWING(ElevatorLevel.STOW, ArmGoals.STOW, WristGoals.LOCK),
-  UNSTOWING(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK);
+  UNSTOWING(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK),
+  // to prevent wrist from flopping
+  IDLE_TO_INTAKE(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK);
 
   public ElevatorLevel elevatorGoal;
   public ArmGoals armGoal;

@@ -17,6 +17,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -394,6 +395,20 @@ public class RobotContainer {
     //             .ignoringDisable(true));
 
     // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runWristOpenLoop(12),
+    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runWristOpenLoop(-12),
+    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             m_superStructure));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -401,20 +416,23 @@ public class RobotContainer {
 
     // INTAKE CORAL
     m_driverController
+        // this is still not perfect but good enough for now
+        // the arm transitioning to INTAKE should finish before a coral could possibly be intaked
+        // fully
         .rightBumper()
-        .whileTrue(
+        .onTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                .andThen(
-                    new ParallelDeadlineGroup(
-                        new IntakeCoralCommand(m_collector, m_endEffector),
-                        DriveCommands.driveToGamePiece(
-                            m_drive,
-                            () -> -m_driverController.getLeftY(),
-                            () -> -m_driverController.getLeftX(),
-                            () -> -m_driverController.getRightX(),
-                            () -> m_vision.getTargetX(2).getRadians(),
-                            true)),
-                    new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE))
+                .unless(m_endEffector::isCoralHeld))
+        .whileTrue(
+            new ParallelDeadlineGroup(
+                    new IntakeCoralCommand(m_collector, m_endEffector),
+                    DriveCommands.driveToGamePiece(
+                        m_drive,
+                        () -> -m_driverController.getLeftY(),
+                        () -> -m_driverController.getLeftX(),
+                        () -> -m_driverController.getRightX(),
+                        () -> m_vision.getTargetX(2).getRadians(),
+                        true))
                 .unless(m_endEffector::isCoralHeld))
         .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
@@ -423,10 +441,11 @@ public class RobotContainer {
         .b()
         .whileTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                .andThen(new EjectIntakeCommand(m_collector)));
+                .andThen(new EjectIntakeCommand(m_collector)))
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
     m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
-    // SCORE CORALx
+    // SCORE CORAL
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
@@ -445,7 +464,8 @@ public class RobotContainer {
                     () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
                 new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
                     .deadlineFor(
-                        new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0)))),
+                        new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
+                    .unless(() -> DriverStation.isTest()),
                 new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
                 new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 

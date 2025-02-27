@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -60,12 +61,14 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> superStructureState),
             new DriveToPoseCommand(
-                drive,
-                () -> transitionPose2d,
-                DriveConstants.kDistanceTolerance,
-                DriveConstants.kRotationTolerance,
-                false)),
-        DriveCommands.preciseChassisAlign(drive, () -> targetPose.get().toPose2d()),
+                    drive,
+                    () -> transitionPose2d,
+                    DriveConstants.kDistanceTolerance,
+                    DriveConstants.kRotationTolerance,
+                    false)
+                .unless(() -> DriverStation.isTest())),
+        DriveCommands.preciseChassisAlign(drive, () -> targetPose.get().toPose2d())
+            .unless(() -> DriverStation.isTest()),
         new ScoreCoralCommand(endEffector));
   }
 }

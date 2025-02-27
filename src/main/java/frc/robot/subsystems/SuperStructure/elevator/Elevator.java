@@ -81,6 +81,7 @@ public class Elevator {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
+    // TODO comment this out for SysId
     runElevatorSetpoint(
         m_elevatorGoal != null ? m_elevatorGoal.setpointMeters.getAsDouble() : getPositionMeters());
 
@@ -156,6 +157,10 @@ public class Elevator {
 
   public ElevatorLevel getGoal() {
     return m_elevatorGoal;
+  }
+
+  public double getSetpointRadians() {
+    return m_elevatorController.getSetpoint();
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/SetpointAchieved")

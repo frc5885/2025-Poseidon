@@ -62,7 +62,7 @@ public class StateGraph {
     // are all the children, or possible transitions from the parent state
     List<SuperStructureState[]> transitions =
         List.of(
-            // IDLE transitions
+            // INTAKE_CORAL transitions
             new SuperStructureState[] {
               SuperStructureState.INTAKE_CORAL,
               SuperStructureState.IDLE,
@@ -74,11 +74,20 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
+              SuperStructureState.STOWING,
+            },
+
+            // IDLE transitions
+            new SuperStructureState[] {
+              SuperStructureState.IDLE,
+              SuperStructureState.IDLE_TO_INTAKE,
               SuperStructureState.STOWING
             },
 
-            // INTAKE_CORAL transitions
-            new SuperStructureState[] {SuperStructureState.IDLE, SuperStructureState.INTAKE_CORAL},
+            // IDLE_TO_INTAKE transitions
+            new SuperStructureState[] {
+              SuperStructureState.IDLE_TO_INTAKE, SuperStructureState.INTAKE_CORAL,
+            },
 
             // INTAKE_ALGAE_FLOOR transitions
             new SuperStructureState[] {
