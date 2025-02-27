@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -63,10 +64,11 @@ public class SuperStructure extends SubsystemBase {
   private Runnable m_extendIntakeCmd = null;
   private Runnable m_retractIntakeCmd = null;
 
-  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO) {
-    m_elevator = new Elevator(elevatorIO);
-    m_arm = new Arm(armIO);
-    m_wrist = new Wrist(wristIO);
+  public SuperStructure(
+      ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO, BooleanSupplier disablePIDs) {
+    m_elevator = new Elevator(elevatorIO, disablePIDs);
+    m_arm = new Arm(armIO, disablePIDs);
+    m_wrist = new Wrist(wristIO, disablePIDs);
     m_wrist.setArmAngleSuppliers(m_arm::getPositionRadians, m_arm::getVelocityRadPerSec);
     m_arm.setWristAngleRadSupplier(m_wrist::getPositionRadians);
 

@@ -49,7 +49,8 @@ public class FeederIOSpark implements FeederIO {
                 feeder1Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
     SparkMaxConfig feeder2Config = feeder1Config;
-    feeder2Config.follow(m_feederMotor1, FeederConstants.kMotor2Inverted);
+    feeder2Config.follow(
+        m_feederMotor1, FeederConstants.kMotor2Inverted != FeederConstants.kMotor2Inverted);
 
     tryUntilOk(
         m_feederMotor2,

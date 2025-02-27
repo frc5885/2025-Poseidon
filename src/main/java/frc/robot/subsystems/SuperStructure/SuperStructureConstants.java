@@ -11,7 +11,7 @@ public class SuperStructureConstants {
     public static final int kElevatorSparkId1 = 40;
     public static final int kElevatorSparkId2 = 41;
     public static final boolean kElevatorM1Inverted = false;
-    public static final boolean kElevatorM2Inverted = !kElevatorM1Inverted;
+    public static final boolean kElevatorM2Inverted = false;
     public static final int kElevatorMotorCurrentLimit = 20;
 
     public static final double kElevatorMassKg = 12.0; // from CAD, elevator + arm + wrist
@@ -80,21 +80,21 @@ public class SuperStructureConstants {
     public static final double kArmMaxVelocity = 5.0; // from sim, TBD
     // In Rad/SecSq
     public static final double kArmMaxAcceleration = 12.5; // from sim, TBD
-    public static final double kArmMotorReduction = 225.0; // real
+    public static final double kArmMotorReduction = 190.55; // real
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
 
     public static final double kArmKs = 0.0; // TBD
-    public static final double kArmKv = 2.3134;
-    public static final double kArmStowedKg = 1.0031;
-    public static final double kArmOutKg = 3.1935;
+    public static final double kArmKv = 1.9594;
+    public static final double kArmStowedKg = 1.1855;
+    public static final double kArmOutKg = 3.7695;
     public static final double kArmKp = 0.0;
     public static final double kArmKd = 0.0;
 
-    public static final double kArmSimKv = 2.3134;
-    public static final double kArmSimKg = 1.0031;
+    public static final double kArmSimKv = 1.9594;
+    public static final double kArmSimKg = 1.1855;
     public static final double kArmSimKp = 1.0;
     public static final double kArmSimKd = 2.0;
 
@@ -119,6 +119,7 @@ public class SuperStructureConstants {
 
     public static final double kWristLengthMeters = Units.inchesToMeters(8.5);
     public static final double kWristMOI_kgm2 = 0.324;
+    public static final double kWristCOGOffsetForFFRadians = 0;
     // real world angle
     public static final double kWristStartingPositionRadians = Units.degreesToRadians(270);
     // relative to arm

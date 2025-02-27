@@ -24,6 +24,8 @@ public class QuestNav extends SubsystemBase {
   // Transform to map between the quest's local coordinate system and field coordinates
   // The translation and rotation get handled separately
   private Transform2d m_questToField = new Transform2d();
+  private Transform2d m_initialQuestToField = new Transform2d();
+  private boolean m_hasBeenSynced = false;
 
   /**
    * Creates a new QuestNav subsystem and uses the robot pose to initialize the quest-to-field
@@ -70,6 +72,10 @@ public class QuestNav extends SubsystemBase {
 
     // Create and store the overall transform
     m_questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
+    if (!m_hasBeenSynced) {
+      m_initialQuestToField = m_questToField;
+      m_hasBeenSynced = true;
+    }
   }
 
   /**
@@ -103,6 +109,21 @@ public class QuestNav extends SubsystemBase {
     // 6) Now apply the questToField translation
     return new Pose2d(
         robotInFieldRotated.getTranslation().plus(m_questToField.getTranslation()),
+        robotInFieldRotated.getRotation());
+  }
+
+  /** Returns the current robot pose in field coordinates using the initial sync transform */
+  public Pose2d getRobotPoseFromInitialSync() {
+    Pose2d questInQuestCoords = getRawQuestPose();
+    Pose2d robotInQuestCoords =
+        questInQuestCoords.transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
+    Rotation2d fieldRotation =
+        robotInQuestCoords.getRotation().plus(m_initialQuestToField.getRotation());
+    Translation2d rotatedTranslation =
+        robotInQuestCoords.getTranslation().rotateBy(m_initialQuestToField.getRotation());
+    Pose2d robotInFieldRotated = new Pose2d(rotatedTranslation, fieldRotation);
+    return new Pose2d(
+        robotInFieldRotated.getTranslation().plus(m_initialQuestToField.getTranslation()),
         robotInFieldRotated.getRotation());
   }
 

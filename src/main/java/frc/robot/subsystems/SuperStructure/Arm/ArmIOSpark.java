@@ -16,12 +16,10 @@ import java.util.function.DoubleSupplier;
 public class ArmIOSpark implements ArmIO {
   private final SparkMax m_armSpark;
   private final Debouncer m_armConnectedDebouncer = new Debouncer(0.5);
-  //   private final SparkAbsoluteEncoder m_absoluteEncoder;
   private final RelativeEncoder m_armEncoder;
 
   public ArmIOSpark() {
     m_armSpark = new SparkMax(kArmSparkId, MotorType.kBrushless);
-    // m_absoluteEncoder = m_armSpark.getAbsoluteEncoder();
     m_armEncoder = m_armSpark.getEncoder();
 
     SparkMaxConfig armConfig = new SparkMaxConfig();
@@ -57,10 +55,6 @@ public class ArmIOSpark implements ArmIO {
   @Override
   public void updateInputs(ArmIOInputs inputs) {
     sparkStickyFault = false;
-    // ifOk(
-    //     m_armSpark,
-    //     m_absoluteEncoder::getPosition,
-    //     (absolutePositionRads) -> inputs.absolutePositionRads = absolutePositionRads);
     ifOk(
         m_armSpark,
         m_armEncoder::getPosition,
