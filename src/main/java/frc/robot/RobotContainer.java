@@ -295,7 +295,7 @@ public class RobotContainer {
     m_autoChooser.addDefaultOption(
         "4_coral_auto_right",
         new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
-    m_autoChooser.addDefaultOption(
+    m_autoChooser.addOption(
         "4_coral_auto_left",
         new LeftAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
