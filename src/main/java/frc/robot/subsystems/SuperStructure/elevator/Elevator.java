@@ -15,12 +15,14 @@ import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator {
   private final ElevatorIO m_io;
   private final ElevatorIOInputsAutoLogged m_inputs = new ElevatorIOInputsAutoLogged();
+  private final BooleanSupplier m_disablePIDs;
 
   private final Alert motor1DisconnectedAlert;
   private final Alert motor2DisconnectedAlert;
@@ -35,8 +37,9 @@ public class Elevator {
   private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
-  public Elevator(ElevatorIO io) {
+  public Elevator(ElevatorIO io, BooleanSupplier disablePIDs) {
     m_io = io;
+    m_disablePIDs = disablePIDs;
 
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -81,9 +84,14 @@ public class Elevator {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
-    // TODO comment this out for SysId
-    runElevatorSetpoint(
-        m_elevatorGoal != null ? m_elevatorGoal.setpointMeters.getAsDouble() : getPositionMeters());
+    if (!m_disablePIDs.getAsBoolean()) {
+      runElevatorSetpoint(
+          m_elevatorGoal != null
+              ? m_elevatorGoal.setpointMeters.getAsDouble()
+              : getPositionMeters());
+    } else {
+      stop();
+    }
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);

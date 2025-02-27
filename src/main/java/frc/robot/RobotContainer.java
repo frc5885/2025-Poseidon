@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
@@ -159,6 +160,9 @@ public class RobotContainer {
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
 
+    // toggle to disable superstructure PIDs (only works in TEST mode)
+    SmartDashboard.putBoolean("Disable PIDs", false);
+
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -188,7 +192,11 @@ public class RobotContainer {
                     VisionConstants.kRobotToCamera2,
                     CameraType.CORAL));
         m_superStructure =
-            new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark(), new WristIOSpark());
+            new SuperStructure(
+                new ElevatorIOSpark(),
+                new ArmIOSpark(),
+                new WristIOSpark(),
+                () -> (DriverStation.isTest() && SmartDashboard.getBoolean("Disable PIDs", false)));
         m_collector =
             new Collector(
                 new IntakeIOSpark(),
@@ -242,7 +250,11 @@ public class RobotContainer {
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
-            new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
+            new SuperStructure(
+                new ElevatorIOSim(),
+                new ArmIOSim(),
+                new WristIOSim(),
+                () -> (DriverStation.isTest() && SmartDashboard.getBoolean("Disable PIDs", false)));
         m_collector =
             new Collector(
                 new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
@@ -272,7 +284,7 @@ public class RobotContainer {
                 new VisionIO() {},
                 new VisionIO() {});
         m_superStructure =
-            new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
+            new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {}, () -> false);
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
         m_endEffector =

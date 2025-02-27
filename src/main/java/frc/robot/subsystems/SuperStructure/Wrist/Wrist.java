@@ -18,6 +18,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.util.TunablePIDController;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -26,6 +27,7 @@ public class Wrist {
   private final WristIO m_io;
   private final WristIOInputsAutoLogged m_inputs = new WristIOInputsAutoLogged();
   private final Alert motorDisconnectedAlert;
+  private final BooleanSupplier m_disablePIDs;
 
   private TrapezoidProfile m_wristProfile =
       new TrapezoidProfile(new Constraints(kWristMaxVelocity, kWristMaxAcceleration));
@@ -46,8 +48,9 @@ public class Wrist {
   private double m_lastArmVelocity = 0.0;
   private double m_armAcceleration = 0.0;
 
-  public Wrist(WristIO io) {
+  public Wrist(WristIO io, BooleanSupplier disablePIDs) {
     m_io = io;
+    m_disablePIDs = disablePIDs;
 
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -98,11 +101,14 @@ public class Wrist {
     m_io.updateInputs(m_inputs, m_armAngleRadSupplier);
     Logger.processInputs("SuperStructure/Wrist", m_inputs);
 
-    // TODO comment this out for SysId
-    runWristSetpoint(
-        m_wristGoal != null
-            ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
-            : getRealWorldPositionRadians());
+    if (!m_disablePIDs.getAsBoolean()) {
+      runWristSetpoint(
+          m_wristGoal != null
+              ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
+              : getRealWorldPositionRadians());
+    } else {
+      stop();
+    }
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.wristConnected);
