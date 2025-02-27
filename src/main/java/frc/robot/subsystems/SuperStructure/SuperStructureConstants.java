@@ -119,6 +119,7 @@ public class SuperStructureConstants {
 
     public static final double kWristLengthMeters = Units.inchesToMeters(8.5);
     public static final double kWristMOI_kgm2 = 0.324;
+    public static final double kWristCOGOffsetForFFRadians = 0;
     // real world angle
     public static final double kWristStartingPositionRadians = Units.degreesToRadians(270);
     // relative to arm

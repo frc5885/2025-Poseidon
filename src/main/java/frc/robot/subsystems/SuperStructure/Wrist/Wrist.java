@@ -33,6 +33,7 @@ public class Wrist {
   private TunablePIDController m_wristController;
   private ArmFeedforward m_wristFeedforward;
   private double m_wristBaseKV = 0.0;
+  private double m_ffOffset = 0.0;
   private SysIdRoutine m_sysIdRoutine;
 
   private WristGoals m_wristGoal = WristGoals.STOW;
@@ -55,6 +56,7 @@ public class Wrist {
                 kWristKp, 0.0, kWristKd, kWristErrorToleranceRads, "WristPID", true);
         m_wristFeedforward = new ArmFeedforward(kWristKs, kWristKg, kWristKv);
         m_wristBaseKV = kWristKv;
+        m_ffOffset = kWristCOGOffsetForFFRadians; // need this on real robot
         break;
       case SIM:
         m_wristController =
@@ -191,7 +193,9 @@ public class Wrist {
     Logger.recordOutput("SuperStructure/Wrist/ArmAcceleration", m_armAcceleration);
 
     // Calculate control outputs
-    double ffVoltage = m_wristFeedforward.calculate(setpoint.position, setpoint.velocity);
+    // Apply COG offset to position used for feedforward calculation only
+    double ffPosition = setpoint.position + m_ffOffset;
+    double ffVoltage = m_wristFeedforward.calculate(ffPosition, setpoint.velocity);
     double pidVoltage = m_wristController.calculate(current.position, setpoint.position);
 
     // Add a direct acceleration compensation term when arm is accelerating rapidly
