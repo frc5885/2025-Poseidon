@@ -104,8 +104,8 @@ public class Arm {
 
     double compensatedKg = kArmStowedKg;
     if (Robot.isReal()) {
-    compensatedKg =
-        kArmOutKg + (kArmOutKg - kArmStowedKg) * Math.cos(m_wristAngleRadSupplier.getAsDouble());
+      compensatedKg =
+          kArmOutKg + (kArmOutKg - kArmStowedKg) * Math.cos(m_wristAngleRadSupplier.getAsDouble());
     }
     m_armFeedforward.setKg(compensatedKg);
     Logger.recordOutput("SuperStructure/Arm/ArmKg", compensatedKg);
