@@ -11,7 +11,7 @@ public class SuperStructureConstants {
     public static final int kElevatorSparkId1 = 40;
     public static final int kElevatorSparkId2 = 41;
     public static final boolean kElevatorM1Inverted = false;
-    public static final boolean kElevatorM2Inverted = !kElevatorM1Inverted;
+    public static final boolean kElevatorM2Inverted = false;
     public static final int kElevatorMotorCurrentLimit = 20;
 
     public static final double kElevatorMassKg = 12.0; // from CAD, elevator + arm + wrist
