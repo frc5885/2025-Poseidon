@@ -24,6 +24,9 @@ public class Elevator {
   private final ElevatorIOInputsAutoLogged m_inputs = new ElevatorIOInputsAutoLogged();
   private final BooleanSupplier m_disablePIDs;
 
+  // Track previous disabled state to detect rising edge
+  private boolean m_wasDisabled = false;
+
   private final Alert motor1DisconnectedAlert;
   private final Alert motor2DisconnectedAlert;
 
@@ -84,14 +87,17 @@ public class Elevator {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
-    if (!m_disablePIDs.getAsBoolean()) {
+    boolean isDisabled = m_disablePIDs.getAsBoolean();
+    if (!isDisabled) {
       runElevatorSetpoint(
           m_elevatorGoal != null
               ? m_elevatorGoal.setpointMeters.getAsDouble()
               : getPositionMeters());
-    } else {
+    } else if (!m_wasDisabled) {
+      // Only call stop() on the rising edge of m_disablePIDs
       stop();
     }
+    m_wasDisabled = isDisabled;
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);

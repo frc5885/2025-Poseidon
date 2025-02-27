@@ -29,6 +29,9 @@ public class Arm {
   private final Alert motorDisconnectedAlert;
   private final BooleanSupplier m_disablePIDs;
 
+  // Track previous disabled state to detect rising edge
+  private boolean m_wasDisabled = false;
+
   private TrapezoidProfile m_armProfile =
       new TrapezoidProfile(new Constraints(kArmMaxVelocity, kArmMaxAcceleration));
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
@@ -76,14 +79,17 @@ public class Arm {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
-    if (!m_disablePIDs.getAsBoolean()) {
+    boolean isDisabled = m_disablePIDs.getAsBoolean();
+    if (!isDisabled) {
       runArmSetpoint(
           m_armGoal != null
               ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
               : getPositionRadians());
-    } else {
+    } else if (!m_wasDisabled) {
+      // Only call stop() on the rising edge of m_disablePIDs
       stop();
     }
+    m_wasDisabled = isDisabled;
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);
