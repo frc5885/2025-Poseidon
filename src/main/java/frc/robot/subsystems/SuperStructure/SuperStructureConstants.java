@@ -87,14 +87,14 @@ public class SuperStructureConstants {
     public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
 
     public static final double kArmKs = 0.0; // TBD
-    public static final double kArmKv = 2.3134;
-    public static final double kArmStowedKg = 1.0031;
-    public static final double kArmOutKg = 3.1935;
+    public static final double kArmKv = 1.9594;
+    public static final double kArmStowedKg = 1.1855;
+    public static final double kArmOutKg = 3.7695;
     public static final double kArmKp = 0.0;
     public static final double kArmKd = 0.0;
 
-    public static final double kArmSimKv = 2.3134;
-    public static final double kArmSimKg = 1.0031;
+    public static final double kArmSimKv = 1.9594;
+    public static final double kArmSimKg = 1.1855;
     public static final double kArmSimKp = 1.0;
     public static final double kArmSimKd = 2.0;
 
