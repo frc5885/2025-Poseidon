@@ -6,7 +6,58 @@
       "name": "Teleoperated",
       "grid_layout": {
         "layouts": [],
-        "containers": []
+        "containers": [
+          {
+            "title": "coral-processed",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 768.0,
+            "height": 640.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/coral-processed",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "LED",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1920.0,
+            "height": 128.0,
+            "type": "Multi Color View",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/LED",
+              "period": 0.06,
+              "data_type": "string[]"
+            }
+          },
+          {
+            "title": "Alerts",
+            "x": 1408.0,
+            "y": 128.0,
+            "width": 512.0,
+            "height": 640.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/Alerts",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Auto Choices",
+            "x": 896.0,
+            "y": 256.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Choices",
+              "period": 0.06,
+              "sort_options": false
+            }
+          }
+        ]
       }
     },
     {
