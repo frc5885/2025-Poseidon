@@ -18,11 +18,14 @@ public enum SuperStructureState {
   SCORE_ALGAE_PROCESSOR(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.PROCESSOR),
   SCORE_ALGAE_NET(ElevatorLevel.L4, ArmGoals.STOW, WristGoals.NET),
   STOWED(ElevatorLevel.STOW, ArmGoals.STOW, WristGoals.STOW),
+  IDLE(ElevatorLevel.STOW, ArmGoals.IDLE, WristGoals.LOCK),
   // TRANSITION STATES
   // while the arm is swinging in/out of stowed state (to/from intake state), lock the wrist to
   // prevent it from crashing
   STOWING(ElevatorLevel.STOW, ArmGoals.STOW, WristGoals.LOCK),
-  UNSTOWING(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK);
+  UNSTOWING(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK),
+  // to prevent wrist from flopping
+  IDLE_TO_INTAKE(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK);
 
   public ElevatorLevel elevatorGoal;
   public ArmGoals armGoal;

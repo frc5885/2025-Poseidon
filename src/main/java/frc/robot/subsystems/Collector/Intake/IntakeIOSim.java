@@ -20,8 +20,8 @@ public class IntakeIOSim implements IntakeIO {
     m_flywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getNEO(2), 0.001, IntakeConstants.kGearRatio),
-            DCMotor.getNEO(2));
+                DCMotor.getNeo550(2), 0.001, IntakeConstants.kGearRatio),
+            DCMotor.getNeo550(2));
 
     m_intakeSimulation =
         IntakeSimulation.OverTheBumperIntake(

@@ -6,7 +6,7 @@ public class CollectorConstants {
     public static final int kMotorId2 = 10;
     public static final boolean kMotor1Inverted = false;
     public static final boolean kMotor2Inverted = !kMotor1Inverted;
-    public static final int kCurrentLimit = 40;
+    public static final int kCurrentLimit = 20;
     public static final double kGearRatio = 1.0;
   }
 
@@ -17,7 +17,7 @@ public class CollectorConstants {
 
     public static final boolean kMotor1Inverted = false;
     public static final boolean kMotor2Inverted = !kMotor1Inverted;
-    public static final int kCurrentLimit = 40;
+    public static final int kCurrentLimit = 20;
     public static final double kGearRatio = 1.0;
 
     public static final int kSolenoidId1 = 0;

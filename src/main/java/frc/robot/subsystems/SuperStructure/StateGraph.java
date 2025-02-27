@@ -65,6 +65,7 @@ public class StateGraph {
             // INTAKE_CORAL transitions
             new SuperStructureState[] {
               SuperStructureState.INTAKE_CORAL,
+              SuperStructureState.IDLE,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
@@ -73,7 +74,19 @@ public class StateGraph {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
+              SuperStructureState.STOWING,
+            },
+
+            // IDLE transitions
+            new SuperStructureState[] {
+              SuperStructureState.IDLE,
+              SuperStructureState.IDLE_TO_INTAKE,
               SuperStructureState.STOWING
+            },
+
+            // IDLE_TO_INTAKE transitions
+            new SuperStructureState[] {
+              SuperStructureState.IDLE_TO_INTAKE, SuperStructureState.INTAKE_CORAL,
             },
 
             // INTAKE_ALGAE_FLOOR transitions

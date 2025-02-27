@@ -14,9 +14,8 @@ public class CoralEjectorIOSim implements CoralEjectorIO {
     m_coralEjectorFlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getNEO(1), 0.001, CoralEjectorConstants.kGearRatio),
-            DCMotor.getNEO(1),
-            0.0);
+                DCMotor.getNeo550(1), 0.001, CoralEjectorConstants.kGearRatio),
+            DCMotor.getNeo550(1));
   }
 
   public void updateInputs(CoralEjectorIOInputs inputs) {

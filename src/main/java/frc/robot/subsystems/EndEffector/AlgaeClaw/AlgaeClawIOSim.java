@@ -13,9 +13,8 @@ public class AlgaeClawIOSim implements AlgaeClawIO {
     m_algaeClawFlywheelSim =
         new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getNEO(1), 0.001, AlgaeClawConstants.kGearRatio),
-            DCMotor.getNEO(1),
-            0.0);
+                DCMotor.getNeo550(1), 0.001, AlgaeClawConstants.kGearRatio),
+            DCMotor.getNeo550(1));
   }
 
   public void updateInputs(AlgaeClawIOInputs inputs) {

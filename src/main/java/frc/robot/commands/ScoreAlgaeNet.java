@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.EndEffector.EndEffector;
@@ -23,17 +24,21 @@ public class ScoreAlgaeNet extends SequentialCommandGroup {
             () -> LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.SCORING_LINE_UP)),
         // TODO requires elevator stability
         new DriveToPoseCommand(
-            drive,
-            () ->
-                new Pose2d(7.0, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d()),
-            DriveConstants.kDistanceTolerance,
-            DriveConstants.kRotationTolerance,
-            false),
+                drive,
+                () ->
+                    new Pose2d(
+                        7.0, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d()),
+                DriveConstants.kDistanceTolerance,
+                DriveConstants.kRotationTolerance,
+                false)
+            .unless(() -> DriverStation.isTest()),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
         DriveCommands.preciseChassisAlign(
-            drive,
-            () ->
-                new Pose2d(7.8, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d())),
+                drive,
+                () ->
+                    new Pose2d(
+                        7.8, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d()))
+            .unless(() -> DriverStation.isTest()),
         new ScoreAlgaeCommand(endEffector));
   }
 }

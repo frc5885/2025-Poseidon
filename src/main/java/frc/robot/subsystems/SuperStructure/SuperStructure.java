@@ -60,11 +60,15 @@ public class SuperStructure extends SubsystemBase {
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
 
+  private Runnable m_extendIntakeCmd = null;
+  private Runnable m_retractIntakeCmd = null;
+
   public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO) {
     m_elevator = new Elevator(elevatorIO);
     m_arm = new Arm(armIO);
     m_wrist = new Wrist(wristIO);
-    m_wrist.setArmAngleSupplier(m_arm::getPositionRadians);
+    m_wrist.setArmAngleSuppliers(m_arm::getPositionRadians, m_arm::getVelocityRadPerSec);
+    m_arm.setWristAngleRadSupplier(m_wrist::getPositionRadians);
 
     visualizationSetup();
 
@@ -86,6 +90,8 @@ public class SuperStructure extends SubsystemBase {
   public ElevatorLevel getElevatorGoal() {
     ElevatorLevel goal = m_elevator.getGoal();
     Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
+    Logger.recordOutput(
+        "SuperStructure/Elevator/SetPointPosition", m_elevator.getSetpointRadians());
     return goal;
   }
 
@@ -99,6 +105,7 @@ public class SuperStructure extends SubsystemBase {
     Logger.recordOutput(
         "SuperStructure/Arm/GoalPosition",
         Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
+    Logger.recordOutput("SuperStructure/Arm/SetPointPosition", m_arm.getSetpointRadians());
     return goal;
   }
 
@@ -108,12 +115,18 @@ public class SuperStructure extends SubsystemBase {
     Logger.recordOutput(
         "SuperStructure/Wrist/GoalPosition",
         Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
+    Logger.recordOutput("SuperStructure/Wrist/SetPointPosition", m_wrist.getSetpointRadians());
     return goal;
   }
 
   @AutoLogOutput(key = "SuperStructure/Goal")
   public SuperStructureState getSuperStructureGoal() {
     return m_state;
+  }
+
+  public void setIntakeFunctions(Runnable extendIntake, Runnable retractIntake) {
+    m_extendIntakeCmd = extendIntake;
+    m_retractIntakeCmd = retractIntake;
   }
 
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
@@ -189,6 +202,27 @@ public class SuperStructure extends SubsystemBase {
   }
 
   private Command setSingleState(SuperStructureState goal) {
+    // If goal is either STOWING or UNSTOWING, run the intake commands around the state command.
+    if (goal == SuperStructureState.STOWING || goal == SuperStructureState.UNSTOWING) {
+      // Only retract if the final goal is not INTAKE_CORAL
+      boolean shouldRetract = m_finalGoal != SuperStructureState.INTAKE_CORAL;
+
+      return Commands.sequence(
+          runIfNotNull(m_extendIntakeCmd),
+          createStateCommand(goal),
+          shouldRetract ? runIfNotNull(m_retractIntakeCmd) : Commands.none());
+    }
+    // Otherwise, just run the state command.
+    return createStateCommand(goal);
+  }
+
+  // Helper that returns a runOnce command if the provided command is non-null, or a no-op command.
+  private Command runIfNotNull(Runnable cmd) {
+    return cmd != null ? Commands.runOnce(cmd::run) : Commands.none();
+  }
+
+  // Creates a command that sets the elevator, arm, and wrist to the specified goal state.
+  private Command createStateCommand(SuperStructureState goal) {
     return Commands.run(
             () -> {
               m_elevator.setGoal(goal.elevatorGoal);
@@ -196,11 +230,8 @@ public class SuperStructure extends SubsystemBase {
               m_wrist.setGoal(goal.wristGoal);
             },
             this)
-        .until(() -> isGoalAchieved())
-        .finallyDo(
-            () -> {
-              m_state = goal;
-            });
+        .until(this::isGoalAchieved)
+        .finallyDo(() -> m_state = goal);
   }
 
   // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal
@@ -245,6 +276,18 @@ public class SuperStructure extends SubsystemBase {
   /** Returns a command to run a wrist dynamic test in the specified direction. */
   public Command wristSysIdDynamic(SysIdRoutine.Direction direction) {
     return m_wrist.getSysIdDynamic(direction);
+  }
+
+  public void runElevatorOpenLoop(double voltage) {
+    m_elevator.runElevatorOpenLoop(voltage);
+  }
+
+  public void runArmOpenLoop(double voltage) {
+    m_arm.runArmOpenLoop(voltage);
+  }
+
+  public void runWristOpenLoop(double voltage) {
+    m_wrist.runWristOpenLoop(voltage);
   }
 
   private void visualizationSetup() {
