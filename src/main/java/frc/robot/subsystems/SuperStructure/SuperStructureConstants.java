@@ -80,7 +80,7 @@ public class SuperStructureConstants {
     public static final double kArmMaxVelocity = 5.0; // from sim, TBD
     // In Rad/SecSq
     public static final double kArmMaxAcceleration = 12.5; // from sim, TBD
-    public static final double kArmMotorReduction = 225.0; // real
+    public static final double kArmMotorReduction = 190.55; // real
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec
