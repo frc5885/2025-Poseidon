@@ -63,6 +63,10 @@ public class Intake {
     m_isIntakeExtended = false;
   }
 
+  public double getCurrentAmps() {
+    return m_intakeInputs.currentAmps[0];
+  }
+
   public boolean isBeamBreakTriggered() {
     return m_beamBreakInputs.state;
   }

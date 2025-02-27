@@ -326,8 +326,8 @@ public class Drive extends SubsystemBase {
    */
   public Command getDriveToPoseCommand(Supplier<Pose2d> pose, boolean doNotFlip) {
     return doNotFlip
-        ? AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast)
-        : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
+        ? AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast, 0.1)
+        : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast, 0.1);
   }
 
   /** Returns the position of each module in radians. */

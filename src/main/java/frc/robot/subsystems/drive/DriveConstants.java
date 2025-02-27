@@ -65,7 +65,7 @@ public class DriveConstants {
   public static final int kBackRightAbsoluteEncoderPort = 1;
 
   // Drive motor configuration
-  public static final int kDriveMotorCurrentLimit = 35;
+  public static final int kDriveMotorCurrentLimit = 40;
   public static final double kWheelRadiusMeters = Units.inchesToMeters(1.943);
   public static final double kDriveMotorReduction = 6.75 / 1.0; // SDS Mk4i L2
   public static final DCMotor kDriveGearbox = DCMotor.getNEO(1);
@@ -126,8 +126,8 @@ public class DriveConstants {
   public static final double kMaxModuleRotationVelocityRadiansPerSec = 15; // measured in sim
 
   // PathPlanner configuration
-  public static final double kRobotMassKg = 60; // TODO: measure
-  public static final double kRobotMOI = 5.0; // can be calculated from sysID, check PP docs
+  public static final double kRobotMassKg = 59.0; // TODO: measure
+  public static final double kRobotMOI = 10.0; // can be calculated from sysID, check PP docs
   public static final double kWheelCOF = 0.899; // maple sim constant for colsons
   public static final double kDistanceTolerance = 0.1; // meters
   public static final double kRotationTolerance = 5; // degrees

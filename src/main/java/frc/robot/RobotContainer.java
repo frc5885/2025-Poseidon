@@ -26,10 +26,12 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.LeftAuto;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
@@ -292,8 +294,11 @@ public class RobotContainer {
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     m_autoChooser.addDefaultOption(
-        "4_coral_auto",
+        "4_coral_auto_right",
         new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
+    m_autoChooser.addDefaultOption(
+        "4_coral_auto_left",
+        new LeftAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
     // Set up SysId routines
     m_autoChooser.addOption(

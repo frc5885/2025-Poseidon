@@ -4,10 +4,14 @@
 
 package frc.robot.subsystems.Collector;
 
+import static frc.robot.Constants.kCurrentMode;
+import static frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants.*;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.subsystems.Collector.Feeder.Feeder;
 import frc.robot.subsystems.Collector.Feeder.FeederIO;
@@ -64,7 +68,12 @@ public class Collector extends SubsystemBase {
   }
 
   public boolean isCollected() {
-    return m_intake.isBeamBreakTriggered();
+    if (kCurrentMode == Mode.SIM) {
+      return m_intake.getCurrentAmps() > kIntakingCurrent
+          && getMapleIntakeSim().getGamePiecesAmount() > 0;
+    } else {
+      return m_intake.getCurrentAmps() > kIntakingCurrent;
+    }
   }
 
   public BeamBreakIO getBeamBreakIO() {

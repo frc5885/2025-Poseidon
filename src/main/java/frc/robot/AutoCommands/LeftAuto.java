@@ -23,11 +23,11 @@ import frc.robot.util.FieldConstants.ReefLevel;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class RightAuto extends SequentialCommandGroup {
-  private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
-  private Pose2d startIntakingPose = new Pose2d(2.6, 2.2, Rotation2d.fromRadians(0.85));
+public class LeftAuto extends SequentialCommandGroup {
+  private Pose2d initialPose = new Pose2d(7.3, 6.2, Rotation2d.fromRadians(Math.PI));
+  private Pose2d startIntakingPose = new Pose2d(2.6, 6.5, Rotation2d.fromRadians(-0.85));
   /** Creates a new RightAuto. */
-  public RightAuto(
+  public LeftAuto(
       Drive drive,
       SuperStructure superStructure,
       EndEffector endEffector,
@@ -50,7 +50,7 @@ public class RightAuto extends SequentialCommandGroup {
             drive,
             superStructure,
             endEffector,
-            () -> FieldConstants.Reef.branchPositions.get(9).get(ReefLevel.L4)),
+            () -> FieldConstants.Reef.branchPositions.get(4).get(ReefLevel.L4)),
 
         // intake then score second coral
         new AutoIntakeThenScoreCommand(
@@ -60,7 +60,7 @@ public class RightAuto extends SequentialCommandGroup {
             endEffector,
             vision,
             startIntakingPose,
-            () -> FieldConstants.Reef.branchPositions.get(10).get(ReefLevel.L4)),
+            () -> FieldConstants.Reef.branchPositions.get(3).get(ReefLevel.L4)),
 
         // intake then score third coral
         new AutoIntakeThenScoreCommand(
@@ -70,7 +70,7 @@ public class RightAuto extends SequentialCommandGroup {
             endEffector,
             vision,
             startIntakingPose,
-            () -> FieldConstants.Reef.branchPositions.get(11).get(ReefLevel.L3)),
+            () -> FieldConstants.Reef.branchPositions.get(2).get(ReefLevel.L4)),
 
         // intake then score forth coral
         new AutoIntakeThenScoreCommand(
@@ -80,6 +80,6 @@ public class RightAuto extends SequentialCommandGroup {
             endEffector,
             vision,
             startIntakingPose,
-            () -> FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)));
+            () -> FieldConstants.Reef.branchPositions.get(1).get(ReefLevel.L4)));
   }
 }
