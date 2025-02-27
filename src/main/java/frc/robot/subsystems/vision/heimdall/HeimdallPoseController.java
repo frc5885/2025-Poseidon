@@ -108,6 +108,7 @@ public class HeimdallPoseController {
       Pose2d questPose = m_questNav.getRobotPose();
       m_questBuffer.addSample(currentTimeSeconds, questPose);
       Logger.recordOutput("Heimdall/QuestNav", questPose);
+      Logger.recordOutput("Heimdall/QuestNavInitialSync", m_questNav.getRobotPoseFromInitialSync());
     }
 
     if (m_mode == HeimdallOdometrySource.AUTO_SWITCH) {
@@ -153,8 +154,8 @@ public class HeimdallPoseController {
       }
       // Compute offset derivative only when needed.
       double offsetDerivative = computeOffsetDerivative();
-      Logger.recordOutput("Heimdall/OffsetDerivative", offsetDerivative);
-      Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
+      // Logger.recordOutput("Heimdall/OffsetDerivative", offsetDerivative);
+      // Logger.recordOutput("Heimdall/TimeStationary", timeStationary);
       if (offsetDerivative < OFFSET_DERIVATIVE_THRESHOLD) {
         // Snap Quest into alignment.
         m_questNav.setRobotPose(odometryPose);

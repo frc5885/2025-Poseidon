@@ -18,6 +18,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
 import frc.robot.util.TunablePIDController;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -26,6 +27,10 @@ public class Wrist {
   private final WristIO m_io;
   private final WristIOInputsAutoLogged m_inputs = new WristIOInputsAutoLogged();
   private final Alert motorDisconnectedAlert;
+  private final BooleanSupplier m_disablePIDs;
+
+  // Track previous disabled state to detect rising edge
+  private boolean m_wasDisabled = false;
 
   private TrapezoidProfile m_wristProfile =
       new TrapezoidProfile(new Constraints(kWristMaxVelocity, kWristMaxAcceleration));
@@ -33,6 +38,7 @@ public class Wrist {
   private TunablePIDController m_wristController;
   private ArmFeedforward m_wristFeedforward;
   private double m_wristBaseKV = 0.0;
+  private double m_ffOffset = 0.0;
   private SysIdRoutine m_sysIdRoutine;
 
   private WristGoals m_wristGoal = WristGoals.STOW;
@@ -45,8 +51,9 @@ public class Wrist {
   private double m_lastArmVelocity = 0.0;
   private double m_armAcceleration = 0.0;
 
-  public Wrist(WristIO io) {
+  public Wrist(WristIO io, BooleanSupplier disablePIDs) {
     m_io = io;
+    m_disablePIDs = disablePIDs;
 
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -55,6 +62,7 @@ public class Wrist {
                 kWristKp, 0.0, kWristKd, kWristErrorToleranceRads, "WristPID", true);
         m_wristFeedforward = new ArmFeedforward(kWristKs, kWristKg, kWristKv);
         m_wristBaseKV = kWristKv;
+        m_ffOffset = kWristCOGOffsetForFFRadians; // need this on real robot
         break;
       case SIM:
         m_wristController =
@@ -96,11 +104,17 @@ public class Wrist {
     m_io.updateInputs(m_inputs, m_armAngleRadSupplier);
     Logger.processInputs("SuperStructure/Wrist", m_inputs);
 
-    // TODO comment this out for SysId
-    runWristSetpoint(
-        m_wristGoal != null
-            ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
-            : getRealWorldPositionRadians());
+    boolean isDisabled = m_disablePIDs.getAsBoolean();
+    if (!isDisabled) {
+      runWristSetpoint(
+          m_wristGoal != null
+              ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
+              : getRealWorldPositionRadians());
+    } else if (!m_wasDisabled) {
+      // Only call stop() on the rising edge of m_disablePIDs
+      stop();
+    }
+    m_wasDisabled = isDisabled;
 
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.wristConnected);
@@ -191,7 +205,9 @@ public class Wrist {
     Logger.recordOutput("SuperStructure/Wrist/ArmAcceleration", m_armAcceleration);
 
     // Calculate control outputs
-    double ffVoltage = m_wristFeedforward.calculate(setpoint.position, setpoint.velocity);
+    // Apply COG offset to position used for feedforward calculation only
+    double ffPosition = setpoint.position + m_ffOffset;
+    double ffVoltage = m_wristFeedforward.calculate(ffPosition, setpoint.velocity);
     double pidVoltage = m_wristController.calculate(current.position, setpoint.position);
 
     // Add a direct acceleration compensation term when arm is accelerating rapidly

@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
@@ -28,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
@@ -159,6 +159,9 @@ public class RobotContainer {
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
 
+    // toggle to disable superstructure PIDs (only works in TEST mode)
+    SmartDashboard.putBoolean("Disable PIDs", false);
+
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -188,7 +191,11 @@ public class RobotContainer {
                     VisionConstants.kRobotToCamera2,
                     CameraType.CORAL));
         m_superStructure =
-            new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark(), new WristIOSpark());
+            new SuperStructure(
+                new ElevatorIOSpark(),
+                new ArmIOSpark(),
+                new WristIOSpark(),
+                () -> SmartDashboard.getBoolean("Disable PIDs", false));
         m_collector =
             new Collector(
                 new IntakeIOSpark(),
@@ -242,7 +249,11 @@ public class RobotContainer {
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
         m_superStructure =
-            new SuperStructure(new ElevatorIOSim(), new ArmIOSim(), new WristIOSim());
+            new SuperStructure(
+                new ElevatorIOSim(),
+                new ArmIOSim(),
+                new WristIOSim(),
+                () -> SmartDashboard.getBoolean("Disable PIDs", false));
         m_collector =
             new Collector(
                 new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
@@ -272,7 +283,7 @@ public class RobotContainer {
                 new VisionIO() {},
                 new VisionIO() {});
         m_superStructure =
-            new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {});
+            new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {}, () -> false);
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
         m_endEffector =
@@ -296,23 +307,24 @@ public class RobotContainer {
         new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
     // Set up SysId routines
-    m_autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(m_drive));
-    m_autoChooser.addOption(
-        "Module Turn Speed Characterization",
-        DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
-    m_autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
-    m_autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Drive Wheel Radius Characterization",
+    // DriveCommands.wheelRadiusCharacterization(m_drive));
+    // m_autoChooser.addOption(
+    //     "Module Turn Speed Characterization",
+    //     DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
+    // m_autoChooser.addOption(
+    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Forward)",
+    //     m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Reverse)",
+    //     m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // TODO not needed for now
     // m_autoChooser.addOption(
@@ -396,18 +408,18 @@ public class RobotContainer {
 
     // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
     // m_driverController
-    //     .y()
+    //     .start()
     //     .whileTrue(
     //         new StartEndCommand(
-    //             () -> m_superStructure.runWristOpenLoop(12),
-    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             () -> m_superStructure.runArmOpenLoop(12),
+    //             () -> m_superStructure.runArmOpenLoop(0),
     //             m_superStructure));
     // m_driverController
-    //     .x()
+    //     .back()
     //     .whileTrue(
     //         new StartEndCommand(
-    //             () -> m_superStructure.runWristOpenLoop(-12),
-    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             () -> m_superStructure.runArmOpenLoop(-12),
+    //             () -> m_superStructure.runArmOpenLoop(0),
     //             m_superStructure));
 
     // ============================================================================
