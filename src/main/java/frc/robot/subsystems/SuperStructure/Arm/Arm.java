@@ -2,6 +2,7 @@ package frc.robot.subsystems.SuperStructure.Arm;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.kWristStartingPositionRadians;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -13,9 +14,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.util.TunablePIDController;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -34,6 +37,8 @@ public class Arm {
   private ArmGoals m_armGoal = ArmGoals.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
+  private DoubleSupplier m_wristAngleRadSupplier = () -> kWristStartingPositionRadians;
+
   public Arm(ArmIO io) {
     m_io = io;
 
@@ -41,7 +46,7 @@ public class Arm {
       case REAL:
         m_armController =
             new TunablePIDController(kArmKp, 0.0, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
-        m_armFeedforward = new ArmFeedforward(kArmKs, kArmKg, kArmKv);
+        m_armFeedforward = new ArmFeedforward(kArmKs, kArmStowedKg, kArmKv);
         break;
       case SIM:
         m_armController =
@@ -96,6 +101,15 @@ public class Arm {
     }
     TrapezoidProfile.State current = getCurrentState();
     TrapezoidProfile.State setpoint = m_armProfile.calculate(0.02, current, m_goal);
+
+    double compensatedKg = kArmStowedKg;
+    if (Robot.isReal()) {
+    compensatedKg =
+        kArmOutKg + (kArmOutKg - kArmStowedKg) * Math.cos(m_wristAngleRadSupplier.getAsDouble());
+    }
+    m_armFeedforward.setKg(compensatedKg);
+    Logger.recordOutput("SuperStructure/Arm/ArmKg", compensatedKg);
+
     m_io.setVoltage(
         m_armFeedforward.calculate(setpoint.position, setpoint.velocity)
             + m_armController.calculate(current.position, setpoint.position));
@@ -115,6 +129,10 @@ public class Arm {
 
   private boolean isWithinMinimum(double positionRadians) {
     return positionRadians > kArmMinAngleRads;
+  }
+
+  public void setWristAngleRadSupplier(DoubleSupplier wristAngleRadSupplier) {
+    m_wristAngleRadSupplier = wristAngleRadSupplier;
   }
 
   public double getPositionRadians() {

@@ -70,30 +70,31 @@ public class SuperStructureConstants {
     public static final int kArmMotorCurrentLimit = 20;
 
     public static final double kArmLengthMeters = Units.inchesToMeters(14.0);
-    public static final double kArmMOI_kgm2 =
-        (0.442 + 1.404) / 2.0; // with gripper in vs out, average for approximation
+    public static final double kArmStowedMOI_kgm2 = 0.442; // with gripper in
+    public static final double kArmOutMOI_kgm2 = 1.404; // with gripper out
     public static final double kArmStartingPositionRadians = Units.degreesToRadians(90);
     public static final double kArmMinAngleRads = Units.degreesToRadians(-45);
     public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = 6.0; // from sim, TBD
+    public static final double kArmMaxVelocity = 5.0; // from sim, TBD
     // In Rad/SecSq
     public static final double kArmMaxAcceleration = 12.5; // from sim, TBD
-    public static final double kArmMotorReduction = 225.0; // real TODO: rerun sysid
+    public static final double kArmMotorReduction = 225.0; // real 
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
 
-    public static final double kArmKs = 0.0;
-    public static final double kArmKv = 0.0;
-    public static final double kArmKg = 0.0;
+    public static final double kArmKs = 0.0; // TBD
+    public static final double kArmKv = 2.3134;
+    public static final double kArmStowedKg = 1.0031;
+    public static final double kArmOutKg = 3.1935;
     public static final double kArmKp = 0.0;
     public static final double kArmKd = 0.0;
 
-    public static final double kArmSimKv = 1.887;
-    public static final double kArmSimKg = 2.575;
+    public static final double kArmSimKv = 2.3134;
+    public static final double kArmSimKg = 1.0031;
     public static final double kArmSimKp = 1.0;
     public static final double kArmSimKd = 2.0;
 
