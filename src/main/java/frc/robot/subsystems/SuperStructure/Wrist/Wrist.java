@@ -279,7 +279,8 @@ public class Wrist {
   public boolean isSetpointAchieved() {
     // always return true if setpoint is lock
     return ((Math.abs(m_goal.position - getRealWorldPositionRadians()) < kWristErrorToleranceRads)
-            || m_wristGoal.equals(WristGoals.LOCK))
+            || m_wristGoal.equals(WristGoals.LOCK)
+            || m_wristGoal.equals(WristGoals.STOW))
         && !m_isSetpointAchievedInvalid;
   }
 

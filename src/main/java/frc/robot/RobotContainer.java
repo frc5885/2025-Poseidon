@@ -26,12 +26,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
+import frc.robot.commands.AutoIntakeCoralStationCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeAlgaeCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
@@ -410,20 +410,48 @@ public class RobotContainer {
     //               m_collector.runFeeder(0);
     //             },
     //             m_superStructure));
-    m_driverController
-        .y()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runWristOpenLoop(12),
-                () -> m_superStructure.runWristOpenLoop(0),
-                m_superStructure));
-    m_driverController
-        .x()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runWristOpenLoop(-12),
-                () -> m_superStructure.runWristOpenLoop(0),
-                m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(12),
+    //             () -> m_superStructure.runElevatorOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(-12),
+    //             () -> m_superStructure.runElevatorOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runArmOpenLoop(12),
+    //             () -> m_superStructure.runArmOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runArmOpenLoop(-12),
+    //             () -> m_superStructure.runArmOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runWristOpenLoop(12),
+    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runWristOpenLoop(-12),
+    //             () -> m_superStructure.runWristOpenLoop(0),
+    //             m_superStructure));
     // m_driverController
     //     .x()
     //     .onTrue(new SuperStructureCommand(m_superStructure, () -> m_stateChooser.get()));
@@ -462,6 +490,18 @@ public class RobotContainer {
     //             .andThen(new EjectIntakeCommand(m_collector)))
     //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
     // m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
+
+    // INTAKE CORAL STATION
+    m_driverController
+        .rightBumper()
+        .whileTrue(
+            new AutoIntakeCoralStationCommand(m_drive, m_superStructure, m_endEffector)
+                .unless(
+                    () ->
+                        DriverStation.isTest()
+                            || m_endEffector.isCoralHeld()
+                            || m_endEffector.isAlgaeHeld()))
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE CORAL
     m_automaticCoralScoreTrigger

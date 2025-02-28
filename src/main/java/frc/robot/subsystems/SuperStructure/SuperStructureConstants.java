@@ -53,6 +53,8 @@ public class SuperStructureConstants {
     @AllArgsConstructor
     public static enum ElevatorLevel {
       STOW(() -> kElevatorMinHeightMeters),
+      CORAL_STATION_TRANSITION(TunableDouble.register("Elevator/CORAL_STATION_TRANSITION", 0.4)),
+      CORAL_STATION(TunableDouble.register("Elevator/CORAL_STATION", 0.5)),
       L1(TunableDouble.register("Elevator/L1", 0.1)),
       ALGAE_L2(TunableDouble.register("Elevator/L2ALGAE", 0.2)),
       L2(TunableDouble.register("Elevator/L2", 0.4)),
@@ -105,6 +107,7 @@ public class SuperStructureConstants {
       IDLE(TunableDouble.register("Arm/IDLE", 50.0)),
       STOW(() -> 90.0),
       INTAKE(() -> 0.0),
+      CORAL_STATION(TunableDouble.register("Arm/CORAL_STATION", 40.0)),
       REEF(TunableDouble.register("Arm/REEF", 45.0)),
       ALGAE_FLOOR(TunableDouble.register("Arm/ALGAE_FLOOR", -45.0));
 
