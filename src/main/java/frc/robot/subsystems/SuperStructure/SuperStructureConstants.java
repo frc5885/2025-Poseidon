@@ -130,7 +130,7 @@ public class SuperStructureConstants {
     public static final double kWristMaxVelocity = 4.5;
     // In Rad/SecSq
     public static final double kWristMaxAcceleration = 20;
-    public static final double kWristMotorReduction = 116.67 / 1.7; // real
+    public static final double kWristMotorReduction = 116.67 / 1.7 * (7.0 / 4.0); // real
     // Motor Rotations -> Wrist Radians
     public static final double kWristEncoderPositionFactor = 2 * Math.PI / kWristMotorReduction;
     // Motor RPM -> Wrist Rad/Sec
