@@ -192,7 +192,8 @@ public class Elevator {
                 null,
                 null,
                 (state) ->
-                    Logger.recordOutput("SuperStructure/ElevatorSysIDState", state.toString())),
+                    Logger.recordOutput(
+                        "SuperStructure/Elevator/ElevatorSysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, superStructure));
   }

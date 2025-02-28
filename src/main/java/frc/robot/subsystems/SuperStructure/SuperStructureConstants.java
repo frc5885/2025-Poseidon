@@ -43,8 +43,8 @@ public class SuperStructureConstants {
     public static final double kElevatorKp = 1.0;
     public static final double kElevatorKd = 0.1;
 
-    public static final double kElevatorSimKv = 7.9891;
-    public static final double kElevatorSimKg = 0.93528;
+    public static final double kElevatorSimKv = 12.204;
+    public static final double kElevatorSimKg = 0.61214;
     public static final double kElevatorSimKp = 1.0;
     public static final double kElevatorSimKd = 0.0;
 
@@ -87,16 +87,16 @@ public class SuperStructureConstants {
     public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
 
     public static final double kArmKs = 0.36613;
-    public static final double kArmKv = 2.7196;
-    public static final double kArmStowedKg = 0.1813;
-    public static final double kArmOutKg = 0.25; // tbd
+    public static final double kArmKv = 2.7412; // from latest sim on bus
+    public static final double kArmStowedKg = 0.84604; // from latest sim on bus
+    public static final double kArmOutKg = 2.6861; // from latest sim on bus
     public static final double kArmKp = 1.0;
     public static final double kArmKd = 0.1;
 
-    public static final double kArmSimKv = 1.9594;
-    public static final double kArmSimKg = 1.1855;
+    public static final double kArmSimKv = 2.7412;
+    public static final double kArmSimKg = 0.84604;
     public static final double kArmSimKp = 1.0;
-    public static final double kArmSimKd = 2.0;
+    public static final double kArmSimKd = 0.5;
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
 
@@ -138,15 +138,15 @@ public class SuperStructureConstants {
         (2 * Math.PI) / 60 / kWristMotorReduction;
 
     public static final double kWristKs = 0.0;
-    public static final double kWristKv = 0.0;
-    public static final double kWristKg = 0.0;
+    public static final double kWristKv = 1.2377; // from latest sim on bus
+    public static final double kWristKg = 2.2744; // from latest sim on bus
     public static final double kWristKp = 0.0;
     public static final double kWristKd = 0.0;
 
-    public static final double kWristSimKv = 1.2031;
-    public static final double kWristSimKg = 2.3423;
+    public static final double kWristSimKv = 1.2377;
+    public static final double kWristSimKg = 2.2744;
     public static final double kWristSimKp = 1.0;
-    public static final double kWristSimKd = 0.4;
+    public static final double kWristSimKd = 0.5;
 
     public static final double kWristErrorToleranceRads = Units.degreesToRadians(1.5);
 

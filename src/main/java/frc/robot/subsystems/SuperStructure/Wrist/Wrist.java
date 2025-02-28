@@ -288,8 +288,8 @@ public class Wrist {
     m_sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                null,
-                null,
+                Volts.of(0.5).per(Second),
+                Volts.of(3),
                 null,
                 (state) ->
                     Logger.recordOutput("SuperStructure/Wrist/WristSysIDState", state.toString())),
