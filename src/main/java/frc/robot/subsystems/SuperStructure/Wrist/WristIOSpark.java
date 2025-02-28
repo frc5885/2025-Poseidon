@@ -1,5 +1,6 @@
 package frc.robot.subsystems.SuperStructure.Wrist;
 
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.kArmStartingPositionRadians;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
@@ -49,7 +50,12 @@ public class WristIOSpark implements WristIO {
         () ->
             m_wristSpark.configure(
                 wristConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    tryUntilOk(m_wristSpark, 5, () -> m_wristEncoder.setPosition(kWristStartingPositionRadians));
+    tryUntilOk(
+        m_wristSpark,
+        5,
+        () ->
+            m_wristEncoder.setPosition(
+                kWristStartingPositionRadians - kArmStartingPositionRadians));
   }
 
   @Override

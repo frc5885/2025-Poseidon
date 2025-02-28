@@ -24,20 +24,17 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
-import frc.robot.AutoCommands.RightAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.EjectIntakeCommand;
 import frc.robot.commands.IntakeAlgaeCommand;
-import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
-import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
@@ -47,14 +44,6 @@ import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.io.operatorPanel.OperatorPanel;
-import frc.robot.subsystems.Collector.Collector;
-import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
-import frc.robot.subsystems.Collector.Feeder.FeederIO;
-import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
-import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
-import frc.robot.subsystems.Collector.Intake.IntakeIO;
-import frc.robot.subsystems.Collector.Intake.IntakeIOSim;
-import frc.robot.subsystems.Collector.Intake.IntakeIOSpark;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIO;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSim;
 import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSpark;
@@ -111,7 +100,7 @@ public class RobotContainer {
   private final Vision m_vision;
   private final HeimdallPoseController m_poseController;
   private final SuperStructure m_superStructure;
-  private final Collector m_collector;
+  //   private final Collector m_collector;
   private final EndEffector m_endEffector;
 
   // SIM
@@ -185,22 +174,22 @@ public class RobotContainer {
                 new VisionIOPhotonVision(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    CameraType.APRILTAG),
-                new VisionIOPhotonVision(
-                    VisionConstants.kCamera2Name,
-                    VisionConstants.kRobotToCamera2,
-                    CameraType.CORAL));
+                    CameraType.APRILTAG));
+        // new VisionIOPhotonVision(
+        //     VisionConstants.kCamera2Name,
+        //     VisionConstants.kRobotToCamera2,
+        //     CameraType.CORAL));
         m_superStructure =
             new SuperStructure(
                 new ElevatorIOSpark(),
                 new ArmIOSpark(),
                 new WristIOSpark(),
                 () -> SmartDashboard.getBoolean("Disable PIDs", false));
-        m_collector =
-            new Collector(
-                new IntakeIOSpark(),
-                new FeederIOSpark(),
-                new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
+        // m_collector =
+        //     new Collector(
+        //         new IntakeIOSpark(),
+        //         new FeederIOSpark(),
+        //         new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         m_endEffector =
             new EndEffector(
                 new AlgaeClawIOSpark(),
@@ -239,12 +228,12 @@ public class RobotContainer {
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
                     m_driveSimulation::getSimulatedDriveTrainPose,
-                    CameraType.APRILTAG),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.kCamera2Name,
-                    VisionConstants.kRobotToCamera2,
-                    m_driveSimulation::getSimulatedDriveTrainPose,
-                    CameraType.CORAL));
+                    CameraType.APRILTAG));
+        // new VisionIOPhotonVisionSim(
+        //     VisionConstants.kCamera2Name,
+        //     VisionConstants.kRobotToCamera2,
+        //     m_driveSimulation::getSimulatedDriveTrainPose,
+        //     CameraType.CORAL));
 
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
@@ -254,9 +243,9 @@ public class RobotContainer {
                 new ArmIOSim(),
                 new WristIOSim(),
                 () -> SmartDashboard.getBoolean("Disable PIDs", false));
-        m_collector =
-            new Collector(
-                new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
+        // m_collector =
+        //     new Collector(
+        //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
         m_endEffector =
             new EndEffector(
                 new AlgaeClawIOSim(),
@@ -284,7 +273,7 @@ public class RobotContainer {
                 new VisionIO() {});
         m_superStructure =
             new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {}, () -> false);
-        m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
+        // m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
         m_endEffector =
             new EndEffector(
@@ -296,15 +285,16 @@ public class RobotContainer {
     }
 
     m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
-    m_superStructure.setIntakeFunctions(
-        () -> m_collector.extendIntake(), () -> m_collector.retractIntake());
+    // m_superStructure.setIntakeFunctions(
+    //     () -> m_collector.extendIntake(), () -> m_collector.retractIntake());
+    m_superStructure.setIntakeFunctions(() -> {}, () -> {});
 
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-    m_autoChooser.addDefaultOption(
-        "4_coral_auto",
-        new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
+    // m_autoChooser.addDefaultOption(
+    //     "4_coral_auto",
+    //     new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
     // Set up SysId routines
     // m_autoChooser.addOption(
@@ -327,42 +317,42 @@ public class RobotContainer {
     //     "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // TODO not needed for now
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Quasistatic Forward)",
-    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Quasistatic Reverse)",
-    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Dynamic Forward)",
-    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Dynamic Reverse)",
-    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Quasistatic Forward)",
-    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Quasistatic Reverse)",
-    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Dynamic Forward)",
-    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Dynamic Reverse)",
-    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Quasistatic Forward)",
-    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Quasistatic Reverse)",
-    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Dynamic Forward)",
-    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Dynamic Reverse)",
-    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Elevator SysId (Quasistatic Forward)",
+        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Elevator SysId (Quasistatic Reverse)",
+        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Elevator SysId (Dynamic Forward)",
+        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Elevator SysId (Dynamic Reverse)",
+        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Arm SysId (Quasistatic Forward)",
+        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Arm SysId (Quasistatic Reverse)",
+        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Arm SysId (Dynamic Forward)",
+        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Arm SysId (Dynamic Reverse)",
+        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Wrist SysId (Quasistatic Forward)",
+        m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Wrist SysId (Quasistatic Reverse)",
+        m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Wrist SysId (Dynamic Forward)",
+        m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Wrist SysId (Dynamic Reverse)",
+        m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
 
@@ -408,54 +398,63 @@ public class RobotContainer {
 
     // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
     // m_driverController
-    //     .start()
+    //     .x()
     //     .whileTrue(
     //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(12),
-    //             () -> m_superStructure.runArmOpenLoop(0),
+    //             () -> {
+    //               m_collector.runIntake(12);
+    //               m_collector.runFeeder(12);
+    //             },
+    //             () -> {
+    //               m_collector.runIntake(0);
+    //               m_collector.runFeeder(0);
+    //             },
     //             m_superStructure));
-    // m_driverController
-    //     .back()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(-12),
-    //             () -> m_superStructure.runArmOpenLoop(0),
-    //             m_superStructure));
+    m_driverController
+        .y()
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_superStructure.runElevatorOpenLoop(8),
+                () -> m_superStructure.runElevatorOpenLoop(0),
+                m_superStructure));
+    m_driverController
+        .x()
+        .onTrue(new SuperStructureCommand(m_superStructure, () -> m_stateChooser.get()));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
     // ============================================================================
 
     // INTAKE CORAL
-    m_driverController
-        // this is still not perfect but good enough for now
-        // the arm transitioning to INTAKE should finish before a coral could possibly be intaked
-        // fully
-        .rightBumper()
-        .onTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                .unless(m_endEffector::isCoralHeld))
-        .whileTrue(
-            new ParallelDeadlineGroup(
-                    new IntakeCoralCommand(m_collector, m_endEffector),
-                    DriveCommands.driveToGamePiece(
-                        m_drive,
-                        () -> -m_driverController.getLeftY(),
-                        () -> -m_driverController.getLeftX(),
-                        () -> -m_driverController.getRightX(),
-                        () -> m_vision.getTargetX(2).getRadians(),
-                        true))
-                .unless(m_endEffector::isCoralHeld))
-        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
+    // m_driverController
+    //     // this is still not perfect but good enough for now
+    //     // the arm transitioning to INTAKE should finish before a coral could possibly be intaked
+    //     // fully
+    //     .rightBumper()
+    //     .onTrue(
+    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+    //             .unless(m_endEffector::isCoralHeld))
+    //     .whileTrue(
+    //         new ParallelDeadlineGroup(
+    //                 new IntakeCoralCommand(m_collector, m_endEffector),
+    //                 DriveCommands.driveToGamePiece(
+    //                     m_drive,
+    //                     () -> -m_driverController.getLeftY(),
+    //                     () -> -m_driverController.getLeftX(),
+    //                     () -> -m_driverController.getRightX(),
+    //                     () -> m_vision.getTargetX(2).getRadians(),
+    //                     true))
+    //             .unless(m_endEffector::isCoralHeld))
+    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
     // EJECT GAME PIECE
-    m_driverController
-        .b()
-        .whileTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                .andThen(new EjectIntakeCommand(m_collector)))
-        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
-    m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
+    // m_driverController
+    //     .b()
+    //     .whileTrue(
+    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+    //             .andThen(new EjectIntakeCommand(m_collector)))
+    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
+    // m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
     // SCORE CORAL
     m_automaticCoralScoreTrigger

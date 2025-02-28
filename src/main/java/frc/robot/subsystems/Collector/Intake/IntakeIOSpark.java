@@ -63,8 +63,7 @@ public class IntakeIOSpark implements IntakeIO {
                 intake1Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
     SparkMaxConfig intake2Config = intake1Config;
-    intake2Config.follow(
-        m_intakeMotor1, IntakeConstants.kMotor1Inverted != IntakeConstants.kMotor2Inverted);
+    intake2Config.follow(m_intakeMotor1, IntakeConstants.kMotor2Opposite);
 
     tryUntilOk(
         m_intakeMotor2,
@@ -102,8 +101,9 @@ public class IntakeIOSpark implements IntakeIO {
   }
 
   public void extendIntake() {
-    m_leftSolenoid.set(true);
-    m_rightSolenoid.set(true);
+    // m_leftSolenoid.set(true);
+    // m_rightSolenoid.set(true);
+    return;
   }
 
   public void retractIntake() {

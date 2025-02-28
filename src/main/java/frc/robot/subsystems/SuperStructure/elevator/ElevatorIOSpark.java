@@ -45,17 +45,16 @@ public class ElevatorIOSpark implements ElevatorIO {
         .appliedOutputPeriodMs(20)
         .busVoltagePeriodMs(20)
         .outputCurrentPeriodMs(20);
-
-    // this might be wrong
-    SparkMaxConfig elevatorConfig2 = elevatorConfig1;
-    elevatorConfig2.follow(m_elevatorSpark1, kElevatorM2Inverted != kElevatorM1Inverted);
-
     tryUntilOk(
         m_elevatorSpark1,
         5,
         () ->
             m_elevatorSpark1.configure(
                 elevatorConfig1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+    SparkMaxConfig elevatorConfig2 = elevatorConfig1;
+    elevatorConfig2.follow(m_elevatorSpark1, kElevatorM2Opposite);
+
     tryUntilOk(
         m_elevatorSpark2,
         5,

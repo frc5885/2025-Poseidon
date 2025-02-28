@@ -26,9 +26,8 @@ public class LEDSubsystem {
   private final AddressableLED m_leds;
   private final AddressableLEDBuffer m_buffer;
   private LEDStates states;
-  private final AddressableLEDBufferView m_left;
-  private final AddressableLEDBufferView m_right;
-  private static final int kLength = 60;
+  private final AddressableLEDBufferView m_view;
+  private static final int kLength = 33;
   private static final int kLEDPort = 0;
 
   @Setter @Getter private boolean coralHeld = false;
@@ -44,8 +43,7 @@ public class LEDSubsystem {
     m_leds.start();
 
     states = LEDStates.IDLE;
-    m_left = m_buffer.createView(0, kLength / 2 - 1);
-    m_right = m_buffer.createView(kLength / 2, kLength - 1).reversed();
+    m_view = m_buffer.createView(0, kLength - 1);
   }
 
   public static synchronized LEDSubsystem getInstance() {
@@ -67,8 +65,7 @@ public class LEDSubsystem {
   }
 
   public void periodic() {
-    states.getPattern().applyTo(m_left);
-    states.getPattern().applyTo(m_right);
+    states.getPattern().applyTo(m_view);
 
     if (isPhotonDied) {
       states = LEDStates.PHOTON_DIED;
@@ -87,8 +84,10 @@ public class LEDSubsystem {
     Logger.recordOutput(
         "LED",
         IntStream.range(0, kLength / 2)
-            .mapToObj(i -> m_left.getLED(i).toHexString())
+            .mapToObj(i -> m_view.getLED(i).toHexString())
             .toArray(String[]::new));
+
+    m_leds.setData(m_buffer);
   }
 
   @RequiredArgsConstructor
