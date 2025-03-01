@@ -106,6 +106,7 @@ public class SuperStructureConstants {
 
     @AllArgsConstructor
     public static enum ArmGoals {
+      // Setpoints MUST be in radians when declared and degrees here! Please
       IDLE(TunableDouble.register("Arm/IDLE", 50.0)),
       STOW(() -> Units.radiansToDegrees(kArmStartingPositionRadians)),
       INTAKE(() -> 0.0),
@@ -158,7 +159,8 @@ public class SuperStructureConstants {
 
     @AllArgsConstructor
     public static enum WristGoals {
-      // these are all in real-world radians
+      // Setpoints MUST be in radians when declared and degrees here! Please
+      // these are all in real-world measurements
       STOW(() -> Units.radiansToDegrees(kWristStartingPositionRadians)),
       INTAKE(() -> 180.0),
       REEF(TunableDouble.register("Wrist/REEF", 150.0)),
