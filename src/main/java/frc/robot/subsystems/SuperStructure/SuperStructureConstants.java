@@ -1,5 +1,7 @@
 package frc.robot.subsystems.SuperStructure;
 
+import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.kArmStartingPositionRadians;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.util.TunableDouble;
@@ -43,16 +45,18 @@ public class SuperStructureConstants {
     public static final double kElevatorKp = 1.0;
     public static final double kElevatorKd = 0.1;
 
-    public static final double kElevatorSimKv = 7.9891;
-    public static final double kElevatorSimKg = 0.93528;
+    public static final double kElevatorSimKv = 12.204;
+    public static final double kElevatorSimKg = 0.61214;
     public static final double kElevatorSimKp = 1.0;
     public static final double kElevatorSimKd = 0.0;
 
-    public static final double kElevatorErrorToleranceMeters = 0.005;
+    public static final double kElevatorErrorToleranceMeters = 0.02;
 
     @AllArgsConstructor
     public static enum ElevatorLevel {
       STOW(() -> kElevatorMinHeightMeters),
+      CORAL_STATION_TRANSITION(TunableDouble.register("Elevator/CORAL_STATION_TRANSITION", 0.4)),
+      CORAL_STATION(TunableDouble.register("Elevator/CORAL_STATION", 0.5)),
       L1(TunableDouble.register("Elevator/L1", 0.1)),
       ALGAE_L2(TunableDouble.register("Elevator/L2ALGAE", 0.2)),
       L2(TunableDouble.register("Elevator/L2", 0.4)),
@@ -86,25 +90,26 @@ public class SuperStructureConstants {
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = (2 * Math.PI) / 60 / kArmMotorReduction;
 
-    public static final double kArmKs = 0.36613;
-    public static final double kArmKv = 2.7196;
-    public static final double kArmStowedKg = 0.1813;
-    public static final double kArmOutKg = 0.25; // tbd
+    public static final double kArmKs = 0.36613; // real
+    public static final double kArmKv = 2.7196; // real
+    public static final double kArmStowedKg = 0.1813; // real
+    public static final double kArmOutKg = 0.65298; // real
     public static final double kArmKp = 1.0;
     public static final double kArmKd = 0.1;
 
-    public static final double kArmSimKv = 1.9594;
-    public static final double kArmSimKg = 1.1855;
+    public static final double kArmSimKv = 2.7196;
+    public static final double kArmSimKg = 0.1813;
     public static final double kArmSimKp = 1.0;
-    public static final double kArmSimKd = 2.0;
+    public static final double kArmSimKd = 0.1;
 
-    public static final double kArmErrorToleranceRads = Units.degreesToRadians(1.5);
+    public static final double kArmErrorToleranceRads = Units.degreesToRadians(5.0);
 
     @AllArgsConstructor
     public static enum ArmGoals {
       IDLE(TunableDouble.register("Arm/IDLE", 50.0)),
-      STOW(() -> 90.0),
+      STOW(() -> Units.radiansToDegrees(kArmStartingPositionRadians)),
       INTAKE(() -> 0.0),
+      CORAL_STATION(TunableDouble.register("Arm/CORAL_STATION", 40.0)),
       REEF(TunableDouble.register("Arm/REEF", 45.0)),
       ALGAE_FLOOR(TunableDouble.register("Arm/ALGAE_FLOOR", -45.0));
 
@@ -119,9 +124,10 @@ public class SuperStructureConstants {
 
     public static final double kWristLengthMeters = Units.inchesToMeters(8.5);
     public static final double kWristMOI_kgm2 = 0.324;
-    public static final double kWristCOGOffsetForFFRadians = 0;
+    public static final double kWristCOGOffsetForFFRadians = -0.53379;
     // real world angle
-    public static final double kWristStartingPositionRadians = Units.degreesToRadians(270);
+    public static final double kWristStartingPositionRadians =
+        kArmStartingPositionRadians + Units.degreesToRadians(180);
     // relative to arm
     public static final double kWristMinAngleRads = Units.degreesToRadians(30);
     public static final double kWristMaxAngleRads = Units.degreesToRadians(180);
@@ -137,23 +143,23 @@ public class SuperStructureConstants {
     public static final double kWristEncoderVelocityFactor =
         (2 * Math.PI) / 60 / kWristMotorReduction;
 
-    public static final double kWristKs = 0.0;
-    public static final double kWristKv = 0.0;
-    public static final double kWristKg = 0.0;
+    public static final double kWristKs = 0.19933; // real
+    public static final double kWristKv = 1.1691; // real
+    public static final double kWristKg = 0.64929; // real
     public static final double kWristKp = 0.0;
     public static final double kWristKd = 0.0;
 
-    public static final double kWristSimKv = 1.2031;
-    public static final double kWristSimKg = 2.3423;
-    public static final double kWristSimKp = 1.0;
-    public static final double kWristSimKd = 0.4;
+    public static final double kWristSimKv = 1.1691;
+    public static final double kWristSimKg = 0.64929;
+    public static final double kWristSimKp = 0.0;
+    public static final double kWristSimKd = 0.0;
 
-    public static final double kWristErrorToleranceRads = Units.degreesToRadians(1.5);
+    public static final double kWristErrorToleranceRads = Units.degreesToRadians(3.0);
 
     @AllArgsConstructor
     public static enum WristGoals {
       // these are all in real-world radians
-      STOW(() -> 270.0),
+      STOW(() -> Units.radiansToDegrees(kWristStartingPositionRadians)),
       INTAKE(() -> 180.0),
       REEF(TunableDouble.register("Wrist/REEF", 150.0)),
       L1REEF(TunableDouble.register("Wrist/L1REEF", 155.0)),
