@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -424,37 +425,34 @@ public class RobotContainer {
     //             () -> m_superStructure.runElevatorOpenLoop(-12),
     //             () -> m_superStructure.runElevatorOpenLoop(0),
     //             m_superStructure));
-    // m_driverController
-    //     .y()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(12),
-    //             () -> m_superStructure.runArmOpenLoop(0),
-    //             m_superStructure));
-    // m_driverController
-    //     .x()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(-12),
-    //             () -> m_superStructure.runArmOpenLoop(0),
-    //             m_superStructure));
-    // m_driverController
-    //     .y()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runWristOpenLoop(12),
-    //             () -> m_superStructure.runWristOpenLoop(0),
-    //             m_superStructure));
-    // m_driverController
-    //     .x()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runWristOpenLoop(-12),
-    //             () -> m_superStructure.runWristOpenLoop(0),
-    //             m_superStructure));
+    m_driverController
+        .y()
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_superStructure.runElevatorOpenLoop(12),
+                () -> m_superStructure.runElevatorOpenLoop(0),
+                m_superStructure));
     m_driverController
         .x()
-        .onTrue(new SuperStructureCommand(m_superStructure, () -> m_stateChooser.get()));
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_superStructure.runElevatorOpenLoop(-12),
+                () -> m_superStructure.runElevatorOpenLoop(0),
+                m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () -> m_superStructure.setElevatorGoal(ElevatorLevel.L1), m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3),
+    // m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .onTrue(new SuperStructureCommand(m_superStructure, () -> m_stateChooser.get()));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv

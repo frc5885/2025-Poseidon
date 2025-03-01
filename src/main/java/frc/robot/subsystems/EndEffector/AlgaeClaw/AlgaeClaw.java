@@ -34,6 +34,10 @@ public class AlgaeClaw {
     // Update game piece visualizer
     GamePieceVisualizer.setHasAlgae(m_beamBreakInputs.state);
     LEDSubsystem.getInstance().setAlgaeHeld(m_beamBreakInputs.state);
+
+    // if (isBeamBreakTriggered()) {
+    //   runAlgaeClaw(6);
+    // }
   }
 
   public void runAlgaeClaw(double volt) {

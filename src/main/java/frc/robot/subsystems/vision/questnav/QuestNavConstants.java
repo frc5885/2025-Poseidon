@@ -8,5 +8,5 @@ public class QuestNavConstants {
   // Physical offset from the robot center to the Quest headset.
   // Quest is 14 inches in front of the robot center
   public static final Transform2d kRobotToQuestTransform =
-      new Transform2d(Units.inchesToMeters(10), 0, new Rotation2d());
+      new Transform2d(Units.inchesToMeters(11), Units.inchesToMeters(5.5), Rotation2d.fromDegrees(60));
 }

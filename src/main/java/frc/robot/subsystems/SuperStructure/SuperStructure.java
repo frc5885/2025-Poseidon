@@ -223,6 +223,10 @@ public class SuperStructure extends SubsystemBase {
     return cmd != null ? Commands.runOnce(cmd::run) : Commands.none();
   }
 
+  public void setElevatorGoal(ElevatorLevel goal) {
+    m_elevator.setGoal(goal);
+  }
+
   // Creates a command that sets the elevator, arm, and wrist to the specified goal state.
   private Command createStateCommand(SuperStructureState goal) {
     return Commands.run(

@@ -4,19 +4,17 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.kWristStartingPositionRadians;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
+import frc.robot.util.TunableFeedForward;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -36,7 +34,7 @@ public class Arm {
       new TrapezoidProfile(new Constraints(kArmMaxVelocity, kArmMaxAcceleration));
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
   private TunablePIDController m_armController;
-  private ArmFeedforward m_armFeedforward;
+  private TunableFeedForward m_armFeedforward;
   private SysIdRoutine m_sysIdRoutine;
 
   private ArmGoals m_armGoal = ArmGoals.STOW;
@@ -51,24 +49,28 @@ public class Arm {
     switch (Constants.kCurrentMode) {
       case REAL:
         m_armController =
-            new TunablePIDController(kArmKp, 0.0, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
-        m_armFeedforward = new ArmFeedforward(kArmKs, kArmStowedKg, kArmKv);
+            new TunablePIDController(
+                kArmKp, kArmKi, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
+        m_armFeedforward =
+            new TunableFeedForward(kArmKs, kArmStowedKg, kArmKv, 0.0, "ArmFeedForward", true);
         break;
       case SIM:
         m_armController =
             new TunablePIDController(
                 kArmSimKp, 0.0, kArmSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
-        m_armFeedforward = new ArmFeedforward(0.0, kArmSimKg, kArmSimKv);
+        m_armFeedforward =
+            new TunableFeedForward(0.0, kArmSimKg, kArmSimKv, 0.0, "ArmSimFeedForward", true);
         break;
       case REPLAY:
         m_armController =
             new TunablePIDController(
                 kArmSimKp, 0.0, kArmSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
-        m_armFeedforward = new ArmFeedforward(0.0, kArmSimKg, kArmSimKv);
+        m_armFeedforward =
+            new TunableFeedForward(0.0, kArmSimKg, kArmSimKv, 0.0, "ArmSimFeedForward", true);
         break;
       default:
         m_armController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
-        m_armFeedforward = new ArmFeedforward(0.0, 0.0, 0.0);
+        m_armFeedforward = new TunableFeedForward(0.0, 0.0, 0.0, 0.0, "", false);
         break;
     }
 
@@ -80,15 +82,15 @@ public class Arm {
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
     boolean isDisabled = m_disablePIDs.getAsBoolean();
-    if (!isDisabled) {
-      runArmSetpoint(
-          m_armGoal != null
-              ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
-              : getPositionRadians());
-    } else if (!m_wasDisabled) {
-      // Only call stop() on the rising edge of m_disablePIDs
-      stop();
-    }
+    // if (!isDisabled) {
+    //   runArmSetpoint(
+    //       m_armGoal != null
+    //           ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+    //           : getPositionRadians());
+    // } else if (!m_wasDisabled) {
+    //   // Only call stop() on the rising edge of m_disablePIDs
+    //   stop();
+    // }
     m_wasDisabled = isDisabled;
 
     // Update alerts
@@ -115,10 +117,11 @@ public class Arm {
     TrapezoidProfile.State setpoint = m_armProfile.calculate(0.02, current, m_goal);
 
     double compensatedKg = kArmStowedKg;
-    if (Robot.isReal()) {
-      compensatedKg =
-          kArmOutKg + (kArmOutKg - kArmStowedKg) * Math.cos(m_wristAngleRadSupplier.getAsDouble());
-    }
+    // if (Robot.isReal()) {
+    //   compensatedKg =
+    //       kArmOutKg + (kArmOutKg - kArmStowedKg) *
+    // Math.cos(m_wristAngleRadSupplier.getAsDouble());
+    // }
     m_armFeedforward.setKg(compensatedKg);
     Logger.recordOutput("SuperStructure/Arm/ArmKg", compensatedKg);
 

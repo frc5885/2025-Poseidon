@@ -83,7 +83,7 @@ public class SuperStructureConstants {
     // In Rad/Sec
     public static final double kArmMaxVelocity = 5.0; // from sim, TBD
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = 12.5; // from sim, TBD
+    public static final double kArmMaxAcceleration = 30.0; // from sim, TBD
     public static final double kArmMotorReduction = 190.55 * 1.4; // real
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
@@ -95,6 +95,7 @@ public class SuperStructureConstants {
     public static final double kArmStowedKg = 0.1813; // real
     public static final double kArmOutKg = 0.65298; // real
     public static final double kArmKp = 1.0;
+    public static final double kArmKi = 0.1;
     public static final double kArmKd = 0.1;
 
     public static final double kArmSimKv = 2.7196;
@@ -147,13 +148,13 @@ public class SuperStructureConstants {
     public static final double kWristKs = 0.19933; // real
     public static final double kWristKv = 1.1691; // real
     public static final double kWristKg = 0.64929; // real
-    public static final double kWristKp = 0.0;
-    public static final double kWristKd = 0.0;
+    public static final double kWristKp = 1.0;
+    public static final double kWristKd = 0.1;
 
     public static final double kWristSimKv = 1.1691;
     public static final double kWristSimKg = 0.64929;
-    public static final double kWristSimKp = 0.0;
-    public static final double kWristSimKd = 0.0;
+    public static final double kWristSimKp = 1.0;
+    public static final double kWristSimKd = 0.5;
 
     public static final double kWristErrorToleranceRads = Units.degreesToRadians(3.0);
 

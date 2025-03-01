@@ -88,15 +88,15 @@ public class Elevator {
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
     boolean isDisabled = m_disablePIDs.getAsBoolean();
-    if (!isDisabled) {
-      runElevatorSetpoint(
-          m_elevatorGoal != null
-              ? m_elevatorGoal.setpointMeters.getAsDouble()
-              : getPositionMeters());
-    } else if (!m_wasDisabled) {
-      // Only call stop() on the rising edge of m_disablePIDs
-      stop();
-    }
+    // if (!isDisabled) {
+    //   runElevatorSetpoint(
+    //       m_elevatorGoal != null
+    //           ? m_elevatorGoal.setpointMeters.getAsDouble()
+    //           : getPositionMeters());
+    // } else if (!m_wasDisabled) {
+    //   // Only call stop() on the rising edge of m_disablePIDs
+    //   stop();
+    // }
     m_wasDisabled = isDisabled;
 
     // Update alerts
