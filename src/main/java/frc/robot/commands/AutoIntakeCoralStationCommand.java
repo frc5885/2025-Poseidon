@@ -49,7 +49,7 @@ public class AutoIntakeCoralStationCommand extends SequentialCommandGroup {
                 DriveConstants.kDistanceTolerance,
                 DriveConstants.kRotationTolerance,
                 false),
-            new SuperStructureCommand(superStructure, () -> SuperStructureState.CORAL_STATION)),
+            new SuperStructureCommand(superStructure, () -> SuperStructureState.INTAKE_CORAL)),
         new ParallelCommandGroup(
             DriveCommands.preciseChassisAlign(
                 drive,

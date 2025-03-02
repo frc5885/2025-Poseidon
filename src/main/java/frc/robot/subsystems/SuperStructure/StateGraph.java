@@ -65,23 +65,18 @@ public class StateGraph {
             // INTAKE_CORAL transitions
             new SuperStructureState[] {
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
+              SuperStructureState.INTAKE_TO_SCORE,
               SuperStructureState.IDLE,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
-              SuperStructureState.INTAKE_ALGAE_L2,
-              SuperStructureState.INTAKE_ALGAE_L3,
-              SuperStructureState.SCORE_CORAL_L1,
-              SuperStructureState.SCORE_CORAL_L2,
-              SuperStructureState.SCORE_CORAL_L3,
-              SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
               SuperStructureState.STOWING,
             },
 
             // CORAL_STATION transitions
-            new SuperStructureState[] {
-              SuperStructureState.CORAL_STATION, SuperStructureState.TRANSITION_FOR_STATION,
-            },
+            // new SuperStructureState[] {
+            //   SuperStructureState.CORAL_STATION, SuperStructureState.TRANSITION_FOR_STATION,
+            // },
 
             // IDLE transitions
             new SuperStructureState[] {
@@ -99,7 +94,8 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.INTAKE_TO_SCORE,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
               SuperStructureState.SCORE_CORAL_L1,
@@ -113,7 +109,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L3,
               SuperStructureState.SCORE_CORAL_L1,
@@ -127,7 +123,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.INTAKE_ALGAE_L3,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.SCORE_CORAL_L1,
@@ -141,7 +137,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.SCORE_CORAL_L1,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
@@ -155,7 +151,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.SCORE_CORAL_L2,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
@@ -169,7 +165,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
@@ -183,7 +179,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.SCORE_CORAL_L4,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
@@ -198,7 +194,8 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.SCORE_ALGAE_PROCESSOR,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.TRANSITION_FOR_STATION,
+              // SuperStructureState.INTAKE_TO_SCORE,
               SuperStructureState.INTAKE_ALGAE_FLOOR,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
@@ -225,25 +222,36 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.UNSTOWING,
               SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.INTAKE_ALGAE_FLOOR,
-              SuperStructureState.INTAKE_ALGAE_L2,
-              SuperStructureState.INTAKE_ALGAE_L3,
+              // SuperStructureState.INTAKE_ALGAE_FLOOR,
+              // SuperStructureState.INTAKE_ALGAE_L2,
+              // SuperStructureState.INTAKE_ALGAE_L3,
               SuperStructureState.STOWING
             },
 
             // TRANSITION_FOR_STATION transitions
+            // new SuperStructureState[] {
+            //   SuperStructureState.TRANSITION_FOR_STATION,
+            //   SuperStructureState.CORAL_STATION,
+            //   SuperStructureState.INTAKE_CORAL,
+            //   SuperStructureState.INTAKE_ALGAE_FLOOR,
+            //   SuperStructureState.INTAKE_ALGAE_L2,
+            //   SuperStructureState.INTAKE_ALGAE_L3,
+            //   SuperStructureState.SCORE_CORAL_L1,
+            //   SuperStructureState.SCORE_CORAL_L2,
+            //   SuperStructureState.SCORE_CORAL_L3,
+            //   SuperStructureState.SCORE_CORAL_L4,
+            //   SuperStructureState.SCORE_ALGAE_PROCESSOR,
+            // },
+
+            // INTAKE_TO_SCORE transitions
             new SuperStructureState[] {
-              SuperStructureState.TRANSITION_FOR_STATION,
-              SuperStructureState.CORAL_STATION,
-              SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.INTAKE_ALGAE_FLOOR,
+              SuperStructureState.INTAKE_TO_SCORE,
               SuperStructureState.INTAKE_ALGAE_L2,
               SuperStructureState.INTAKE_ALGAE_L3,
               SuperStructureState.SCORE_CORAL_L1,
               SuperStructureState.SCORE_CORAL_L2,
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.SCORE_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_PROCESSOR,
             });
 
     // for each set of transitions
