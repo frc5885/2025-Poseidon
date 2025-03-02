@@ -138,7 +138,7 @@ public class RobotContainer {
             .leftBumper()
             .debounce(0.1)
             .and(m_operatorPanel.getOverrideSwitch(1))
-            .and(m_operatorPanel.getOverrideSwitch(2));
+            .and(m_operatorPanel.getNegatedOverrideSwitch(2));
     m_algaeFloorTrigger =
         m_driverController
             .leftBumper()
@@ -154,7 +154,7 @@ public class RobotContainer {
             .leftBumper()
             .debounce(0.1)
             .and(m_operatorPanel.getOverrideSwitch(1))
-            .and(m_operatorPanel.getNegatedOverrideSwitch(2));
+            .and(m_operatorPanel.getOverrideSwitch(2));
 
     // toggle to disable superstructure PIDs (only works in TEST mode)
     SmartDashboard.putBoolean("Disable PIDs", false);
@@ -462,7 +462,7 @@ public class RobotContainer {
     m_driverController
         .x()
         .onTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.STOWED));
     m_driverController
         .y()
         .onTrue(
@@ -577,7 +577,8 @@ public class RobotContainer {
             new InstantCommand(
                     () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE))
                 .andThen(
-                    new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE),
+                    new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
                     new InstantCommand(
                         () -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 

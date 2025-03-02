@@ -42,7 +42,7 @@ public class SuperStructureConstants {
     public static final double kElevatorKs = 0.29106;
     public static final double kElevatorKv = 12.41;
     public static final double kElevatorKg = 0.40538;
-    public static final double kElevatorKp = 15.0;
+    public static final double kElevatorKp = 30.0;
     public static final double kElevatorKd = 0.0;
 
     public static final double kElevatorSimKv = 12.204;
@@ -170,7 +170,7 @@ public class SuperStructureConstants {
       L4REEF(TunableDouble.register("Wrist/L4REEF", 130.0)),
       ALGAE_FLOOR(TunableDouble.register("Wrist/ALGAE_FLOOR", 30.0)),
       ALGAE_REEF(TunableDouble.register("Wrist/ALGAE_REEF", 120.0)),
-      PROCESSOR(TunableDouble.register("Wrist/PROCESSOR", 120.0)),
+      PROCESSOR(TunableDouble.register("Wrist/PROCESSOR", 110.0)),
       NET(TunableDouble.register("Wrist/NET", 160.0)),
       LOCK(() -> -1.0);
 
