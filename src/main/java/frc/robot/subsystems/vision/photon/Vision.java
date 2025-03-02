@@ -15,8 +15,6 @@ package frc.robot.subsystems.vision.photon;
 
 import static frc.robot.subsystems.vision.photon.VisionConstants.*;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -42,12 +40,14 @@ public class Vision extends SubsystemBase {
   private final VisionIO[] m_io;
   private final VisionIOInputs[] m_inputs;
   private final Alert[] m_disconnectedAlerts;
-  private final SparkMax m_power = new SparkMax(VisionConstants.kCameraPowerId, MotorType.kBrushed);
+  // private final SparkMax m_power = new SparkMax(VisionConstants.kCameraPowerId,
+  // MotorType.kBrushed);
+  // private final PWM m_source = new PWM(kCameraPowerChannel);
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     m_consumer = consumer;
     m_io = io;
-    m_power.setVoltage(5.0);
+    // m_source.setPulseTimeMicroseconds(1550);
 
     // Initialize inputs
     m_inputs = new VisionIOInputs[io.length];

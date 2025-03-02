@@ -36,6 +36,7 @@ import org.littletonrobotics.urcl.URCL;
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
   private RobotContainer m_robotContainer;
+  // private final PWM m_source;
 
   public Robot() {
     // Record metadata
@@ -88,6 +89,7 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    // m_source = new PWM(VisionConstants.kCameraPowerChannel);
   }
 
   /** This function is called periodically during all modes. */
@@ -108,6 +110,7 @@ public class Robot extends LoggedRobot {
 
     GamePieceVisualizer.showHeldGamePieces();
     LEDSubsystem.getInstance().periodic();
+    // m_source.setPulseTimeMicroseconds(1762);
   }
 
   /** This function is called once when the robot is disabled. */
