@@ -38,6 +38,10 @@ public class EndEffector extends SubsystemBase {
     return m_algaeClaw.isBeamBreakTriggered();
   }
 
+  public void setCLawApplyHoldVoltage(boolean applyHoldVoltage) {
+    m_algaeClaw.setApplyHoldVoltage(applyHoldVoltage);
+  }
+
   public BeamBreakIO getAlgaeBeamBreakIO() {
     return m_algaeClaw.getBeamBreakIO();
   }

@@ -35,15 +35,20 @@ import java.util.List;
 import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
 public class Vision extends SubsystemBase {
   private final VisionConsumer m_consumer;
   private final VisionIO[] m_io;
   private final VisionIOInputs[] m_inputs;
   private final Alert[] m_disconnectedAlerts;
+  private final SparkMax m_power = new SparkMax(VisionConstants.kCameraPowerId, MotorType.kBrushed);
 
-  public Vision(VisionConsumer consumer, VisionIO... io) {
+  public Vision(VisionConsumer consumer, SparkMax actuator, VisionIO... io) {
     m_consumer = consumer;
     m_io = io;
+    m_power.setVoltage(5.0);
 
     // Initialize inputs
     m_inputs = new VisionIOInputs[io.length];

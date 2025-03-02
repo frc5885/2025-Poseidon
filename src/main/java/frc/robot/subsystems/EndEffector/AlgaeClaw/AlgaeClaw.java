@@ -6,6 +6,7 @@ import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 public class AlgaeClaw {
@@ -14,6 +15,8 @@ public class AlgaeClaw {
   private AlgaeClawIOInputsAutoLogged m_algaeInputs = new AlgaeClawIOInputsAutoLogged();
   private final BeamBreakIO m_beamBreakIO;
   private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
+
+  @Setter private boolean applyHoldVoltage = false;
 
   public AlgaeClaw(AlgaeClawIO io, BeamBreakIO beamBreakIO) {
     m_algaeClawIO = io;
@@ -35,9 +38,13 @@ public class AlgaeClaw {
     GamePieceVisualizer.setHasAlgae(m_beamBreakInputs.state);
     LEDSubsystem.getInstance().setAlgaeHeld(m_beamBreakInputs.state);
 
-    // if (isBeamBreakTriggered()) {
-    //   runAlgaeClaw(6);
-    // }
+    if (applyHoldVoltage) {
+      runAlgaeClaw(3);
+      if (!isBeamBreakTriggered()) {
+        stop();
+        applyHoldVoltage = false;
+      }
+    }
   }
 
   public void runAlgaeClaw(double volt) {

@@ -30,7 +30,7 @@ public class SuperStructureConstants {
     public static final double kElevatorMaxVelocity = 1.5; // from sim, TBD
     // In Meters/SecSq
     public static final double kElevatorMaxAcceleration = 5.5; // from sim, TBD
-    public static final double kElevatorMotorReduction = 35.0 * (22.0 / 18.0) * 1.25; // real
+    public static final double kElevatorMotorReduction = 35.0 * (22.0 / 18.0) * 1.25 * 1.72; // real
     public static final double kElevatorWheelRadiusMeters = 0.045; // real
     // Motor Rotations -> Elevator Meters
     public static final double kElevatorEncoderPositionFactor =
@@ -42,8 +42,8 @@ public class SuperStructureConstants {
     public static final double kElevatorKs = 0.29106;
     public static final double kElevatorKv = 12.41;
     public static final double kElevatorKg = 0.40538;
-    public static final double kElevatorKp = 1.0;
-    public static final double kElevatorKd = 0.1;
+    public static final double kElevatorKp = 15.0;
+    public static final double kElevatorKd = 0.0;
 
     public static final double kElevatorSimKv = 12.204;
     public static final double kElevatorSimKg = 0.61214;
@@ -58,7 +58,7 @@ public class SuperStructureConstants {
       CORAL_STATION_TRANSITION(TunableDouble.register("Elevator/CORAL_STATION_TRANSITION", 0.4)),
       CORAL_STATION(TunableDouble.register("Elevator/CORAL_STATION", 0.5)),
       L1(TunableDouble.register("Elevator/L1", 0.1)),
-      ALGAE_L2(TunableDouble.register("Elevator/L2ALGAE", 0.2)),
+      ALGAE_L2(TunableDouble.register("Elevator/L2ALGAE", 0.1)),
       L2(TunableDouble.register("Elevator/L2", 0.4)),
       ALGAE_L3(TunableDouble.register("Elevator/L3ALGAE", 0.57)),
       L3(TunableDouble.register("Elevator/L3", 0.77)),
@@ -94,7 +94,7 @@ public class SuperStructureConstants {
     public static final double kArmKv = 2.7196; // real
     public static final double kArmStowedKg = 0.1813; // real
     public static final double kArmOutKg = 0.65298; // real
-    public static final double kArmKp = 1.0;
+    public static final double kArmKp = 8.0;
     public static final double kArmKi = 0.1;
     public static final double kArmKd = 0.1;
 
@@ -148,8 +148,9 @@ public class SuperStructureConstants {
     public static final double kWristKs = 0.19933; // real
     public static final double kWristKv = 1.1691; // real
     public static final double kWristKg = 0.64929; // real
-    public static final double kWristKp = 1.0;
-    public static final double kWristKd = 0.1;
+    public static final double kWristKp = 8.0;
+    public static final double kWristKi = 0.0;
+    public static final double kWristKd = 0.5;
 
     public static final double kWristSimKv = 1.1691;
     public static final double kWristSimKg = 0.64929;

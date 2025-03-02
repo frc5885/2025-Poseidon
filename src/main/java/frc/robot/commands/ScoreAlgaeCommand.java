@@ -23,6 +23,8 @@ public class ScoreAlgaeCommand extends Command {
 
   @Override
   public void initialize() {
+    m_endEffector.setCLawApplyHoldVoltage(false);
+
     // Simulate an algae being scored
     if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
       ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).simulateGamePieceOuttake(0.5);

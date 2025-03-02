@@ -6,6 +6,7 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristC
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
+import frc.robot.util.TunableDouble;
 import frc.robot.util.TunableFeedForward;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
@@ -41,6 +43,8 @@ public class Arm {
   private boolean m_isSetpointAchievedInvalid = false;
 
   private DoubleSupplier m_wristAngleRadSupplier = () -> kWristStartingPositionRadians;
+
+  private DoubleSupplier kG = TunableDouble.register("Arm/kG", 0.5);
 
   public Arm(ArmIO io, BooleanSupplier disablePIDs) {
     m_io = io;
@@ -82,15 +86,15 @@ public class Arm {
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
     boolean isDisabled = m_disablePIDs.getAsBoolean();
-    // if (!isDisabled) {
-    //   runArmSetpoint(
-    //       m_armGoal != null
-    //           ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
-    //           : getPositionRadians());
-    // } else if (!m_wasDisabled) {
-    //   // Only call stop() on the rising edge of m_disablePIDs
-    //   stop();
-    // }
+    if (!isDisabled) {
+      runArmSetpoint(
+          m_armGoal != null
+              ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+              : getPositionRadians());
+    } else if (!m_wasDisabled) {
+      // Only call stop() on the rising edge of m_disablePIDs
+      stop();
+    }
     m_wasDisabled = isDisabled;
 
     // Update alerts
@@ -126,8 +130,9 @@ public class Arm {
     Logger.recordOutput("SuperStructure/Arm/ArmKg", compensatedKg);
 
     m_io.setVoltage(
-        m_armFeedforward.calculate(setpoint.position, setpoint.velocity)
-            + m_armController.calculate(current.position, setpoint.position));
+        // m_armFeedforward.calculate(setpoint.position, setpoint.velocity) +
+        m_armController.calculate(current.position, m_goal.position)
+            + kG.getAsDouble() * Math.cos(m_inputs.positionRads));
   }
 
   public void runCharacterization(double outputVolts) {

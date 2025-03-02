@@ -26,11 +26,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.JustDrive;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.AutoIntakeCoralStationCommand;
 import frc.robot.commands.DriveCommands;
@@ -237,7 +237,7 @@ public class RobotContainer {
         //     CameraType.CORAL));
 
         // the sim lags really badly if you use auto switch
-        m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
+        m_poseController.setMode(HeimdallOdometrySource.ONLY_QUEST);
         m_superStructure =
             new SuperStructure(
                 new ElevatorIOSim(),
@@ -296,6 +296,8 @@ public class RobotContainer {
     // m_autoChooser.addDefaultOption(
     //     "4_coral_auto",
     //     new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
+
+    m_autoChooser.addDefaultOption("Just Drive", new JustDrive(m_drive));
 
     // Set up SysId routines
     // m_autoChooser.addOption(
@@ -425,20 +427,20 @@ public class RobotContainer {
     //             () -> m_superStructure.runElevatorOpenLoop(-12),
     //             () -> m_superStructure.runElevatorOpenLoop(0),
     //             m_superStructure));
-    m_driverController
-        .y()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runElevatorOpenLoop(12),
-                () -> m_superStructure.runElevatorOpenLoop(0),
-                m_superStructure));
-    m_driverController
-        .x()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runElevatorOpenLoop(-12),
-                () -> m_superStructure.runElevatorOpenLoop(0),
-                m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(7),
+    //             () -> m_superStructure.runElevatorOpenLoop(0),
+    //             m_superStructure));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(-7),
+    //             () -> m_superStructure.runElevatorOpenLoop(0),
+    //             m_superStructure));
     // m_driverController
     //     .y()
     //     .onTrue(
@@ -450,9 +452,14 @@ public class RobotContainer {
     //         new InstantCommand(
     //             () -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3),
     // m_superStructure));
-    // m_driverController
-    //     .x()
-    //     .onTrue(new SuperStructureCommand(m_superStructure, () -> m_stateChooser.get()));
+    m_driverController
+        .x()
+        .onTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+    m_driverController
+        .y()
+        .onTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L3));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -612,5 +619,9 @@ public class RobotContainer {
         "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
     Logger.recordOutput(
         "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+  }
+
+  public void syncQuest() {
+    m_poseController.forceSyncQuest();
   }
 }

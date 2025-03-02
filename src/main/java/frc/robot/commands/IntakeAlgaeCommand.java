@@ -36,6 +36,7 @@ public class IntakeAlgaeCommand extends Command {
   @Override
   public void end(boolean interrupted) {
     m_endEffector.stopAlgaeClaw();
+    m_endEffector.setCLawApplyHoldVoltage(true);
 
     // Don't simulate a successful intake if the command was interrupted
     if (interrupted) {

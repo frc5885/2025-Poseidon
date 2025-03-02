@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
+import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -51,6 +52,8 @@ public class Wrist {
   private double m_lastArmVelocity = 0.0;
   private double m_armAcceleration = 0.0;
 
+  private DoubleSupplier kG = TunableDouble.register("Wrist/kG", 1.1);
+
   public Wrist(WristIO io, BooleanSupplier disablePIDs) {
     m_io = io;
     m_disablePIDs = disablePIDs;
@@ -59,7 +62,7 @@ public class Wrist {
       case REAL:
         m_wristController =
             new TunablePIDController(
-                kWristKp, 0.0, kWristKd, kWristErrorToleranceRads, "WristPID", true);
+                kWristKp, kWristKi, kWristKd, kWristErrorToleranceRads, "WristPID", true);
         m_wristFeedforward = new ArmFeedforward(kWristKs, kWristKg, kWristKv);
         m_wristBaseKV = kWristKv;
         m_ffOffset = kWristCOGOffsetForFFRadians; // need this on real robot
@@ -105,15 +108,15 @@ public class Wrist {
     Logger.processInputs("SuperStructure/Wrist", m_inputs);
 
     boolean isDisabled = m_disablePIDs.getAsBoolean();
-    // if (!isDisabled) {
-    //   runWristSetpoint(
-    //       m_wristGoal != null
-    //           ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
-    //           : getRealWorldPositionRadians());
-    // } else if (!m_wasDisabled) {
-    //   // Only call stop() on the rising edge of m_disablePIDs
-    //   stop();
-    // }
+    if (!isDisabled) {
+      runWristSetpoint(
+          m_wristGoal != null
+              ? Units.degreesToRadians(m_wristGoal.setpointDegrees.getAsDouble())
+              : getRealWorldPositionRadians());
+    } else if (!m_wasDisabled) {
+      // Only call stop() on the rising edge of m_disablePIDs
+      stop();
+    }
     m_wasDisabled = isDisabled;
 
     // Update alerts
@@ -208,7 +211,7 @@ public class Wrist {
     // Apply COG offset to position used for feedforward calculation only
     double ffPosition = setpoint.position + m_ffOffset;
     double ffVoltage = m_wristFeedforward.calculate(ffPosition, setpoint.velocity);
-    double pidVoltage = m_wristController.calculate(current.position, setpoint.position);
+    double pidVoltage = m_wristController.calculate(current.position, m_goal.position);
 
     // Add a direct acceleration compensation term when arm is accelerating rapidly
     if (armAccelAbs > 2.0) {
@@ -223,7 +226,9 @@ public class Wrist {
     Logger.recordOutput("SuperStructure/Wrist/PIDVoltage", pidVoltage);
     Logger.recordOutput("SuperStructure/Wrist/GoalPosition", setpointRadians);
     Logger.recordOutput("SuperStructure/Wrist/SetpointPosition", setpoint.position);
-    m_io.setVoltage(ffVoltage + pidVoltage);
+    m_io.setVoltage(
+        // ffVoltage +
+        pidVoltage + kG.getAsDouble() * Math.cos(m_inputs.realWorldPositionRads));
   }
 
   public void runCharacterization(double outputVolts) {

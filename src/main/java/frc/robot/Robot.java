@@ -150,6 +150,7 @@ public class Robot extends LoggedRobot {
     }
 
     LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
+    m_robotContainer.syncQuest();
   }
 
   /** This function is called periodically during operator control. */

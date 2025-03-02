@@ -26,7 +26,7 @@ public class AlgaeClawIOSpark implements AlgaeClawIO {
     m_algaeClawConfig = new SparkMaxConfig();
     m_algaeClawConfig
         .inverted(AlgaeClawConstants.kInverted)
-        .idleMode(IdleMode.kCoast)
+        .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(AlgaeClawConstants.kCurrentLimit)
         .voltageCompensation(12.0);
     m_algaeClawConfig.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);

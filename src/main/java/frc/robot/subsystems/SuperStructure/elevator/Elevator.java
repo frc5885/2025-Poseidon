@@ -14,8 +14,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -39,6 +41,8 @@ public class Elevator {
 
   private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
+
+  private DoubleSupplier kG = TunableDouble.register("Elevator/kG", 0.40538);
 
   public Elevator(ElevatorIO io, BooleanSupplier disablePIDs) {
     m_io = io;
@@ -88,15 +92,15 @@ public class Elevator {
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
     boolean isDisabled = m_disablePIDs.getAsBoolean();
-    // if (!isDisabled) {
-    //   runElevatorSetpoint(
-    //       m_elevatorGoal != null
-    //           ? m_elevatorGoal.setpointMeters.getAsDouble()
-    //           : getPositionMeters());
-    // } else if (!m_wasDisabled) {
-    //   // Only call stop() on the rising edge of m_disablePIDs
-    //   stop();
-    // }
+    if (!isDisabled) {
+      runElevatorSetpoint(
+          m_elevatorGoal != null
+              ? m_elevatorGoal.setpointMeters.getAsDouble()
+              : getPositionMeters());
+    } else if (!m_wasDisabled) {
+      // Only call stop() on the rising edge of m_disablePIDs
+      stop();
+    }
     m_wasDisabled = isDisabled;
 
     // Update alerts
@@ -124,8 +128,8 @@ public class Elevator {
     TrapezoidProfile.State current = getCurrentState();
     TrapezoidProfile.State setpoint = m_elevatorProfile.calculate(0.02, current, m_goal);
     m_io.setVoltage(
-        m_elevatorFeedforward.calculate(setpoint.velocity)
-            + m_elevatorController.calculate(current.position, setpoint.position));
+        // m_elevatorFeedforward.calculate(setpoint.velocity) +
+        m_elevatorController.calculate(current.position, m_goal.position) + kG.getAsDouble());
   }
 
   public void runCharacterization(double outputVolts) {
