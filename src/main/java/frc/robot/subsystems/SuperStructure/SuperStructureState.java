@@ -27,7 +27,9 @@ public enum SuperStructureState {
   UNSTOWING(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK),
   // to prevent wrist from flopping
   IDLE_TO_INTAKE(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.LOCK),
-  TRANSITION_FOR_STATION(ElevatorLevel.CORAL_STATION_TRANSITION, ArmGoals.INTAKE, WristGoals.STOW);
+  TRANSITION_FOR_STATION(ElevatorLevel.CORAL_STATION_TRANSITION, ArmGoals.INTAKE,
+  WristGoals.STOW),
+  INTAKE_TO_SCORE(ElevatorLevel.STOW, ArmGoals.INTAKE, WristGoals.REEF);
 
   public ElevatorLevel elevatorGoal;
   public ArmGoals armGoal;

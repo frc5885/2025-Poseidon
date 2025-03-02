@@ -15,6 +15,8 @@ package frc.robot.subsystems.vision.photon;
 
 import static frc.robot.subsystems.vision.photon.VisionConstants.*;
 
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -35,9 +37,6 @@ import java.util.List;
 import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-
 public class Vision extends SubsystemBase {
   private final VisionConsumer m_consumer;
   private final VisionIO[] m_io;
@@ -45,7 +44,7 @@ public class Vision extends SubsystemBase {
   private final Alert[] m_disconnectedAlerts;
   private final SparkMax m_power = new SparkMax(VisionConstants.kCameraPowerId, MotorType.kBrushed);
 
-  public Vision(VisionConsumer consumer, SparkMax actuator, VisionIO... io) {
+  public Vision(VisionConsumer consumer, VisionIO... io) {
     m_consumer = consumer;
     m_io = io;
     m_power.setVoltage(5.0);

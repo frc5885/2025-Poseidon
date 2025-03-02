@@ -24,7 +24,7 @@ public class VisionConstants {
   public static final AprilTagFieldLayout kAprilTagLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
-public static final int kCameraPowerId = 40;
+  public static final int kCameraPowerId = 40;
 
   // Camera names, must match names configured on coprocessor
   public static final String kCamera0Name = "tsunami";

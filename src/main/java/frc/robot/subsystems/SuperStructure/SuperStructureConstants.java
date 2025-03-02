@@ -47,7 +47,7 @@ public class SuperStructureConstants {
 
     public static final double kElevatorSimKv = 12.204;
     public static final double kElevatorSimKg = 0.61214;
-    public static final double kElevatorSimKp = 1.0;
+    public static final double kElevatorSimKp = 30.0;
     public static final double kElevatorSimKd = 0.0;
 
     public static final double kElevatorErrorToleranceMeters = 0.02;
@@ -100,7 +100,7 @@ public class SuperStructureConstants {
 
     public static final double kArmSimKv = 2.7196;
     public static final double kArmSimKg = 0.1813;
-    public static final double kArmSimKp = 1.0;
+    public static final double kArmSimKp = 8.0;
     public static final double kArmSimKd = 0.1;
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(5.0);
@@ -154,7 +154,7 @@ public class SuperStructureConstants {
 
     public static final double kWristSimKv = 1.1691;
     public static final double kWristSimKg = 0.64929;
-    public static final double kWristSimKp = 1.0;
+    public static final double kWristSimKp = 25.0;
     public static final double kWristSimKd = 0.5;
 
     public static final double kWristErrorToleranceRads = Units.degreesToRadians(3.0);
