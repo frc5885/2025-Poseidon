@@ -16,7 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -24,24 +23,19 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.JustDrive;
-import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.AutoIntakeCoralStationCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeAlgaeCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNet;
-import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
-import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -125,6 +119,8 @@ public class RobotContainer {
   private final Trigger m_manualTroughScoreTrigger;
   /** right trigger and button 4 false */
   private final Trigger m_automaticCoralScoreTrigger;
+  /** leftBumper and button 3 true */
+  private final Trigger m_algaeReefL3Trigger;
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
@@ -138,7 +134,11 @@ public class RobotContainer {
     m_algaeProcessorTrigger =
         m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
     m_algaeReefTrigger =
-        m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
+        m_driverController
+            .leftBumper()
+            .debounce(0.1)
+            .and(m_operatorPanel.getOverrideSwitch(1))
+            .and(m_operatorPanel.getNegatedOverrideSwitch(2));
     m_algaeFloorTrigger =
         m_driverController
             .leftBumper()
@@ -149,6 +149,12 @@ public class RobotContainer {
     m_automaticCoralScoreTrigger =
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
+    m_algaeReefL3Trigger =
+        m_driverController
+            .leftBumper()
+            .debounce(0.1)
+            .and(m_operatorPanel.getOverrideSwitch(2))
+            .and(m_operatorPanel.getNegatedOverrideSwitch(1));
 
     // toggle to disable superstructure PIDs (only works in TEST mode)
     SmartDashboard.putBoolean("Disable PIDs", false);
@@ -517,26 +523,38 @@ public class RobotContainer {
                 .unless(() -> !m_endEffector.isCoralHeld()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
-    // INTAKE ALGAE REEF
+    // INTAKE ALGAE REEF L2
     m_algaeReefTrigger
         .whileTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L2)
-            .alongWith(new IntakeAlgaeCommand(m_endEffector))
-            // .andThen(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR))
+                .alongWith(new IntakeAlgaeCommand(m_endEffector))
+            // .andThen(new SuperStructureCommand(m_superStructure, () ->
+            // SuperStructureState.SCORE_ALGAE_PROCESSOR))
             // new AutoIntakeAlgaeReefCommand(
             //     m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose())
-                )
-        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+            )
+        .onFalse(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
             // new SequentialCommandGroup(
             //     new InstantCommand(
-            //         () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
+            //         () ->
+            // LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
             //     new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
             //         .deadlineFor(
             //             new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
             //         .unless(() -> DriverStation.isTest()),
-            //     new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
+            //     new SuperStructureCommand(m_superStructure, () ->
+            // SuperStructureState.INTAKE_CORAL),
             //     new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)))
-                );
+            );
+
+    // INTAKE ALGAE REEF L3
+    m_algaeReefL3Trigger
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L3)
+                .alongWith(new IntakeAlgaeCommand(m_endEffector)))
+        .onFalse(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
 
     // INTAKE ALGAE FLOOR
     m_algaeFloorTrigger
@@ -547,14 +565,21 @@ public class RobotContainer {
         .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
     // line up for algae processor score
-    m_driverController.a().onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR));
+    m_driverController
+        .a()
+        .onTrue(
+            new SuperStructureCommand(
+                m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR));
     // SCORE ALGAE PROCESSOR
     m_algaeProcessorTrigger
         .whileTrue(new ScoreAlgaeCommand(m_endEffector))
-        .onFalse(new InstantCommand(
-            () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)).andThen(
-        new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE),
-        new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
+        .onFalse(
+            new InstantCommand(
+                    () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE))
+                .andThen(
+                    new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE),
+                    new InstantCommand(
+                        () -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 
     // SCORE ALGAE NET
     m_algaeNetTrigger
