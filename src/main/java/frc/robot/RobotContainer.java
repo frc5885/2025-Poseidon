@@ -36,6 +36,7 @@ import frc.robot.commands.AutoIntakeCoralStationCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeAlgaeCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
+import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNet;
 import frc.robot.commands.ScoreAlgaeProcessor;
 import frc.robot.commands.ScoreCoralCommand;
@@ -519,18 +520,23 @@ public class RobotContainer {
     // INTAKE ALGAE REEF
     m_algaeReefTrigger
         .whileTrue(
-            new AutoIntakeAlgaeReefCommand(
-                m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
-        .onFalse(
-            new SequentialCommandGroup(
-                new InstantCommand(
-                    () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
-                new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-                    .deadlineFor(
-                        new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
-                    .unless(() -> DriverStation.isTest()),
-                new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
-                new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L2)
+            .alongWith(new IntakeAlgaeCommand(m_endEffector))
+            // .andThen(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR))
+            // new AutoIntakeAlgaeReefCommand(
+            //     m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose())
+                )
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+            // new SequentialCommandGroup(
+            //     new InstantCommand(
+            //         () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
+            //     new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+            //         .deadlineFor(
+            //             new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
+            //         .unless(() -> DriverStation.isTest()),
+            //     new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
+            //     new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)))
+                );
 
     // INTAKE ALGAE FLOOR
     m_algaeFloorTrigger
@@ -540,12 +546,15 @@ public class RobotContainer {
                 .alongWith(new IntakeAlgaeCommand(m_endEffector)))
         .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
+    // line up for algae processor score
+    m_driverController.a().onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR));
     // SCORE ALGAE PROCESSOR
     m_algaeProcessorTrigger
-        .whileTrue(
-            new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector)
-                .unless(() -> !m_endEffector.isAlgaeHeld()))
-        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+        .whileTrue(new ScoreAlgaeCommand(m_endEffector))
+        .onFalse(new InstantCommand(
+            () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)).andThen(
+        new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE),
+        new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 
     // SCORE ALGAE NET
     m_algaeNetTrigger
