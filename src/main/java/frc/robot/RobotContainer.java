@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.JustDrive;
 import frc.robot.commands.AutoIntakeCoralStationCommand;
@@ -159,7 +158,7 @@ public class RobotContainer {
     // toggle to disable superstructure PIDs (only works in TEST mode)
     SmartDashboard.putBoolean("Disable PIDs", false);
 
-    m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
+    m_poseController = new HeimdallPoseController(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
     switch (Constants.kCurrentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -305,6 +304,8 @@ public class RobotContainer {
     //     new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
     m_autoChooser.addDefaultOption("Just Drive", new JustDrive(m_drive));
+    // m_autoChooser.addOption(
+    //     "2 Algae", new MidAuto(m_drive, m_superStructure, m_endEffector, m_vision));
 
     // Set up SysId routines
     // m_autoChooser.addOption(
@@ -327,42 +328,42 @@ public class RobotContainer {
     //     "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // TODO not needed for now
-    m_autoChooser.addOption(
-        "Elevator SysId (Quasistatic Forward)",
-        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Elevator SysId (Quasistatic Reverse)",
-        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Elevator SysId (Dynamic Forward)",
-        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Elevator SysId (Dynamic Reverse)",
-        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Arm SysId (Quasistatic Forward)",
-        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Arm SysId (Quasistatic Reverse)",
-        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Arm SysId (Dynamic Forward)",
-        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Arm SysId (Dynamic Reverse)",
-        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Wrist SysId (Quasistatic Forward)",
-        m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Wrist SysId (Quasistatic Reverse)",
-        m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Wrist SysId (Dynamic Forward)",
-        m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Wrist SysId (Dynamic Reverse)",
-        m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Forward)",
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Reverse)",
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Forward)",
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Reverse)",
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Forward)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Reverse)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Dynamic Forward)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Dynamic Reverse)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Quasistatic Forward)",
+    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Quasistatic Reverse)",
+    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Dynamic Forward)",
+    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Wrist SysId (Dynamic Reverse)",
+    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
 
@@ -461,8 +462,7 @@ public class RobotContainer {
     // m_superStructure));
     m_driverController
         .x()
-        .onTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.STOWED));
+        .onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.STOWED));
     m_driverController
         .y()
         .onTrue(

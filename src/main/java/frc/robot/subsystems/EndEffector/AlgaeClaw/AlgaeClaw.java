@@ -18,6 +18,8 @@ public class AlgaeClaw {
 
   @Setter private boolean applyHoldVoltage = false;
 
+  private boolean m_isSetpointAchievedInvalid = false;
+
   public AlgaeClaw(AlgaeClawIO io, BeamBreakIO beamBreakIO) {
     m_algaeClawIO = io;
     m_beamBreakIO = beamBreakIO;
@@ -39,12 +41,15 @@ public class AlgaeClaw {
     LEDSubsystem.getInstance().setAlgaeHeld(m_beamBreakInputs.state);
 
     if (applyHoldVoltage) {
+      m_isSetpointAchievedInvalid = true;
       runAlgaeClaw(3);
       if (!isBeamBreakTriggered()) {
         stop();
         applyHoldVoltage = false;
       }
     }
+
+    m_isSetpointAchievedInvalid = false;
   }
 
   public void runAlgaeClaw(double volt) {
@@ -56,7 +61,7 @@ public class AlgaeClaw {
   }
 
   public boolean isBeamBreakTriggered() {
-    return m_beamBreakInputs.state;
+    return m_beamBreakInputs.state && !m_isSetpointAchievedInvalid;
   }
 
   public void stop() {

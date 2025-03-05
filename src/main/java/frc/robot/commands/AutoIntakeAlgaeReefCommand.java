@@ -7,9 +7,10 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
@@ -20,12 +21,14 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.TunableDouble;
 import java.util.List;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
-  private final double kTransitionDistance = 0.2;
+  private final double kTransitionDistance = Units.inchesToMeters(7.0);
   private Pose2d targetPose;
   private Pose2d transitionPose2d;
   private Supplier<SuperStructureState> stateSupplier;
@@ -57,18 +60,19 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
 
               LEDSubsystem.getInstance().setStates(LEDStates.ALGAE_INTAKE_LINE_UP);
             }),
-        new ParallelDeadlineGroup(
-            new IntakeAlgaeCommand(endEffector),
-            new SuperStructureCommand(superStructure, () -> stateSupplier.get()),
+        new ParallelCommandGroup(
             new DriveToPoseCommand(
                     drive,
                     () -> transitionPose2d,
                     DriveConstants.kDistanceTolerance,
                     DriveConstants.kRotationTolerance,
                     true)
-                .unless(() -> DriverStation.isTest())),
-        DriveCommands.preciseChassisAlign(drive, () -> AllianceFlipUtil.apply(targetPose))
-            .unless(() -> DriverStation.isTest()));
+                .unless(() -> DriverStation.isTest()),
+            new SuperStructureCommand(superStructure, () -> stateSupplier.get())),
+        new IntakeAlgaeCommand(endEffector)
+            .deadlineFor(
+                DriveCommands.preciseChassisAlign(drive, () -> AllianceFlipUtil.apply(targetPose))
+                    .unless(() -> DriverStation.isTest())));
   }
 
   private SuperStructureState calculateState(Pose2d pose) {

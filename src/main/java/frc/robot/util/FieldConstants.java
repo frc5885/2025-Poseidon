@@ -95,7 +95,7 @@ public class FieldConstants {
     public static final Pose2d[] centerFaces =
         new Pose2d[6]; // Starting facing the reef in clockwise order
     public static final SuperStructureState[] AlgaeLevel = new SuperStructureState[6];
-    public static final double centerFaceOffset = 0.65;
+    public static final double centerFaceOffset = 0.45;
     public static final List<Map<ReefLevel, Pose3d>> branchPositions =
         new ArrayList<>(); // Starting at the right branch facing the reef in clockwise
 

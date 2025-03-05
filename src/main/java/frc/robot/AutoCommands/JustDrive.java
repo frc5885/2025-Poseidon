@@ -7,8 +7,10 @@ package frc.robot.AutoCommands;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -19,8 +21,14 @@ public class JustDrive extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-        new WaitUntilFarFromCommand(drive::getPose, 1.5)
+        new WaitCommand(10.0),
+        new WaitUntilFarFromCommand(drive::getPose, 5.0)
             .deadlineFor(
-                new RunCommand(() -> drive.runVelocity(new ChassisSpeeds(1.0, 0.0, 0.0)), drive)));
+                new RunCommand(
+                    () ->
+                        drive.runVelocity(
+                            new ChassisSpeeds(
+                                DriveConstants.kMaxSpeedMetersPerSec / 2.5, 0.0, 0.0)),
+                    drive)));
   }
 }
