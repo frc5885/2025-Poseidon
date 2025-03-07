@@ -28,25 +28,20 @@ public class VisionConstants {
   public static final String kCamera0Name = "tsunami";
   public static final String kCamera1Name = "sandstorm";
 
-  public static final String kCamera2Name = "coral";
-
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
   public static final Transform3d kRobotToCamera0 =
       new Transform3d(
-          Units.inchesToMeters(10),
-          -Units.inchesToMeters(12.25),
-          Units.inchesToMeters(8.0),
-          new Rotation3d(0.0, 0, Units.degreesToRadians(10)));
+          Units.inchesToMeters(8.689),
+          -Units.inchesToMeters(7.375),
+          Units.inchesToMeters(12.964),
+          new Rotation3d(0.0, 0, 0));
   public static final Transform3d kRobotToCamera1 =
       new Transform3d(
-          Units.inchesToMeters(10),
-          Units.inchesToMeters(12.25),
-          Units.inchesToMeters(8.0),
-          new Rotation3d(0.0, 0, -Units.degreesToRadians(10)));
-  // coral intake camera
-  public static final Transform3d kRobotToCamera2 =
-      new Transform3d(0, 0, 1, new Rotation3d(0, Units.degreesToRadians(50), Math.PI));
+          Units.inchesToMeters(8.689),
+          Units.inchesToMeters(7.375),
+          Units.inchesToMeters(12.964),
+          new Rotation3d(0.0, 0, 0));
 
   // Basic filtering thresholds
   public static final double kMaxAmbiguity = 0.3;

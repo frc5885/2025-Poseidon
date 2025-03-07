@@ -1,12 +1,12 @@
 package frc.robot.subsystems.vision.questnav;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.FloatArraySubscriber;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Timer;
 
 public class QuestNavIOReal implements QuestNavIO {
   // NetworkTables instance and table for Quest communication
@@ -27,11 +27,14 @@ public class QuestNavIOReal implements QuestNavIO {
   private final DoubleSubscriber m_questBatteryPercent =
       m_nt4Table.getDoubleTopic("batteryPercent").subscribe(0.0f);
 
+  private double m_prevTimestamp = 0.0;
+  private Debouncer m_connectedDebouncer = new Debouncer(0.5);
+
   @Override
   public void updateInputs(QuestNavIOInputs inputs) {
-    inputs.connected =
-        ((Timer.getTimestamp() - m_questBatteryPercent.getLastChange()) / 1000) < 250;
     inputs.timestamp = m_questTimestamp.get();
+    inputs.connected = !m_connectedDebouncer.calculate(inputs.timestamp == m_prevTimestamp);
+    m_prevTimestamp = inputs.timestamp;
     inputs.batteryPercent = m_questBatteryPercent.get();
     inputs.position = m_questPosition.get();
     inputs.quaternion = m_questQuaternion.get();
