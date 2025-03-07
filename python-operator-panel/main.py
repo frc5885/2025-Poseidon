@@ -46,6 +46,9 @@ reef = pygame.image.load("python-operator-panel/reef.png")
 branch = pygame.image.load("python-operator-panel/branch.png").convert_alpha()
 branch = pygame.transform.scale(branch, (126, 402))
 
+programIcon = pygame.image.load('python-operator-panel\WiredcatsVectorLogoGood.png')
+pygame.display.set_icon(programIcon)
+
 class Spinner:
     def __init__(self, center, radius):
         self.center = center

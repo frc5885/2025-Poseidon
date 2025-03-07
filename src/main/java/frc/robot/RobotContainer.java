@@ -74,9 +74,6 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -185,16 +182,11 @@ public class RobotContainer {
                 new VisionIOPhotonVision(
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
-                    CameraType.APRILTAG),
-                new VisionIOPhotonVision(
-                    VisionConstants.kCamera2Name,
-                    VisionConstants.kRobotToCamera2,
-                    CameraType.CORAL));
+                    CameraType.APRILTAG));
         m_superStructure =
             new SuperStructure(
                 new ElevatorIOSpark(),
                 new ArmIOSpark(),
-                new WristIOSpark(),
                 () -> SmartDashboard.getBoolean("Disable PIDs", false));
         m_collector =
             new Collector(
@@ -239,12 +231,7 @@ public class RobotContainer {
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
                     m_driveSimulation::getSimulatedDriveTrainPose,
-                    CameraType.APRILTAG),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.kCamera2Name,
-                    VisionConstants.kRobotToCamera2,
-                    m_driveSimulation::getSimulatedDriveTrainPose,
-                    CameraType.CORAL));
+                    CameraType.APRILTAG));
 
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
@@ -252,7 +239,6 @@ public class RobotContainer {
             new SuperStructure(
                 new ElevatorIOSim(),
                 new ArmIOSim(),
-                new WristIOSim(),
                 () -> SmartDashboard.getBoolean("Disable PIDs", false));
         m_collector =
             new Collector(
@@ -276,16 +262,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 m_poseController,
                 (pose) -> {});
-        m_vision =
-            new Vision(
-                m_drive::addVisionMeasurement,
-                new VisionIO() {},
-                new VisionIO() {},
-                new VisionIO() {});
-        m_superStructure =
-            new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {}, () -> false);
+        m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, () -> false);
         m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
-
         m_endEffector =
             new EndEffector(
                 new AlgaeClawIO() {},
@@ -296,8 +275,6 @@ public class RobotContainer {
     }
 
     m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
-    m_superStructure.setIntakeFunctions(
-        () -> m_collector.extendIntake(), () -> m_collector.retractIntake());
 
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -351,18 +328,6 @@ public class RobotContainer {
     // m_autoChooser.addOption(
     //     "Arm SysId (Dynamic Reverse)",
     //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Quasistatic Forward)",
-    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Quasistatic Reverse)",
-    //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Dynamic Forward)",
-    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Wrist SysId (Dynamic Reverse)",
-    //     m_superStructure.wristSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
 
@@ -393,20 +358,6 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
-    // Reset gyro to 0° when leftStick is pressed
-    // m_driverController
-    //     .leftStick()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () -> {
-    //                   m_drive.resetGyro();
-    //                   Pose2d newPose = new Pose2d(0, 0, new Rotation2d());
-    //                   m_drive.setPose(newPose);
-    //                 },
-    //                 m_drive)
-    //             .ignoringDisable(true));
-
-    // m_driverController.y().onTrue(new InstantCommand(() -> m_poseController.forceSyncQuest()));
     // m_driverController
     //     .start()
     //     .whileTrue(
@@ -515,30 +466,6 @@ public class RobotContainer {
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
     // ============================================================================
-
-    // new JoystickButton(new GenericHID(1), 2)
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_collector.runIntake(12), () -> m_collector.stopIntake(), m_collector));
-
-    // new JoystickButton(new GenericHID(1), 3)
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_collector.runFeeder(12), () -> m_collector.stopFeeder(), m_collector));
-
-    // new JoystickButton(new GenericHID(1), 4)
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_endEffector.runCoralEjector(12),
-    //             () -> m_endEffector.stopCoralEjector(),
-    //             m_collector));
-
-    // new JoystickButton(new GenericHID(1), 5)
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_endEffector.runAlgaeClaw(12),
-    //             () -> m_endEffector.stopAlgaeClaw(),
-    //             m_collector));
   }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

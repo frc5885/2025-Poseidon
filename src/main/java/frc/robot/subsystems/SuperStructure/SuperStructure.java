@@ -24,9 +24,6 @@ import frc.robot.subsystems.SuperStructure.Elevator.Elevator;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
-import frc.robot.subsystems.SuperStructure.Wrist.Wrist;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -45,7 +42,6 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
-  private final Wrist m_wrist;
 
   private SuperStructureState m_state = SuperStructureState.STOWED;
   private SuperStructureState m_finalGoal = SuperStructureState.STOWED;
@@ -56,7 +52,6 @@ public class SuperStructure extends SubsystemBase {
   private LoggedMechanismRoot2d m_carriageRoot;
   private LoggedMechanismRoot2d m_armRoot;
   private LoggedMechanismLigament2d m_armMech;
-  private LoggedMechanismLigament2d m_wristMech;
 
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
@@ -64,26 +59,20 @@ public class SuperStructure extends SubsystemBase {
   private Runnable m_extendIntakeCmd = null;
   private Runnable m_retractIntakeCmd = null;
 
-  public SuperStructure(
-      ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO, BooleanSupplier disablePIDs) {
+  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, BooleanSupplier disablePIDs) {
     m_elevator = new Elevator(elevatorIO, disablePIDs);
     m_arm = new Arm(armIO, disablePIDs);
-    m_wrist = new Wrist(wristIO, disablePIDs);
-    m_wrist.setArmAngleSuppliers(m_arm::getPositionRadians, m_arm::getVelocityRadPerSec);
-    m_arm.setWristAngleRadSupplier(m_wrist::getPositionRadians);
 
     visualizationSetup();
 
     m_elevator.sysIdSetup(this);
     m_arm.sysIdSetup(this);
-    m_wrist.sysIdSetup(this);
   }
 
   @Override
   public void periodic() {
     m_elevator.periodic();
     m_arm.periodic();
-    m_wrist.periodic();
 
     visualizationUpdate();
   }
@@ -108,16 +97,6 @@ public class SuperStructure extends SubsystemBase {
         "SuperStructure/Arm/GoalPosition",
         Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
     Logger.recordOutput("SuperStructure/Arm/SetPointPosition", m_arm.getSetpointRadians());
-    return goal;
-  }
-
-  @AutoLogOutput(key = "SuperStructure/Wrist/Goal")
-  public WristGoals getWristGoal() {
-    WristGoals goal = m_wrist.getGoal();
-    Logger.recordOutput(
-        "SuperStructure/Wrist/GoalPosition",
-        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
-    Logger.recordOutput("SuperStructure/Wrist/SetPointPosition", m_wrist.getSetpointRadians());
     return goal;
   }
 
@@ -228,8 +207,6 @@ public class SuperStructure extends SubsystemBase {
     return Commands.run(
             () -> {
               m_elevator.setGoal(goal.elevatorGoal);
-              m_arm.setGoal(goal.armGoal);
-              m_wrist.setGoal(goal.wristGoal);
             },
             this)
         .until(this::isGoalAchieved)
@@ -240,9 +217,7 @@ public class SuperStructure extends SubsystemBase {
   // state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
-    return m_elevator.isSetpointAchieved()
-        && m_arm.isSetpointAchieved()
-        && m_wrist.isSetpointAchieved();
+    return m_elevator.isSetpointAchieved() && m_arm.isSetpointAchieved();
   }
 
   @AutoLogOutput(key = "SuperStructure/isFinalGoalAchieved")
@@ -270,26 +245,12 @@ public class SuperStructure extends SubsystemBase {
     return m_arm.getSysIdDynamic(direction);
   }
 
-  /** Returns a command to run a wrist quasistatic test in the specified direction. */
-  public Command wristSysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return m_wrist.getSysIdQuasistatic(direction);
-  }
-
-  /** Returns a command to run a wrist dynamic test in the specified direction. */
-  public Command wristSysIdDynamic(SysIdRoutine.Direction direction) {
-    return m_wrist.getSysIdDynamic(direction);
-  }
-
   public void runElevatorOpenLoop(double voltage) {
     m_elevator.runElevatorOpenLoop(voltage);
   }
 
   public void runArmOpenLoop(double voltage) {
     m_arm.runArmOpenLoop(voltage);
-  }
-
-  public void runWristOpenLoop(double voltage) {
-    m_wrist.runWristOpenLoop(voltage);
   }
 
   private void visualizationSetup() {
@@ -322,21 +283,6 @@ public class SuperStructure extends SubsystemBase {
                 Units.radiansToDegrees(kArmStartingPositionRadians),
                 10.0,
                 new Color8Bit(0, 255, 0)));
-    m_wristMech =
-        m_armMech.append(
-            new LoggedMechanismLigament2d(
-                "Wrist",
-                kWristLengthMeters,
-                Units.radiansToDegrees(kWristStartingPositionRadians),
-                10.0,
-                new Color8Bit(0, 255, 255)));
-    // parts of algae claw (don't need to update because they're fixed relative to wrist)
-    m_wristMech.append(
-        new LoggedMechanismLigament2d(
-            "AlgaeClaw1", kWristLengthMeters, -149, 10.0, new Color8Bit(0, 255, 255)));
-    m_wristMech.append(
-        new LoggedMechanismLigament2d(
-            "AlgaeClaw2", kWristLengthMeters, -84, 10.0, new Color8Bit(0, 255, 255)));
   }
 
   private void visualizationUpdate() {
@@ -347,7 +293,6 @@ public class SuperStructure extends SubsystemBase {
     m_armRoot.setPosition(
         m_armRootTranslation.getX(), m_armRootTranslation.getY() + m_elevator.getPositionMeters());
     m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
-    m_wristMech.setAngle(Units.radiansToDegrees(m_wrist.getPositionRadians()));
     Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
 
     // Log pose 3d
@@ -368,7 +313,6 @@ public class SuperStructure extends SubsystemBase {
             0,
             m_armRootTranslation.getY() + m_elevator.getPositionMeters(),
             new Rotation3d(0, -m_arm.getPositionRadians(), 0)));
-    Logger.recordOutput("SuperStructure/Mechanism3d/3-Wrist", getEndEffectorPose3d());
   }
 
   /* Returns the pose of the end effector for game piece visualization */
@@ -381,6 +325,6 @@ public class SuperStructure extends SubsystemBase {
         m_armRootTranslation.getY()
             + m_elevator.getPositionMeters()
             + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
-        new Rotation3d(0.0, -m_wrist.getRealWorldPositionRadians(), 0.0));
+        new Rotation3d());
   }
 }
