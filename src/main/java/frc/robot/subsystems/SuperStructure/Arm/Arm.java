@@ -4,11 +4,16 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.kWristStartingPositionRadians;
 
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -32,8 +37,6 @@ public class Arm {
   // Track previous disabled state to detect rising edge
   private boolean m_wasDisabled = false;
 
-  private TrapezoidProfile m_armProfile =
-      new TrapezoidProfile(new Constraints(kArmMaxVelocity, kArmMaxAcceleration));
   private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
   private TunablePIDController m_armController;
   private TunableFeedForward m_armFeedforward;
@@ -46,17 +49,42 @@ public class Arm {
 
   private DoubleSupplier kG = TunableDouble.register("Arm/kG", 0.5);
 
+  private TalonFX m_arm;
+  private DutyCycleEncoder m_encoder;
+  private double m_lastPosition;
+  private double m_setPointRadians = 2.94;
+  private final double kMaxVelocity = 1.15;
+  private final double kMaxAccel = 11.0;
+  private final double kVelDeviation = 0.040337;
+
+  private TrapezoidProfile m_armProfile =
+      new TrapezoidProfile(new Constraints(kMaxVelocity, kMaxAccel));
+
   public Arm(ArmIO io, BooleanSupplier disablePIDs) {
+    m_arm = new TalonFX(60);
+    TalonFXConfiguration config = new TalonFXConfiguration();
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.Feedback.SensorToMechanismRatio = 76.57;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    StatusCode status = StatusCode.StatusCodeNotInitialized;
+    for (int i = 0; i < 5; i++) {
+      status = m_arm.getConfigurator().apply(config);
+      if (status.isOK()) break;
+    }
+    m_encoder = new DutyCycleEncoder(1);
+    m_encoder.setDutyCycleRange(kArmEncoderMin, kArmEncoderMax);
+    m_arm.setPosition(2.94);
+
     m_io = io;
     m_disablePIDs = disablePIDs;
 
     switch (Constants.kCurrentMode) {
       case REAL:
         m_armController =
-            new TunablePIDController(
-                kArmKp, kArmKi, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
+            new TunablePIDController(10.0, 0.0, 0.5, kArmErrorToleranceRads, "ArmPID", true);
         m_armFeedforward =
-            new TunableFeedForward(kArmKs, kArmStowedKg, kArmKv, 0.0, "ArmFeedForward", true);
+            new TunableFeedForward(0.36392, 0.29185, 7.6337, 0.0, "ArmFeedForward", true);
+        // kA = 0.17852
         break;
       case SIM:
         m_armController =
@@ -81,25 +109,60 @@ public class Arm {
     motorDisconnectedAlert = new Alert("Arm disconnected", AlertType.kError);
   }
 
+  private double getArmPositionFalcon() {
+    return m_arm.getPosition().getValueAsDouble();
+  }
+
+  private double getArmVelocity() {
+    return m_arm.getVelocity().getValueAsDouble();
+  }
+
+  private double getArmVoltage() {
+    return m_arm.getMotorVoltage().getValueAsDouble();
+  }
+
+  public void setArmOpenLoop(double inputVolt) {
+    m_arm.setVoltage(inputVolt);
+  }
+
+  public void setPose(double setpoint) {
+    m_setPointRadians = setpoint;
+  }
+
   public void periodic() {
-    m_io.updateInputs(m_inputs);
-    Logger.processInputs("SuperStructure/Arm", m_inputs);
+    Logger.recordOutput("TestArm/Position", getArmPositionFalcon());
+    Logger.recordOutput("TestArm/Velocity", getArmVelocity());
+    Logger.recordOutput("TestArm/InputVolts", getArmVoltage());
+    Logger.recordOutput("TestArm/Goal", m_setPointRadians);
 
-    boolean isDisabled = m_disablePIDs.getAsBoolean();
-    if (!isDisabled) {
-      runArmSetpoint(
-          m_armGoal != null
-              ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
-              : getPositionRadians());
-    } else if (!m_wasDisabled) {
-      // Only call stop() on the rising edge of m_disablePIDs
-      stop();
+    if (m_goal.position != m_setPointRadians) {
+      m_goal = new TrapezoidProfile.State(m_setPointRadians, 0.0);
     }
-    m_wasDisabled = isDisabled;
+    TrapezoidProfile.State current = getCurrentState();
+    TrapezoidProfile.State setpoint = m_armProfile.calculate(0.02, current, m_goal);
+    Logger.recordOutput("TestArm/Setpoint", setpoint.position);
+    m_arm.setVoltage(
+        m_armFeedforward.calculate(setpoint.position, setpoint.velocity)
+            + m_armController.calculate(current.position, m_goal.position));
 
-    // Update alerts
-    motorDisconnectedAlert.set(!m_inputs.armConnected);
-    m_isSetpointAchievedInvalid = false;
+    // m_io.updateInputs(m_inputs);
+    // Logger.processInputs("SuperStructure/Arm", m_inputs);
+
+    // boolean isDisabled = m_disablePIDs.getAsBoolean();
+    // if (!isDisabled) {
+    //   runArmSetpoint(
+    //       m_armGoal != null
+    //           ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+    //           : getPositionRadians());
+    // } else if (!m_wasDisabled) {
+    //   // Only call stop() on the rising edge of m_disablePIDs
+    //   stop();
+    // }
+    // m_wasDisabled = isDisabled;
+
+    // // Update alerts
+    // motorDisconnectedAlert.set(!m_inputs.armConnected);
+    // m_isSetpointAchievedInvalid = false;
   }
 
   public void runArmOpenLoop(double outputVolts) {
@@ -136,7 +199,8 @@ public class Arm {
   }
 
   public void runCharacterization(double outputVolts) {
-    m_io.setVoltage(outputVolts);
+    // m_io.setVoltage(outputVolts);
+    m_arm.setVoltage(outputVolts);
   }
 
   public void stop() {
@@ -165,7 +229,7 @@ public class Arm {
   }
 
   public TrapezoidProfile.State getCurrentState() {
-    return new TrapezoidProfile.State(getPositionRadians(), getVelocityRadPerSec());
+    return new TrapezoidProfile.State(getArmPositionFalcon(), getArmVelocity());
   }
 
   public void setGoal(ArmGoals armGoal) {

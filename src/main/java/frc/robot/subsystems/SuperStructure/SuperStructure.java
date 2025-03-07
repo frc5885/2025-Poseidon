@@ -227,6 +227,14 @@ public class SuperStructure extends SubsystemBase {
     m_elevator.setGoal(goal);
   }
 
+  public void runTestArmOpenLoop(double InputVolts) {
+    m_arm.setArmOpenLoop(InputVolts);
+  }
+
+  public void setTestArmSetpoint(double setpoint) {
+    m_arm.setPose(setpoint);
+  }
+
   // Creates a command that sets the elevator, arm, and wrist to the specified goal state.
   private Command createStateCommand(SuperStructureState goal) {
     return Commands.run(

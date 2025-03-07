@@ -13,10 +13,7 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
+// import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -25,58 +22,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
-import frc.robot.AutoCommands.JustDrive;
-import frc.robot.commands.AutoIntakeCoralStationCommand;
-import frc.robot.commands.DriveCommands;
-import frc.robot.commands.IntakeAlgaeCommand;
-import frc.robot.commands.ResetSuperStructureCommand;
-import frc.robot.commands.ScoreAlgaeCommand;
-import frc.robot.commands.ScoreAlgaeNet;
-import frc.robot.commands.ScoreCoralCommand;
-import frc.robot.commands.SuperStructureCommand;
-import frc.robot.io.beambreak.BeamBreakIO;
-import frc.robot.io.beambreak.BeamBreakIOReal;
-import frc.robot.io.beambreak.BeamBreakIOSim;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.io.operatorPanel.OperatorPanel;
-import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIO;
-import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSim;
-import frc.robot.subsystems.EndEffector.AlgaeClaw.AlgaeClawIOSpark;
-import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIO;
-import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSim;
-import frc.robot.subsystems.EndEffector.CoralEjector.CoralEjectorIOSpark;
-import frc.robot.subsystems.EndEffector.EndEffector;
-import frc.robot.subsystems.EndEffector.EndEffectorConstants.AlgaeClawConstants;
-import frc.robot.subsystems.EndEffector.EndEffectorConstants.CoralEjectorConstants;
-import frc.robot.subsystems.LEDS.LEDSubsystem;
-import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
-import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import frc.robot.subsystems.SuperStructure.Wrist.WristIOSim;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIOSpark;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIONavX;
-import frc.robot.subsystems.drive.GyroIOSim;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOSpark;
-import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
-import frc.robot.subsystems.vision.heimdall.HeimdallPoseController.HeimdallOdometrySource;
-import frc.robot.subsystems.vision.photon.Vision;
-import frc.robot.subsystems.vision.photon.VisionConstants;
-import frc.robot.subsystems.vision.photon.VisionIO;
-import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
-import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -91,12 +47,12 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive m_drive;
-  private final Vision m_vision;
-  private final HeimdallPoseController m_poseController;
+  //   private final Drive m_drive;
+  //   private final Vision m_vision;
+  //   private final HeimdallPoseController m_poseController;
   private final SuperStructure m_superStructure;
   //   private final Collector m_collector;
-  private final EndEffector m_endEffector;
+  //   private final EndEffector m_endEffector;
 
   // SIM
   private SwerveDriveSimulation m_driveSimulation = null;
@@ -158,84 +114,84 @@ public class RobotContainer {
     // toggle to disable superstructure PIDs (only works in TEST mode)
     SmartDashboard.putBoolean("Disable PIDs", false);
 
-    m_poseController = new HeimdallPoseController(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
+    // m_poseController = new HeimdallPoseController(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
     switch (Constants.kCurrentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        m_drive =
-            new Drive(
-                new GyroIONavX(),
-                new ModuleIOSpark(0),
-                new ModuleIOSpark(1),
-                new ModuleIOSpark(2),
-                new ModuleIOSpark(3),
-                m_poseController,
-                (pose) -> {});
-        m_vision =
-            new Vision(
-                m_drive::addVisionMeasurement,
-                new VisionIOPhotonVision(
-                    VisionConstants.kCamera0Name,
-                    VisionConstants.kRobotToCamera0,
-                    CameraType.APRILTAG),
-                new VisionIOPhotonVision(
-                    VisionConstants.kCamera1Name,
-                    VisionConstants.kRobotToCamera1,
-                    CameraType.APRILTAG));
+        // m_drive =
+        //     new Drive(
+        //         new GyroIONavX(),
+        //         new ModuleIOSpark(0),
+        //         new ModuleIOSpark(1),
+        //         new ModuleIOSpark(2),
+        //         new ModuleIOSpark(3),
+        //         m_poseController,
+        //         (pose) -> {});
+        // m_vision =
+        //     new Vision(
+        //         m_drive::addVisionMeasurement,
+        //         new VisionIOPhotonVision(
+        //             VisionConstants.kCamera0Name,
+        //             VisionConstants.kRobotToCamera0,
+        //             CameraType.APRILTAG),
+        //         new VisionIOPhotonVision(
+        //             VisionConstants.kCamera1Name,
+        //             VisionConstants.kRobotToCamera1,
+        //             CameraType.APRILTAG));
         // new VisionIOPhotonVision(
         //     VisionConstants.kCamera2Name,
         //     VisionConstants.kRobotToCamera2,
         //     CameraType.CORAL));
         m_superStructure =
             new SuperStructure(
-                new ElevatorIOSpark(),
+                new ElevatorIO() {},
                 new ArmIOSpark(),
-                new WristIOSpark(),
+                new WristIO() {},
                 () -> SmartDashboard.getBoolean("Disable PIDs", false));
         // m_collector =
         //     new Collector(
         //         new IntakeIOSpark(),
         //         new FeederIOSpark(),
         //         new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
-        m_endEffector =
-            new EndEffector(
-                new AlgaeClawIOSpark(),
-                new CoralEjectorIOSpark(),
-                new BeamBreakIOReal(AlgaeClawConstants.kBeamBreakId),
-                new BeamBreakIOReal(CoralEjectorConstants.kBeamBreakId));
+        // m_endEffector =
+        //     new EndEffector(
+        //         new AlgaeClawIOSpark(),
+        //         new CoralEjectorIOSpark(),
+        //         new BeamBreakIOReal(AlgaeClawConstants.kBeamBreakId),
+        //         new BeamBreakIOReal(CoralEjectorConstants.kBeamBreakId));
 
         break;
 
       case SIM:
         // create a maple-sim swerve drive simulation instance
-        m_driveSimulation =
-            new SwerveDriveSimulation(
-                DriveConstants.kMapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
-        // add the simulated drivetrain to the simulation field
-        SimulatedArena.getInstance().addDriveTrainSimulation(m_driveSimulation);
-        // Sim robot, instantiate physics sim IO implementations
-        m_drive =
-            new Drive(
-                new GyroIOSim(m_driveSimulation.getGyroSimulation()),
-                new ModuleIOSim(m_driveSimulation.getModules()[0]),
-                new ModuleIOSim(m_driveSimulation.getModules()[1]),
-                new ModuleIOSim(m_driveSimulation.getModules()[2]),
-                new ModuleIOSim(m_driveSimulation.getModules()[3]),
-                m_poseController,
-                m_driveSimulation::setSimulationWorldPose);
-        m_vision =
-            new Vision(
-                m_drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.kCamera0Name,
-                    VisionConstants.kRobotToCamera0,
-                    m_driveSimulation::getSimulatedDriveTrainPose,
-                    CameraType.APRILTAG),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.kCamera1Name,
-                    VisionConstants.kRobotToCamera1,
-                    m_driveSimulation::getSimulatedDriveTrainPose,
-                    CameraType.APRILTAG));
+        // m_driveSimulation =
+        //     new SwerveDriveSimulation(
+        //         DriveConstants.kMapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+        // // add the simulated drivetrain to the simulation field
+        // SimulatedArena.getInstance().addDriveTrainSimulation(m_driveSimulation);
+        // // Sim robot, instantiate physics sim IO implementations
+        // m_drive =
+        //     new Drive(
+        //         new GyroIOSim(m_driveSimulation.getGyroSimulation()),
+        //         new ModuleIOSim(m_driveSimulation.getModules()[0]),
+        //         new ModuleIOSim(m_driveSimulation.getModules()[1]),
+        //         new ModuleIOSim(m_driveSimulation.getModules()[2]),
+        //         new ModuleIOSim(m_driveSimulation.getModules()[3]),
+        //         m_poseController,
+        //         m_driveSimulation::setSimulationWorldPose);
+        // m_vision =
+        //     new Vision(
+        //         m_drive::addVisionMeasurement,
+        //         new VisionIOPhotonVisionSim(
+        //             VisionConstants.kCamera0Name,
+        //             VisionConstants.kRobotToCamera0,
+        //             m_driveSimulation::getSimulatedDriveTrainPose,
+        //             CameraType.APRILTAG),
+        //         new VisionIOPhotonVisionSim(
+        //             VisionConstants.kCamera1Name,
+        //             VisionConstants.kRobotToCamera1,
+        //             m_driveSimulation::getSimulatedDriveTrainPose,
+        //             CameraType.APRILTAG));
         // new VisionIOPhotonVisionSim(
         //     VisionConstants.kCamera2Name,
         //     VisionConstants.kRobotToCamera2,
@@ -243,7 +199,7 @@ public class RobotContainer {
         //     CameraType.CORAL));
 
         // the sim lags really badly if you use auto switch
-        m_poseController.setMode(HeimdallOdometrySource.ONLY_QUEST);
+        // m_poseController.setMode(HeimdallOdometrySource.ONLY_QUEST);
         m_superStructure =
             new SuperStructure(
                 new ElevatorIOSim(),
@@ -253,57 +209,57 @@ public class RobotContainer {
         // m_collector =
         //     new Collector(
         //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
-        m_endEffector =
-            new EndEffector(
-                new AlgaeClawIOSim(),
-                new CoralEjectorIOSim(),
-                new BeamBreakIOSim(),
-                new BeamBreakIOSim());
+        // m_endEffector =
+        //     new EndEffector(
+        //         new AlgaeClawIOSim(),
+        //         new CoralEjectorIOSim(),
+        //         new BeamBreakIOSim(),
+        //         new BeamBreakIOSim());
         break;
 
       default:
         // Replayed robot, disable IO implementations
-        m_drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                m_poseController,
-                (pose) -> {});
-        m_vision =
-            new Vision(
-                m_drive::addVisionMeasurement,
-                new VisionIO() {},
-                new VisionIO() {},
-                new VisionIO() {});
+        // m_drive =
+        //     new Drive(
+        //         new GyroIO() {},
+        //         new ModuleIO() {},
+        //         new ModuleIO() {},
+        //         new ModuleIO() {},
+        //         new ModuleIO() {},
+        //         m_poseController,
+        //         (pose) -> {});
+        // m_vision =
+        //     new Vision(
+        //         m_drive::addVisionMeasurement,
+        //         new VisionIO() {},
+        //         new VisionIO() {},
+        //         new VisionIO() {});
         m_superStructure =
             new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, new WristIO() {}, () -> false);
         // m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
 
-        m_endEffector =
-            new EndEffector(
-                new AlgaeClawIO() {},
-                new CoralEjectorIO() {},
-                new BeamBreakIO() {},
-                new BeamBreakIO() {});
+        // m_endEffector =
+        //     new EndEffector(
+        //         new AlgaeClawIO() {},
+        //         new CoralEjectorIO() {},
+        //         new BeamBreakIO() {},
+        //         new BeamBreakIO() {});
         break;
     }
 
-    m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
+    // m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
     // m_superStructure.setIntakeFunctions(
     //     () -> m_collector.extendIntake(), () -> m_collector.retractIntake());
     m_superStructure.setIntakeFunctions(() -> {}, () -> {});
 
     // Set up auto routines
-    m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    m_autoChooser = new LoggedDashboardChooser<>("Auto Choices");
 
     // m_autoChooser.addDefaultOption(
     //     "4_coral_auto",
     //     new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
 
-    m_autoChooser.addDefaultOption("Just Drive", new JustDrive(m_drive));
+    // m_autoChooser.addDefaultOption("Just Drive", new JustDrive(m_drive));
     // m_autoChooser.addOption(
     //     "2 Algae", new MidAuto(m_drive, m_superStructure, m_endEffector, m_vision));
 
@@ -340,18 +296,18 @@ public class RobotContainer {
     // m_autoChooser.addOption(
     //     "Elevator SysId (Dynamic Reverse)",
     //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Quasistatic Forward)",
-    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Quasistatic Reverse)",
-    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Dynamic Forward)",
-    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Dynamic Reverse)",
-    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Arm SysId (Quasistatic Forward)",
+        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Arm SysId (Quasistatic Reverse)",
+        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Arm SysId (Dynamic Forward)",
+        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Arm SysId (Dynamic Reverse)",
+        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
     // m_autoChooser.addOption(
     //     "Wrist SysId (Quasistatic Forward)",
     //     m_superStructure.wristSysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -375,8 +331,8 @@ public class RobotContainer {
     configureButtonBindings();
 
     // Set suppliers for the game piece visualizer
-    GamePieceVisualizer.setRobotPoseSupplier(m_drive::getPose);
-    GamePieceVisualizer.setEndEffectorPoseSupplier(m_superStructure::getEndEffectorPose3d);
+    // GamePieceVisualizer.setRobotPoseSupplier(m_drive::getPose);
+    // GamePieceVisualizer.setEndEffectorPoseSupplier(m_superStructure::getEndEffectorPose3d);
   }
 
   /**
@@ -387,12 +343,12 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    m_drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            m_drive,
-            () -> -m_driverController.getLeftY(),
-            () -> -m_driverController.getLeftX(),
-            () -> -m_driverController.getRightX()));
+    // m_drive.setDefaultCommand(
+    //     DriveCommands.joystickDrive(
+    //         m_drive,
+    //         () -> -m_driverController.getLeftY(),
+    //         () -> -m_driverController.getLeftX(),
+    //         () -> -m_driverController.getRightX()));
 
     // Reset gyro to 0° when leftStick is pressed
     // m_driverController
@@ -460,13 +416,30 @@ public class RobotContainer {
     //         new InstantCommand(
     //             () -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3),
     // m_superStructure));
+
     m_driverController
         .x()
-        .onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.STOWED));
+        .onTrue(
+            new InstantCommand(() -> m_superStructure.setTestArmSetpoint(1.9), m_superStructure));
     m_driverController
         .y()
         .onTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L3));
+            new InstantCommand(() -> m_superStructure.setTestArmSetpoint(2.6), m_superStructure));
+
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runTestArmOpenLoop(10.0),
+    //             () -> m_superStructure.runTestArmOpenLoop(0.0),
+    //             m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runTestArmOpenLoop(-10.0),
+    //             () -> m_superStructure.runTestArmOpenLoop(0.0),
+    //             m_superStructure));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -504,99 +477,105 @@ public class RobotContainer {
     // m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
     // INTAKE CORAL STATION
-    m_driverController
-        .rightBumper()
-        .whileTrue(
-            new AutoIntakeCoralStationCommand(m_drive, m_superStructure, m_endEffector)
-                .unless(
-                    () ->
-                        DriverStation.isTest()
-                            || m_endEffector.isCoralHeld()
-                            || m_endEffector.isAlgaeHeld()))
-        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+    // m_driverController
+    //     .rightBumper()
+    //     .whileTrue(
+    //         new AutoIntakeCoralStationCommand(m_drive, m_superStructure, m_endEffector)
+    //             .unless(
+    //                 () ->
+    //                     DriverStation.isTest()
+    //                         || m_endEffector.isCoralHeld()
+    //                         || m_endEffector.isAlgaeHeld()))
+    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
-    // SCORE CORAL
-    m_automaticCoralScoreTrigger
-        .whileTrue(
-            new AutoScoreCoralAtBranchCommand(
-                    m_drive, m_superStructure, m_endEffector, m_operatorPanel::getTargetPose)
-                .unless(() -> !m_endEffector.isCoralHeld()))
-        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+    // // SCORE CORAL
+    // m_automaticCoralScoreTrigger
+    //     .whileTrue(
+    //         new AutoScoreCoralAtBranchCommand(
+    //                 m_drive, m_superStructure, m_endEffector, m_operatorPanel::getTargetPose)
+    //             .unless(() -> !m_endEffector.isCoralHeld()))
+    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
-    // INTAKE ALGAE REEF L2
-    m_algaeReefTrigger
-        .whileTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L2)
-                .alongWith(new IntakeAlgaeCommand(m_endEffector))
-            // .andThen(new SuperStructureCommand(m_superStructure, () ->
-            // SuperStructureState.SCORE_ALGAE_PROCESSOR))
-            // new AutoIntakeAlgaeReefCommand(
-            //     m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose())
-            )
-        .onFalse(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-            // new SequentialCommandGroup(
-            //     new InstantCommand(
-            //         () ->
-            // LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
-            //     new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-            //         .deadlineFor(
-            //             new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
-            //         .unless(() -> DriverStation.isTest()),
-            //     new SuperStructureCommand(m_superStructure, () ->
-            // SuperStructureState.INTAKE_CORAL),
-            //     new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)))
-            );
+    // // INTAKE ALGAE REEF L2
+    // m_algaeReefTrigger
+    //     .whileTrue(
+    //         new SuperStructureCommand(m_superStructure, () ->
+    // SuperStructureState.INTAKE_ALGAE_L2)
+    //             .alongWith(new IntakeAlgaeCommand(m_endEffector))
+    //         // .andThen(new SuperStructureCommand(m_superStructure, () ->
+    //         // SuperStructureState.SCORE_ALGAE_PROCESSOR))
+    //         // new AutoIntakeAlgaeReefCommand(
+    //         //     m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose())
+    //         )
+    //     .onFalse(
+    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+    //         // new SequentialCommandGroup(
+    //         //     new InstantCommand(
+    //         //         () ->
+    //         // LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
+    //         //     new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+    //         //         .deadlineFor(
+    //         //             new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0,
+    // 0))))
+    //         //         .unless(() -> DriverStation.isTest()),
+    //         //     new SuperStructureCommand(m_superStructure, () ->
+    //         // SuperStructureState.INTAKE_CORAL),
+    //         //     new InstantCommand(() ->
+    // LEDSubsystem.getInstance().setStates(LEDStates.IDLE)))
+    //         );
 
-    // INTAKE ALGAE REEF L3
-    m_algaeReefL3Trigger
-        .whileTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L3)
-                .alongWith(new IntakeAlgaeCommand(m_endEffector)))
-        .onFalse(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
+    // // INTAKE ALGAE REEF L3
+    // m_algaeReefL3Trigger
+    //     .whileTrue(
+    //         new SuperStructureCommand(m_superStructure, () ->
+    // SuperStructureState.INTAKE_ALGAE_L3)
+    //             .alongWith(new IntakeAlgaeCommand(m_endEffector)))
+    //     .onFalse(
+    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL));
 
-    // INTAKE ALGAE FLOOR
-    m_algaeFloorTrigger
-        .whileTrue(
-            new SuperStructureCommand(
-                    m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_FLOOR)
-                .alongWith(new IntakeAlgaeCommand(m_endEffector)))
-        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
+    // // INTAKE ALGAE FLOOR
+    // m_algaeFloorTrigger
+    //     .whileTrue(
+    //         new SuperStructureCommand(
+    //                 m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_FLOOR)
+    //             .alongWith(new IntakeAlgaeCommand(m_endEffector)))
+    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
-    // line up for algae processor score
-    m_driverController
-        .a()
-        .onTrue(
-            new SuperStructureCommand(
-                m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR));
-    // SCORE ALGAE PROCESSOR
-    m_algaeProcessorTrigger
-        .whileTrue(new ScoreAlgaeCommand(m_endEffector))
-        .onFalse(
-            new InstantCommand(
-                    () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE))
-                .andThen(
-                    new SuperStructureCommand(
-                        m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
-                    new InstantCommand(
-                        () -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
+    // // line up for algae processor score
+    // m_driverController
+    //     .a()
+    //     .onTrue(
+    //         new SuperStructureCommand(
+    //             m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR));
+    // // SCORE ALGAE PROCESSOR
+    // m_algaeProcessorTrigger
+    //     .whileTrue(new ScoreAlgaeCommand(m_endEffector))
+    //     .onFalse(
+    //         new InstantCommand(
+    //                 () ->
+    // LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE))
+    //             .andThen(
+    //                 new SuperStructureCommand(
+    //                     m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
+    //                 new InstantCommand(
+    //                     () -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 
-    // SCORE ALGAE NET
-    m_algaeNetTrigger
-        .whileTrue(
-            new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector)
-                .unless(() -> !m_endEffector.isAlgaeHeld()))
-        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+    // // SCORE ALGAE NET
+    // m_algaeNetTrigger
+    //     .whileTrue(
+    //         new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector)
+    //             .unless(() -> !m_endEffector.isAlgaeHeld()))
+    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
-    // MANUAL TROUGH SUPERSTRUCTURE
-    m_manualTroughSuperStructureTrigger
-        .whileTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1))
-        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
+    // // MANUAL TROUGH SUPERSTRUCTURE
+    // m_manualTroughSuperStructureTrigger
+    //     .whileTrue(
+    //         new SuperStructureCommand(m_superStructure, () ->
+    // SuperStructureState.SCORE_CORAL_L1))
+    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
-    // MANUAL CORAL SCORE
-    m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector));
+    // // MANUAL CORAL SCORE
+    // m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -638,7 +617,7 @@ public class RobotContainer {
   public void resetSimulationField() {
     if (Constants.kCurrentMode != Constants.Mode.SIM) return;
 
-    m_drive.setPose(new Pose2d(3, 3, new Rotation2d()));
+    // m_drive.setPose(new Pose2d(3, 3, new Rotation2d()));
 
     // Reset GamePieceVisualizer (and SimulatedArena)
     GamePieceVisualizer.resetFieldGamePieces();
@@ -657,6 +636,6 @@ public class RobotContainer {
   }
 
   public void syncQuest() {
-    m_poseController.forceSyncQuest();
+    // m_poseController.forceSyncQuest();
   }
 }

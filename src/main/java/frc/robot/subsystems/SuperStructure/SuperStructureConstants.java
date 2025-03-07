@@ -69,6 +69,15 @@ public class SuperStructureConstants {
   }
 
   public static class ArmConstants {
+    // Arm Encoder Stuff
+    public static final double kArmEncoderMax = 0.276 * 2 * Math.PI;
+    public static final double kArmEncoderMin = 0.096 * 2 * Math.PI;
+    // The rotation 2d will have to be changed to doubles when we know our setpoint
+    public static final double kArmAmp = 0.273; // max -.03
+    // public static final double kSetPoint = -0.1;
+    public static final double kArmStow = 0.096; // min
+    public static final double kArmPass = 0.19; // min + .8
+
     public static final int kArmSparkId = 43;
     public static final boolean kArmInverted = true;
     public static final int kArmMotorCurrentLimit = 20;
