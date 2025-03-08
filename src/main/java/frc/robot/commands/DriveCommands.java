@@ -14,7 +14,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -31,34 +30,44 @@ import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.TunablePIDController;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 2.0;
-  private static final double kAngleKd = 0.2;
-  private static final double kTranslateKp = 3.0;
-  private static final double kTranslateKd = 0.5;
+  private static final double kAngleKp = 2.5;
+  private static final double kAngleKd = 0.0;
+  private static final double kTranslateKp = 2.5;
+  private static final double kTranslateKd = 0.0;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
+  private static final double kAngleTolerance = 0.06;
+  private static final double kTranslationTolerance = 0.02;
 
   // Create PID controllers
-  private static PIDController angleController;
-  private static PIDController xController;
-  private static PIDController yController;
+  private static TunablePIDController angleController;
+  private static TunablePIDController xController;
+  private static TunablePIDController yController;
   // Static initialization block
   static {
-    angleController = new PIDController(kAngleKp, 0.0, kAngleKd);
+    angleController =
+        new TunablePIDController(
+            kAngleKp, 0.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
     angleController.enableContinuousInput(-Math.PI, Math.PI);
-    xController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
-    yController = new PIDController(kTranslateKp, 0.0, kTranslateKd);
+    xController =
+        new TunablePIDController(
+            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
+    yController =
+        new TunablePIDController(
+            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
   }
 
   private DriveCommands() {}
@@ -249,6 +258,11 @@ public class DriveCommands {
               double omega =
                   angleController.calculate(
                       drive.getRotation().getRadians(), targetPoseValue.getRotation().getRadians());
+
+              Logger.recordOutput(
+                  "Odometry/AngleSetpoint", targetPoseValue.getRotation().getRadians());
+              Logger.recordOutput("Odometry/XSetpoint", targetPoseValue.getX());
+              Logger.recordOutput("Odometry/YSetpoint", targetPoseValue.getY());
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds = new ChassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omega);

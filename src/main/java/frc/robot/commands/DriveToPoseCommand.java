@@ -30,8 +30,8 @@ public class DriveToPoseCommand extends Command {
       boolean doNotFlip) {
     m_drive = drive;
     m_targetPose = targetPose;
-    m_distanceTolerance = distanceToleranceMeters;
-    m_rotationTolerance = rotationToleranceDegrees;
+    m_distanceTolerance = 1.0;
+    m_rotationTolerance = 1.0;
     m_doNotFlip = doNotFlip;
 
     addRequirements(m_drive);
