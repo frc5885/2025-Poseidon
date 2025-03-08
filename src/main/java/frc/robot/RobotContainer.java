@@ -364,7 +364,7 @@ public class RobotContainer {
                     true)
                 .andThen(
                     DriveCommands.preciseChassisAlign(
-                        m_drive, m_operatorPanel.getTargetPose()::toPose2d)));
+                        m_drive, () -> m_operatorPanel.getTargetPose().toPose2d())));
 
     m_driverController
         .b()

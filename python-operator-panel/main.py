@@ -40,6 +40,7 @@ pygame.font.init()
 font = pygame.font.SysFont(None, 48)
 small_font = pygame.font.SysFont(None, 36)
 
+
 # Reef graphics
 reef = pygame.image.load("python-operator-panel/reef.png")
 
