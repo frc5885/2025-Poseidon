@@ -121,7 +121,7 @@ public class RobotContainer {
     // toggle to disable superstructure PIDs (only works in TEST mode)
     SmartDashboard.putBoolean("Disable PIDs", false);
 
-    m_poseController = new HeimdallPoseController(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY);
+    m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
