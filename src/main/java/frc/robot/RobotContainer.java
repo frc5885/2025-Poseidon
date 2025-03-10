@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -52,7 +53,10 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -336,12 +340,18 @@ public class RobotContainer {
 
     // m_driverController.start().onTrue(new InstantCommand(() ->
     // m_poseController.forceSyncQuest()));
-    // m_driverController
-    //     .a()
-    //     .whileTrue(
-    //         DriveCommands.preciseChassisAlign(
-    //             m_drive,
-    // FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)::toPose2d));
+    m_driverController
+        .a()
+        .whileTrue(
+            new DeferredCommand(
+                () ->
+                    DriveCommands.pathfindThenPreciseAlign(
+                        m_drive,
+                        FieldConstants.Reef.branchPositions
+                                .get(m_operatorPanel.getReefTarget())
+                                .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
+                            ::toPose2d),
+                Set.of(m_drive)));
     // m_driverController
     //     .b()
     //     .whileTrue(
