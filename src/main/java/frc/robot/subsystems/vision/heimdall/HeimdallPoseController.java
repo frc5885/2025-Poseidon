@@ -44,8 +44,8 @@ public class HeimdallPoseController {
   // Convergence factors - control how quickly the transform is updated
   // Lower values mean slower but smoother convergence
   private static final double kTranslationConvergenceFactor = 0.01; // 1% adjustment per cycle
-  private static final double kRotationConvergenceFactor = 0.015;   // 1.5% adjustment per cycle
-  
+  private static final double kRotationConvergenceFactor = 0.015; // 1.5% adjustment per cycle
+
   // First-time initialization flag
   private boolean m_isFirstUpdate = true;
 
@@ -85,9 +85,9 @@ public class HeimdallPoseController {
   }
 
   /**
-   * Blends two transforms together, moving from the current transform toward the target
-   * by the specified convergence factors.
-   * 
+   * Blends two transforms together, moving from the current transform toward the target by the
+   * specified convergence factors.
+   *
    * @param current The current transform
    * @param target The target transform to converge toward
    * @param translationFactor How much to adjust translation each cycle (0-1)
@@ -95,33 +95,30 @@ public class HeimdallPoseController {
    * @return A new transform that's a blend between current and target
    */
   private Transform2d blendTransforms(
-      Transform2d current, 
-      Transform2d target, 
-      double translationFactor, 
-      double rotationFactor) {
-    
+      Transform2d current, Transform2d target, double translationFactor, double rotationFactor) {
+
     // Calculate the translation difference and apply convergence factor
     Translation2d currentTranslation = current.getTranslation();
     Translation2d targetTranslation = target.getTranslation();
     Translation2d translationDiff = targetTranslation.minus(currentTranslation);
-    
-    Translation2d newTranslation = currentTranslation.plus(
-        new Translation2d(
-            translationDiff.getX() * translationFactor,
-            translationDiff.getY() * translationFactor));
-    
+
+    Translation2d newTranslation =
+        currentTranslation.plus(
+            new Translation2d(
+                translationDiff.getX() * translationFactor,
+                translationDiff.getY() * translationFactor));
+
     // Calculate the rotation difference and apply convergence factor
     // We need to handle angle wrapping properly
     Rotation2d currentRotation = current.getRotation();
     Rotation2d targetRotation = target.getRotation();
-    
+
     // Find the shortest path rotation difference
     double rotationDiffRad = targetRotation.minus(currentRotation).getRadians();
-    
+
     // Apply the rotation factor to get the new rotation
-    Rotation2d newRotation = currentRotation.plus(
-        new Rotation2d(rotationDiffRad * rotationFactor));
-    
+    Rotation2d newRotation = currentRotation.plus(new Rotation2d(rotationDiffRad * rotationFactor));
+
     return new Transform2d(newTranslation, newRotation);
   }
 
@@ -165,14 +162,15 @@ public class HeimdallPoseController {
     // Add vision measurement to odometry estimator
     m_odometryEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    
+
     // Now update Quest-to-field transform based on the new vision measurement
-    
+
     // Get the current Quest-to-Field transform
     Transform2d currentQuestToField = m_questNav.getQuestToFieldTransform();
 
     // Calculate the "target" transform based on the vision pose
-    Transform2d targetQuestToField = m_questNav.calculateQuestToField(m_odometryEstimator.getEstimatedPosition());
+    Transform2d targetQuestToField =
+        m_questNav.calculateQuestToField(m_odometryEstimator.getEstimatedPosition());
 
     // If this is the first update, directly set the transform without gradual convergence
     if (m_isFirstUpdate) {
@@ -183,11 +181,12 @@ public class HeimdallPoseController {
     }
 
     // Calculate the new transform by blending the current and target transforms
-    Transform2d newQuestToField = blendTransforms(
-        currentQuestToField, 
-        targetQuestToField, 
-        kTranslationConvergenceFactor, 
-        kRotationConvergenceFactor);
+    Transform2d newQuestToField =
+        blendTransforms(
+            currentQuestToField,
+            targetQuestToField,
+            kTranslationConvergenceFactor,
+            kRotationConvergenceFactor);
 
     // Update QuestNav with the new blended transform
     m_questNav.updateQuestToFieldTransform(newQuestToField);

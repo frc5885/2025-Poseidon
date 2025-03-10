@@ -139,14 +139,14 @@ public class QuestNav extends SubsystemBase {
         getRawQuestPose().transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
 
     Rotation2d questToFieldAngleOffset =
-    robotPose.getRotation().minus(robotInQuestCoords.getRotation());
+        robotPose.getRotation().minus(robotInQuestCoords.getRotation());
 
     // Rotate the Quest translation by the needed offset, then find how far apart
     // the rotated Quest translation is from the real robot pose in field coords
     Translation2d rotatedQuestTranslation =
         robotInQuestCoords.getTranslation().rotateBy(questToFieldAngleOffset);
     Translation2d questToFieldTranslationOffset =
-    robotPose.getTranslation().minus(rotatedQuestTranslation);
+        robotPose.getTranslation().minus(rotatedQuestTranslation);
 
     // Create the overall transform
     return new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
