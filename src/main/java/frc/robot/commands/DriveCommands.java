@@ -26,12 +26,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.TunableProfiledPIDController;
+import frc.robot.util.TunablePIDController;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -54,42 +53,21 @@ public class DriveCommands {
   private static final double kTranslationTolerance = 0.02;
 
   // Create PID controllers
-  private static TunableProfiledPIDController angleController;
-  private static TunableProfiledPIDController xController;
-  private static TunableProfiledPIDController yController;
+  private static TunablePIDController angleController;
+  private static TunablePIDController xController;
+  private static TunablePIDController yController;
   // Static initialization block
   static {
     angleController =
-        new TunableProfiledPIDController(
-            kAngleKp,
-            0.0,
-            kAngleKd,
-            kAngleTolerance,
-            DriveConstants.kMaxAngularSpeedRadiansPerSec,
-            DriveConstants.kMaxAngularAccelerationRadiansPerSecSq,
-            "DriveAngleController",
-            true);
+        new TunablePIDController(
+            kAngleKp, 0.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
     angleController.enableContinuousInput(-Math.PI, Math.PI);
     xController =
-        new TunableProfiledPIDController(
-            kTranslateKp,
-            0.0,
-            kTranslateKd,
-            kTranslationTolerance,
-            DriveConstants.kMaxSpeedMetersPerSec,
-            DriveConstants.kMaxAccelerationMetersPerSecSq,
-            "DriveXController",
-            true);
+        new TunablePIDController(
+            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
     yController =
-        new TunableProfiledPIDController(
-            kTranslateKp,
-            0.0,
-            kTranslateKd,
-            kTranslationTolerance,
-            DriveConstants.kMaxSpeedMetersPerSec,
-            DriveConstants.kMaxAccelerationMetersPerSecSq,
-            "DriveYController",
-            true);
+        new TunablePIDController(
+            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
   }
 
   private DriveCommands() {}
@@ -291,29 +269,14 @@ public class DriveCommands {
               drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
             },
             drive)
-        .until(() -> xController.atGoal() && yController.atGoal() && angleController.atGoal())
-        .beforeStarting(() -> resetAllControllers(drive.getPose(), drive.getChassisSpeeds()))
+        .until(
+            () ->
+                xController.atSetpoint()
+                    && yController.atSetpoint()
+                    && angleController.atSetpoint())
         .finallyDo(drive::stop);
   }
 
-  /**
-   * Pathfinding to pose, followed by a smooth transition to precise chassis align
-   *
-   * @param drive Drive subsystem
-   * @param targetPose Target pose
-   */
-  public static SequentialCommandGroup pathfindThenPreciseAlign(
-      Drive drive, Supplier<Pose2d> targetPose) {
-    double kTransitionDistance = 0.3; // Meters
-    return new SequentialCommandGroup(
-        drive
-            .getDriveToPoseCommand(targetPose, false)
-            .until(
-                () ->
-                    drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                        < kTransitionDistance)
-            .andThen(preciseChassisAlign(drive, targetPose)));
-  }
   /**
    * Measures the velocity feedforward constants for the drive motors.
    *
@@ -501,18 +464,5 @@ public class DriveCommands {
   private static class MaxTurnVelocityState {
     // Array for 4 modules. Initialized to 0.
     public double[] maxVelocities = new double[4];
-  }
-
-  private static void resetAllControllers(
-      Pose2d currentPosition, ChassisSpeeds robotRelativeChassisSpeeds) {
-    ChassisSpeeds fieldRelativeChassisSpeeds =
-        ChassisSpeeds.fromRobotRelativeSpeeds(
-            robotRelativeChassisSpeeds, currentPosition.getRotation());
-
-    angleController.reset(
-        currentPosition.getRotation().getRadians(),
-        fieldRelativeChassisSpeeds.omegaRadiansPerSecond);
-    xController.reset(currentPosition.getX(), fieldRelativeChassisSpeeds.vxMetersPerSecond);
-    yController.reset(currentPosition.getY(), fieldRelativeChassisSpeeds.vyMetersPerSecond);
   }
 }
