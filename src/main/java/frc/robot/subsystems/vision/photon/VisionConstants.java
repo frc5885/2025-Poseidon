@@ -35,13 +35,13 @@ public class VisionConstants {
           Units.inchesToMeters(8.689),
           -Units.inchesToMeters(7.375),
           Units.inchesToMeters(12.964),
-          new Rotation3d(0.0, 0, 0));
+          new Rotation3d(0.0, 0, -Units.degreesToRadians(3.1)));
   public static final Transform3d kRobotToCamera1 =
       new Transform3d(
           Units.inchesToMeters(8.689),
           Units.inchesToMeters(7.375),
           Units.inchesToMeters(12.964),
-          new Rotation3d(0.0, 0, 0));
+          new Rotation3d(0.0, 0, Units.degreesToRadians(3.1)));
 
   // Basic filtering thresholds
   public static final double kMaxAmbiguity = 0.3;

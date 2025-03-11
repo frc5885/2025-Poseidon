@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -49,7 +50,7 @@ public class DriveCommands {
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
-  private static final double kAngleTolerance = 0.06;
+  private static final double kAngleTolerance = 0.02;
   private static final double kTranslationTolerance = 0.02;
 
   // Create PID controllers
@@ -275,6 +276,27 @@ public class DriveCommands {
                     && yController.atSetpoint()
                     && angleController.atSetpoint())
         .finallyDo(drive::stop);
+  }
+
+  /**
+   * Pathfinding to pose, followed by a smooth transition to precise chassis align
+   *
+   * @param drive Drive subsystem
+   * @param targetPose Target pose
+   */
+  public static SequentialCommandGroup pathfindThenPreciseAlign(
+      Drive drive, Supplier<Pose2d> targetPose) {
+    double kTransitionDistance = 0.3; // Meters
+    Pose2d transitionPose =
+        targetPose.get().transformBy(new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
+    return new SequentialCommandGroup(
+        drive
+            .getDriveToPoseCommand(() -> transitionPose, false)
+            .until(
+                () ->
+                    drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+                        < kTransitionDistance)
+            .andThen(preciseChassisAlign(drive, targetPose)));
   }
 
   /**

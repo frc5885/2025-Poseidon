@@ -16,18 +16,17 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.io.operatorPanel.OperatorPanel;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
@@ -52,7 +51,10 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -334,14 +336,24 @@ public class RobotContainer {
     //             () -> m_superStructure.runArmOpenLoop(0),
     //             m_superStructure));
 
-    // m_driverController.start().onTrue(new InstantCommand(() ->
-    // m_poseController.forceSyncQuest()));
-    // m_driverController
-    //     .a()
-    //     .whileTrue(
-    //         DriveCommands.preciseChassisAlign(
-    //             m_drive,
-    // FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)::toPose2d));
+    m_driverController
+        .a()
+        .whileTrue(
+            new DeferredCommand(
+                () ->
+                    DriveCommands.pathfindThenPreciseAlign(
+                        m_drive,
+                        FieldConstants.Reef.branchPositions
+                                .get(m_operatorPanel.getReefTarget())
+                                .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
+                            ::toPose2d),
+                Set.of(m_drive)));
+
+    m_driverController
+        .b()
+        .onTrue(m_poseController.getQuestNav().determineOffsetToRobotCenter(m_drive));
+
+    m_driverController.y().onTrue(new InstantCommand(() -> m_drive.resetGyro()));
     // m_driverController
     //     .b()
     //     .whileTrue(
@@ -349,37 +361,37 @@ public class RobotContainer {
     //             m_drive,
     // FieldConstants.Reef.branchPositions.get(1).get(ReefLevel.L4)::toPose2d));
 
-    m_driverController
-        .x()
-        .whileTrue(
-            new DriveToPoseCommand(
-                    m_drive,
-                    () ->
-                        m_operatorPanel
-                            .getTargetPose()
-                            .toPose2d()
-                            .transformBy(new Transform2d(-0.6, 0.0, new Rotation2d())),
-                    DriveConstants.kDistanceTolerance,
-                    DriveConstants.kRotationTolerance,
-                    true)
-                .andThen(
-                    DriveCommands.preciseChassisAlign(
-                        m_drive, () -> m_operatorPanel.getTargetPose().toPose2d())));
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new DriveToPoseCommand(
+    //                 m_drive,
+    //                 () ->
+    //                     m_operatorPanel
+    //                         .getTargetPose()
+    //                         .toPose2d()
+    //                         .transformBy(new Transform2d(-0.6, 0.0, new Rotation2d())),
+    //                 DriveConstants.kDistanceTolerance,
+    //                 DriveConstants.kRotationTolerance,
+    //                 true)
+    //             .andThen(
+    //                 DriveCommands.preciseChassisAlign(
+    //                     m_drive, () -> m_operatorPanel.getTargetPose().toPose2d())));
 
-    m_driverController
-        .b()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runElevatorOpenLoop(10.0),
-                () -> m_superStructure.runElevatorOpenLoop(0.0),
-                m_superStructure));
-    m_driverController
-        .a()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_superStructure.runElevatorOpenLoop(-10.0),
-                () -> m_superStructure.runElevatorOpenLoop(0.0),
-                m_superStructure));
+    // m_driverController
+    //     .b()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(10.0),
+    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             m_superStructure));
+    // m_driverController
+    //     .a()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(-10.0),
+    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             m_superStructure));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv

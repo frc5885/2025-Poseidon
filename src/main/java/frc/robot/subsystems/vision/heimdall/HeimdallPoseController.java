@@ -222,4 +222,8 @@ public class HeimdallPoseController {
     ONLY_QUEST,
     AUTO_SWITCH
   }
+
+  public QuestNav getQuestNav() {
+    return m_questNav;
+  }
 }
