@@ -4,7 +4,13 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.kWristStartingPositionRadians;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
+import edu.wpi.first.math.numbers.*;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
@@ -17,6 +23,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
+import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -39,14 +46,27 @@ public class Arm {
   private ArmFeedforward m_armFeedforward;
   private SysIdRoutine m_sysIdRoutine;
 
+  private LinearSystem<N2, N1, N2> m_plant;
+  private LinearQuadraticRegulator<N2, N1, N2> m_regulator;
+  private DoubleSupplier m_setpoint =
+      TunableDouble.register("Arm/OverrideSetpoint", kArmStartingPositionRadians);
+
   private ArmGoals m_armGoal = ArmGoals.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
+  private boolean m_pidOff = false;
 
   private DoubleSupplier m_wristAngleRadSupplier = () -> kWristStartingPositionRadians;
 
   public Arm(ArmIO io, BooleanSupplier disablePIDs) {
     m_io = io;
     m_disablePIDs = disablePIDs;
+
+    m_plant =
+        LinearSystemId.createSingleJointedArmSystem(
+            DCMotor.getNeo550(1), kArmStowedMOI_kgm2, kArmMotorReduction);
+    m_regulator =
+        new LinearQuadraticRegulator<>(
+            m_plant, VecBuilder.fill(0.1E-10, 9.9E10), VecBuilder.fill(9.9E10), 0.02);
 
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -79,24 +99,33 @@ public class Arm {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
-    boolean isDisabled = m_disablePIDs.getAsBoolean();
-    if (!isDisabled) {
-      runArmSetpoint(
-          m_armGoal != null
-              ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
-              : getPositionRadians());
-    } else if (!m_wasDisabled) {
-      // Only call stop() on the rising edge of m_disablePIDs
-      stop();
-    }
-    m_wasDisabled = isDisabled;
+    if (!m_pidOff) {
+      boolean isDisabled = m_disablePIDs.getAsBoolean();
+      if (!isDisabled) {
+        runArmSetpoint(
+            m_armGoal != null
+                ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+                : getPositionRadians());
+      } else if (!m_wasDisabled) {
+        // Only call stop() on the rising edge of m_disablePIDs
+        stop();
+      }
+      m_wasDisabled = isDisabled;
 
+      m_io.setVoltage(
+          m_regulator
+              .calculate(
+                  VecBuilder.fill(getPositionRadians(), getVelocityRadPerSec()),
+                  VecBuilder.fill(Units.degreesToRadians(m_setpoint.getAsDouble()), 0.0))
+              .get(0, 0));
+    }
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);
     m_isSetpointAchievedInvalid = false;
   }
 
   public void runArmOpenLoop(double outputVolts) {
+    m_pidOff = true;
     // TODO MUST match the real implementation!
     if (outputVolts > 0) {
       m_io.setVoltage(isWithinMaximum(getPositionRadians()) ? outputVolts : 0.0);
@@ -206,5 +235,9 @@ public class Arm {
     return Commands.run(() -> runCharacterization(0.0))
         .withTimeout(1.0)
         .andThen(m_sysIdRoutine.dynamic(direction));
+  }
+
+  public void setPIDOff(boolean flag) {
+    m_pidOff = flag;
   }
 }

@@ -3,7 +3,14 @@ package frc.robot.subsystems.SuperStructure.Elevator;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Alert;
@@ -14,8 +21,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
+import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -37,12 +46,27 @@ public class Elevator {
   private ElevatorFeedforward m_elevatorFeedforward;
   private SysIdRoutine m_sysIdRoutine;
 
+  private LinearSystem<N2, N1, N2> m_plant;
+  private LinearQuadraticRegulator<N2, N1, N2> m_regulator;
+  private DoubleSupplier m_setpoint =
+      TunableDouble.register("Elevator/OverrideSetpoint", kElevatorStartingPositionMeters);
+
   private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
   public Elevator(ElevatorIO io, BooleanSupplier disablePIDs) {
     m_io = io;
     m_disablePIDs = disablePIDs;
+
+    m_plant =
+        LinearSystemId.createElevatorSystem(
+            DCMotor.getNeo550(2),
+            kElevatorMassKg,
+            kElevatorWheelRadiusMeters,
+            kElevatorMotorReduction);
+    m_regulator =
+        new LinearQuadraticRegulator<>(
+            m_plant, VecBuilder.fill(0.1E-10, 9.9E10), VecBuilder.fill(9.9E10), 0.02);
 
     switch (Constants.kCurrentMode) {
       case REAL:
@@ -87,7 +111,7 @@ public class Elevator {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
-    boolean isDisabled = m_disablePIDs.getAsBoolean();
+    // boolean isDisabled = m_disablePIDs.getAsBoolean();
     // if (!isDisabled) {
     //   runElevatorSetpoint(
     //       m_elevatorGoal != null
@@ -97,7 +121,14 @@ public class Elevator {
     //   // Only call stop() on the rising edge of m_disablePIDs
     //   stop();
     // }
-    m_wasDisabled = isDisabled;
+    // m_wasDisabled = isDisabled;
+
+    m_io.setVoltage(
+        m_regulator
+            .calculate(
+                VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()),
+                VecBuilder.fill(m_setpoint.getAsDouble(), 0.0))
+            .get(0, 0));
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);

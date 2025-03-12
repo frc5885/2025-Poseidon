@@ -253,6 +253,11 @@ public class SuperStructure extends SubsystemBase {
     m_arm.runArmOpenLoop(voltage);
   }
 
+  public void armOpenLoopEnd() {
+    m_arm.setPIDOff(false);
+    m_arm.runArmSetpoint(m_arm.getPositionRadians());
+  }
+
   private void visualizationSetup() {
     m_canvas = new LoggedMechanism2d(m_canvasWidth, 3.0);
     m_elevatorRoot =

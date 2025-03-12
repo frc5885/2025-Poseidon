@@ -28,6 +28,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.io.operatorPanel.OperatorPanel;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
@@ -95,7 +97,8 @@ public class RobotContainer {
   private final Trigger m_manualTroughScoreTrigger;
   /** right trigger and button 4 false */
   private final Trigger m_automaticCoralScoreTrigger;
-
+  /** bogus call button 7 */
+  private final Trigger m_bogusCallTrigger;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
   private final LoggedDashboardChooser<SuperStructureState> m_stateChooser;
@@ -119,6 +122,7 @@ public class RobotContainer {
     m_automaticCoralScoreTrigger =
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
+    m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
 
     // toggle to disable superstructure PIDs (only works in TEST mode)
     SmartDashboard.putBoolean("Disable PIDs", false);
@@ -321,13 +325,15 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
-    // m_driverController
-    //     .start()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(12),
-    //             () -> m_superStructure.runArmOpenLoop(0),
-    //             m_superStructure));
+    m_driverController
+        .start()
+        .whileTrue(new InstantCommand(() -> m_superStructure.runArmOpenLoop(12), m_superStructure))
+        .onFalse(new InstantCommand(() -> m_superStructure.armOpenLoopEnd(), m_superStructure));
+
+    m_driverController
+        .back()
+        .whileTrue(new InstantCommand(() -> m_superStructure.runArmOpenLoop(-12), m_superStructure))
+        .onFalse(new InstantCommand(() -> m_superStructure.armOpenLoopEnd(), m_superStructure));
     // m_driverController
     //     .back()
     //     .whileTrue(
@@ -354,6 +360,11 @@ public class RobotContainer {
         .onTrue(m_poseController.getQuestNav().determineOffsetToRobotCenter(m_drive));
 
     m_driverController.y().onTrue(new InstantCommand(() -> m_drive.resetGyro()));
+
+    m_bogusCallTrigger
+        .onTrue(
+            new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.BOGUS_CALL)))
+        .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
     // m_driverController
     //     .b()
     //     .whileTrue(

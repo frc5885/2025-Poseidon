@@ -113,7 +113,11 @@ public class LEDSubsystem {
     RESETTING_SUPERSTRUCTURE(LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0))),
     AUTO(
         LEDPattern.gradient(GradientType.kDiscontinuous, Color.kRed, Color.kYellow, Color.kGreen)
-            .mask(LEDPattern.progressMaskLayer(() -> Timer.getMatchTime() / 15.0)));
+            .mask(LEDPattern.progressMaskLayer(() -> Timer.getMatchTime() / 15.0))),
+    BOGUS_CALL(
+        LEDPattern.solid(Color.kBlue)
+            .blink(Seconds.of(0.1))
+            .overlayOn(LEDPattern.solid(Color.kRed)));
 
     @Getter private final LEDPattern pattern;
   }
