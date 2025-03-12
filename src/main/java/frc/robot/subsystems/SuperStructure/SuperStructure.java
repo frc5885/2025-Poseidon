@@ -59,9 +59,9 @@ public class SuperStructure extends SubsystemBase {
   private Runnable m_extendIntakeCmd = null;
   private Runnable m_retractIntakeCmd = null;
 
-  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, BooleanSupplier disablePIDs) {
-    m_elevator = new Elevator(elevatorIO, disablePIDs);
-    m_arm = new Arm(armIO, disablePIDs);
+  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO, BooleanSupplier disableBrakeMode) {
+    m_elevator = new Elevator(elevatorIO, disableBrakeMode);
+    m_arm = new Arm(armIO, disableBrakeMode);
 
     visualizationSetup();
 

@@ -16,6 +16,8 @@ import java.util.function.DoubleSupplier;
 public class ElevatorIOSpark implements ElevatorIO {
   private final SparkMax m_elevatorSpark1;
   private final SparkMax m_elevatorSpark2;
+  private SparkMaxConfig m_elevatorConfig1;
+  private SparkMaxConfig m_elevatorConfig2;
   private final Debouncer m_elevatorM1ConnectedDebouncer = new Debouncer(0.5);
   private final Debouncer m_elevatorM2ConnectedDebouncer = new Debouncer(0.5);
   private final RelativeEncoder m_elevatorEncoder;
@@ -25,18 +27,18 @@ public class ElevatorIOSpark implements ElevatorIO {
     m_elevatorSpark2 = new SparkMax(kElevatorSparkId2, MotorType.kBrushless);
     m_elevatorEncoder = m_elevatorSpark1.getEncoder();
 
-    SparkMaxConfig elevatorConfig1 = new SparkMaxConfig();
-    elevatorConfig1
+    m_elevatorConfig1 = new SparkMaxConfig();
+    m_elevatorConfig1
         .inverted(kElevatorM1Inverted)
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(kElevatorMotorCurrentLimit)
         .voltageCompensation(12.0);
-    elevatorConfig1
+    m_elevatorConfig1
         .encoder
         .positionConversionFactor(kElevatorEncoderPositionFactor)
         .velocityConversionFactor(kElevatorEncoderVelocityFactor)
         .uvwAverageDepth(2);
-    elevatorConfig1
+    m_elevatorConfig1
         .signals
         .primaryEncoderPositionAlwaysOn(true)
         .primaryEncoderPositionPeriodMs(20)
@@ -51,17 +53,17 @@ public class ElevatorIOSpark implements ElevatorIO {
         5,
         () ->
             m_elevatorSpark1.configure(
-                elevatorConfig1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+                m_elevatorConfig1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
-    SparkMaxConfig elevatorConfig2 = elevatorConfig1;
-    elevatorConfig2.follow(m_elevatorSpark1, kElevatorM2Opposite);
+    m_elevatorConfig2 = m_elevatorConfig1;
+    m_elevatorConfig2.follow(m_elevatorSpark1, kElevatorM2Opposite);
 
     tryUntilOk(
         m_elevatorSpark2,
         5,
         () ->
             m_elevatorSpark2.configure(
-                elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+                m_elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
     // elevator start position
     tryUntilOk(
@@ -104,5 +106,23 @@ public class ElevatorIOSpark implements ElevatorIO {
   @Override
   public void setVoltage(double outputVolts) {
     m_elevatorSpark1.setVoltage(outputVolts);
+  }
+
+  @Override
+  public void setBrakeMode(boolean brakeModeEnabled) {
+    m_elevatorConfig1.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
+    m_elevatorConfig2.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
+    tryUntilOk(
+        m_elevatorSpark1,
+        5,
+        () ->
+            m_elevatorSpark1.configure(
+                m_elevatorConfig1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(
+        m_elevatorSpark2,
+        5,
+        () ->
+            m_elevatorSpark2.configure(
+                m_elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
   }
 }

@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunableDouble;
@@ -31,7 +30,7 @@ import org.littletonrobotics.junction.Logger;
 public class Elevator {
   private final ElevatorIO m_io;
   private final ElevatorIOInputsAutoLogged m_inputs = new ElevatorIOInputsAutoLogged();
-  private final BooleanSupplier m_disablePIDs;
+  private final BooleanSupplier m_disableBrakeMode;
 
   // Track previous disabled state to detect rising edge
   private boolean m_wasDisabled = false;
@@ -54,9 +53,10 @@ public class Elevator {
   private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
-  public Elevator(ElevatorIO io, BooleanSupplier disablePIDs) {
+  public Elevator(ElevatorIO io, BooleanSupplier disableBrakeMode) {
     m_io = io;
-    m_disablePIDs = disablePIDs;
+    m_disableBrakeMode = disableBrakeMode;
+    m_wasDisabled = m_disableBrakeMode.getAsBoolean();
 
     m_plant =
         LinearSystemId.createElevatorSystem(
@@ -66,42 +66,8 @@ public class Elevator {
             kElevatorMotorReduction);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.1E-10, 9.9E10), VecBuilder.fill(9.9E10), 0.02);
-
-    switch (Constants.kCurrentMode) {
-      case REAL:
-        m_elevatorController =
-            new TunablePIDController(
-                kElevatorKp, 0.0, kElevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", true);
-        m_elevatorFeedforward = new ElevatorFeedforward(kElevatorKs, kElevatorKg, kElevatorKv);
-        break;
-      case SIM:
-        m_elevatorController =
-            new TunablePIDController(
-                kElevatorSimKp,
-                0.0,
-                kElevatorSimKd,
-                kElevatorErrorToleranceMeters,
-                "ElevatorSimPID",
-                true);
-        m_elevatorFeedforward = new ElevatorFeedforward(0.0, kElevatorSimKg, kElevatorSimKv);
-        break;
-      case REPLAY:
-        m_elevatorController =
-            new TunablePIDController(
-                kElevatorSimKp,
-                0.0,
-                kElevatorSimKd,
-                kElevatorErrorToleranceMeters,
-                "ElevatorReplayPID",
-                true);
-        m_elevatorFeedforward = new ElevatorFeedforward(0.0, kElevatorSimKg, kElevatorSimKv);
-        break;
-      default:
-        m_elevatorController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
-        m_elevatorFeedforward = new ElevatorFeedforward(0.0, 0.0, 0.0);
-        break;
-    }
+            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
+    m_regulator.latencyCompensate(m_plant, 0.02, 0.025);
 
     motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
     motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
@@ -110,18 +76,6 @@ public class Elevator {
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
-
-    // boolean isDisabled = m_disablePIDs.getAsBoolean();
-    // if (!isDisabled) {
-    //   runElevatorSetpoint(
-    //       m_elevatorGoal != null
-    //           ? m_elevatorGoal.setpointMeters.getAsDouble()
-    //           : getPositionMeters());
-    // } else if (!m_wasDisabled) {
-    //   // Only call stop() on the rising edge of m_disablePIDs
-    //   stop();
-    // }
-    // m_wasDisabled = isDisabled;
 
     m_io.setVoltage(
         m_regulator
@@ -135,6 +89,15 @@ public class Elevator {
     motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
 
     m_isSetpointAchievedInvalid = false;
+
+    // toggle brake mode if needed
+    if (m_disableBrakeMode.getAsBoolean() && !m_wasDisabled) {
+      m_io.setBrakeMode(false);
+      m_wasDisabled = true;
+    } else if (!m_disableBrakeMode.getAsBoolean() && m_wasDisabled) {
+      m_io.setBrakeMode(true);
+      m_wasDisabled = false;
+    }
   }
 
   public void runElevatorOpenLoop(double outputVolts) {

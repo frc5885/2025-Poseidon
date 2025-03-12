@@ -124,8 +124,8 @@ public class RobotContainer {
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
     m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
 
-    // toggle to disable superstructure PIDs (only works in TEST mode)
-    SmartDashboard.putBoolean("Disable PIDs", false);
+    // toggle to disable superstructure PIDs
+    SmartDashboard.putBoolean("Disable Brake Mode", false);
 
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
@@ -155,7 +155,7 @@ public class RobotContainer {
             new SuperStructure(
                 new ElevatorIOSpark(),
                 new ArmIO() {},
-                () -> SmartDashboard.getBoolean("Disable PIDs", false));
+                () -> SmartDashboard.getBoolean("Disable Brake Mode", false));
         // m_collector =
         //     new Collector(
         //         new IntakeIOSpark(),
@@ -207,7 +207,7 @@ public class RobotContainer {
             new SuperStructure(
                 new ElevatorIOSim(),
                 new ArmIOSim(),
-                () -> SmartDashboard.getBoolean("Disable PIDs", false));
+                () -> SmartDashboard.getBoolean("Disable Brake Mode", false));
         // m_collector =
         //     new Collector(
         //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());

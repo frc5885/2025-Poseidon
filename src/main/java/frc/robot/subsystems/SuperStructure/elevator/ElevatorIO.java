@@ -16,4 +16,6 @@ public interface ElevatorIO {
   public default void updateInputs(ElevatorIOInputs inputs) {}
 
   public default void setVoltage(double outputVolts) {}
+
+  public default void setBrakeMode(boolean brakeModeEnabled) {}
 }
