@@ -145,7 +145,7 @@ public class DriveConstants {
           kModuleTranslations);
 
   public static final PPHolonomicDriveController kPPController =
-      new PPHolonomicDriveController(new PIDConstants(2.0, 0.0), new PIDConstants(2.0, 0.0));
+      new PPHolonomicDriveController(new PIDConstants(3.0, 0.0), new PIDConstants(3.0, 0.0));
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(
