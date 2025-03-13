@@ -254,21 +254,21 @@ public class RobotContainer {
     // Set up SysId routines
     m_autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(m_drive));
-    // m_autoChooser.addOption(
-    //     "Module Turn Speed Characterization",
-    //     DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
-    // m_autoChooser.addOption(
-    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
-    // m_autoChooser.addOption(
-    //     "Drive SysId (Quasistatic Forward)",
-    //     m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Drive SysId (Quasistatic Reverse)",
-    //     m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Module Turn Speed Characterization",
+        DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
+    m_autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
+    m_autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // TODO not needed for now
     m_autoChooser.addOption(

@@ -168,7 +168,7 @@ public class Elevator {
   }
 
   public double getSetpointRadians() {
-    return m_elevatorController.getSetpoint();
+    return -1.0;
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/SetpointAchieved")

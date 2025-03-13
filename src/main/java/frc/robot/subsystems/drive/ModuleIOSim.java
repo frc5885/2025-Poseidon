@@ -19,8 +19,15 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import frc.robot.util.SparkUtil;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -40,7 +47,21 @@ public class ModuleIOSim implements ModuleIO {
   private double m_driveAppliedVolts = 0.0;
   private double m_turnAppliedVolts = 0.0;
 
+  private final LinearSystem<N1, N1, N1> m_drivePlant;
+  private final LinearQuadraticRegulator<N1, N1, N1> m_driveRegulator;
+  private final LinearSystem<N2, N1, N2> m_turnPlant;
+  private final LinearQuadraticRegulator<N2, N1, N2> m_turnRegulator;
+
   public ModuleIOSim(SwerveModuleSimulation moduleSimulation) {
+    m_drivePlant = LinearSystemId.identifyVelocitySystem(0.15668, 0.013224);
+    m_driveRegulator =
+        new LinearQuadraticRegulator<>(
+            m_drivePlant, VecBuilder.fill(0.1E-10), VecBuilder.fill(12.0), 0.02);
+    m_turnPlant = LinearSystemId.identifyPositionSystem(0.42421, 0.008291);
+    m_turnRegulator =
+        new LinearQuadraticRegulator<>(
+            m_turnPlant, VecBuilder.fill(0.01, 0.01E2), VecBuilder.fill(6.0), 0.02);
+    
     // Create drive and turn sim models
     m_moduleSimulation = moduleSimulation;
     m_driveMotor =
@@ -60,23 +81,40 @@ public class ModuleIOSim implements ModuleIO {
   public void updateInputs(ModuleIOInputs inputs) {
     // Run closed-loop control
     if (m_driveClosedLoop) {
+      // m_driveAppliedVolts =
+      //     m_driveFFVolts
+      //         + m_driveController.calculate(
+      //             m_moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond));
+
       m_driveAppliedVolts =
-          m_driveFFVolts
-              + m_driveController.calculate(
-                  m_moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond));
+          m_driveRegulator
+              .calculate(
+                  VecBuilder.fill(
+                      m_moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond)),
+                  VecBuilder.fill(m_driveController.getSetpoint()))
+              .get(0, 0);
     } else {
       m_driveController.reset();
     }
     if (m_turnClosedLoop) {
+      // m_turnAppliedVolts =
+      //     m_turnController.calculate(m_moduleSimulation.getSteerAbsoluteFacing().getRadians());
+
       m_turnAppliedVolts =
-          m_turnController.calculate(m_moduleSimulation.getSteerAbsoluteFacing().getRadians());
+          m_turnRegulator
+              .calculate(
+                  VecBuilder.fill(
+                      m_moduleSimulation.getSteerAbsoluteFacing().getRadians(),
+                      m_moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond)),
+                  VecBuilder.fill(m_turnController.getSetpoint(), 0.0))
+              .get(0, 0);
     } else {
       m_turnController.reset();
     }
 
     // Update simulation state
-    m_driveMotor.requestVoltage(Volts.of(m_driveAppliedVolts));
-    m_turnMotor.requestVoltage(Volts.of(m_turnAppliedVolts));
+    m_driveMotor.requestVoltage(Volts.of(MathUtil.clamp(m_driveAppliedVolts, -12.0, 12.0)));
+    m_turnMotor.requestVoltage(Volts.of(MathUtil.clamp(m_turnAppliedVolts, -12.0, 12.0)));
 
     // Update drive inputs
     inputs.driveConnected = true;
