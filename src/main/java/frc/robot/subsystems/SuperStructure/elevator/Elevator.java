@@ -3,6 +3,7 @@ package frc.robot.subsystems.SuperStructure.Elevator;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -20,7 +21,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Robot;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -35,13 +37,13 @@ public class Elevator {
 
   private TrapezoidProfile m_elevatorProfile =
       new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
-  private TunablePIDController m_elevatorController;
-  private ElevatorFeedforward m_elevatorFeedforward;
+  private TunablePIDController m_pidController;
+  private ElevatorFeedforward m_feedforwardPID;
   private SysIdRoutine m_sysIdRoutine;
 
   private LinearSystem<N2, N1, N2> m_plant;
   private LinearQuadraticRegulator<N2, N1, N2> m_regulator;
-  private LinearPlantInversionFeedforward<N2, N1, N2> m_feedForward;
+  private LinearPlantInversionFeedforward<N2, N1, N2> m_feedForwardLQR;
 
   private boolean m_isSetpointAchievedInvalid = false;
 
@@ -52,15 +54,19 @@ public class Elevator {
   public Elevator(ElevatorIO io) {
     m_io = io;
 
+    // for state space
     m_plant = LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
             m_plant, VecBuilder.fill(0.02, 0.1), VecBuilder.fill(12.0), 0.02);
-    if (Robot.isReal()) {
-      m_regulator.latencyCompensate(m_plant, 0.02, 0.025);
+    if (Constants.kCurrentMode == Mode.REAL) {
+      m_regulator.latencyCompensate(m_plant, 0.02, kElevatorLatencyCompensationMs);
     }
-    m_feedForward = new LinearPlantInversionFeedforward<>(m_plant, 0.02);
-    m_elevatorController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
+    m_feedForwardLQR = new LinearPlantInversionFeedforward<>(m_plant, 0.02);
+
+    // for PID + FF
+    m_pidController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
+    m_feedforwardPID = new ElevatorFeedforward(kElevatorKs, kElevatorKv, kElevatorKa, kElevatorKg);
 
     motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
     motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
@@ -97,16 +103,24 @@ public class Elevator {
     TrapezoidProfile.State current = getCurrentState();
     TrapezoidProfile.State setpoint = m_elevatorProfile.calculate(0.02, current, m_goalState);
     Logger.recordOutput("SuperStructure/Elevator/Setpoint", setpoint.position);
-    Vector<N2> nextR = VecBuilder.fill(setpoint.position, setpoint.velocity);
 
-    m_io.setVoltage(
-        SmartDashboard.getBoolean("ElevatorStateSpace", true)
-            ? m_regulator
-                .calculate(VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()), nextR)
-                .plus(m_feedForward.calculate(nextR))
-                .get(0, 0)
-            : m_elevatorFeedforward.calculate(setpoint.velocity)
-                + m_elevatorController.calculate(current.position, setpoint.position));
+    if (SmartDashboard.getBoolean("ElevatorStateSpace", true)) {
+      Vector<N2> nextR = VecBuilder.fill(setpoint.position, setpoint.velocity);
+      double baseVoltage =
+          m_regulator
+              .calculate(VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()), nextR)
+              .plus(m_feedForwardLQR.calculate(nextR))
+              .get(0, 0);
+      // add ks and kg manually
+      double finalVoltage =
+          MathUtil.clamp(
+              baseVoltage + kElevatorKs * Math.signum(baseVoltage) + kElevatorKg, -12.0, 12.0);
+      m_io.setVoltage(finalVoltage);
+    } else {
+      m_io.setVoltage(
+          m_feedforwardPID.calculate(setpoint.velocity)
+              + m_pidController.calculate(current.position, setpoint.position));
+    }
   }
 
   public void runCharacterization(double outputVolts) {

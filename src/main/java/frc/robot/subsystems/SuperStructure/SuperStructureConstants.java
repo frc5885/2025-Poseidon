@@ -46,11 +46,7 @@ public class SuperStructureConstants {
     public static final double kElevatorKg = 0.024669;
     public static final double kElevatorKp = 30.0;
     public static final double kElevatorKd = 0.0;
-
-    public static final double kElevatorSimKv = 12.204;
-    public static final double kElevatorSimKg = 0.61214;
-    public static final double kElevatorSimKp = 30.0;
-    public static final double kElevatorSimKd = 0.0;
+    public static final double kElevatorLatencyCompensationMs = 0.025;
 
     public static final double kElevatorErrorToleranceMeters = 0.02;
 
