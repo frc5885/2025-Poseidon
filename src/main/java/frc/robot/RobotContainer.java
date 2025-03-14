@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -100,6 +99,8 @@ public class RobotContainer {
   private final Trigger m_automaticCoralScoreTrigger;
   /** bogus call button 7 */
   private final Trigger m_bogusCallTrigger;
+  /** disable brake mode button 6 */
+  private final Trigger m_disableBrakeModeTrigger;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
   private final LoggedDashboardChooser<SuperStructureState> m_stateChooser;
@@ -124,9 +125,7 @@ public class RobotContainer {
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
     m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
-
-    // toggle to disable superstructure PIDs
-    SmartDashboard.putBoolean("Disable Brake Mode", false);
+    m_disableBrakeModeTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(6));
 
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
@@ -152,11 +151,7 @@ public class RobotContainer {
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
                     CameraType.APRILTAG));
-        m_superStructure =
-            new SuperStructure(
-                new ElevatorIOSpark(),
-                new ArmIO() {},
-                () -> SmartDashboard.getBoolean("Disable Brake Mode", false));
+        m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIO() {});
         // m_collector =
         //     new Collector(
         //         new IntakeIOSpark(),
@@ -204,11 +199,7 @@ public class RobotContainer {
 
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.AUTO_SWITCH);
-        m_superStructure =
-            new SuperStructure(
-                new ElevatorIOSim(),
-                new ArmIOSim(),
-                () -> SmartDashboard.getBoolean("Disable Brake Mode", false));
+        m_superStructure = new SuperStructure(new ElevatorIOSim(), new ArmIOSim());
         // m_collector =
         //     new Collector(
         //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
@@ -232,7 +223,7 @@ public class RobotContainer {
                 m_poseController,
                 (pose) -> {});
         m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {}, () -> false);
+        m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
         // m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
         // m_endEffector =
         //     new EndEffector(
@@ -326,22 +317,12 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
-    m_driverController
-        .start()
-        .whileTrue(new InstantCommand(() -> m_superStructure.runArmOpenLoop(12), m_superStructure))
-        .onFalse(new InstantCommand(() -> m_superStructure.armOpenLoopEnd(), m_superStructure));
-
-    m_driverController
-        .back()
-        .whileTrue(new InstantCommand(() -> m_superStructure.runArmOpenLoop(-12), m_superStructure))
-        .onFalse(new InstantCommand(() -> m_superStructure.armOpenLoopEnd(), m_superStructure));
-    // m_driverController
-    //     .back()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(-12),
-    //             () -> m_superStructure.runArmOpenLoop(0),
-    //             m_superStructure));
+    // Disable PIDs on switch flip
+    m_disableBrakeModeTrigger
+        .onTrue(
+            new InstantCommand(() -> m_superStructure.setBrakeMode(false)).ignoringDisable(true))
+        .onFalse(
+            new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
 
     m_driverController
         .a()
@@ -357,59 +338,11 @@ public class RobotContainer {
                 Set.of(m_drive)));
 
     m_driverController
-        .b()
-        .onTrue(m_poseController.getQuestNav().determineOffsetToRobotCenter(m_drive));
-
-    // m_driverController.y().onTrue(new InstantCommand(() -> m_drive.resetGyro()));
-    m_driverController
         .x()
         .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L2)));
     m_driverController
         .y()
         .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3)));
-
-    m_bogusCallTrigger
-        .onTrue(
-            new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.BOGUS_CALL)))
-        .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
-    // m_driverController
-    //     .b()
-    //     .whileTrue(
-    //         DriveCommands.preciseChassisAlign(
-    //             m_drive,
-    // FieldConstants.Reef.branchPositions.get(1).get(ReefLevel.L4)::toPose2d));
-
-    // m_driverController
-    //     .x()
-    //     .whileTrue(
-    //         new DriveToPoseCommand(
-    //                 m_drive,
-    //                 () ->
-    //                     m_operatorPanel
-    //                         .getTargetPose()
-    //                         .toPose2d()
-    //                         .transformBy(new Transform2d(-0.6, 0.0, new Rotation2d())),
-    //                 DriveConstants.kDistanceTolerance,
-    //                 DriveConstants.kRotationTolerance,
-    //                 true)
-    //             .andThen(
-    //                 DriveCommands.preciseChassisAlign(
-    //                     m_drive, () -> m_operatorPanel.getTargetPose().toPose2d())));
-
-    // m_driverController
-    //     .b()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runElevatorOpenLoop(10.0),
-    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
-    //             m_superStructure));
-    // m_driverController
-    //     .a()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runElevatorOpenLoop(-10.0),
-    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
-    //             m_superStructure));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -503,6 +436,12 @@ public class RobotContainer {
 
     // MANUAL CORAL SCORE
     // m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector));
+
+    // BOGUS CALL
+    m_bogusCallTrigger
+        .onTrue(
+            new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.BOGUS_CALL)))
+        .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
 
     // ============================================================================
     // ^^^^^^^^^^^^^^^^^^^^^^^^^ TELEOP CONTROLLER BINDS ^^^^^^^^^^^^^^^^^^^^^^^^^

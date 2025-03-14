@@ -13,7 +13,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,7 +24,6 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -34,10 +32,10 @@ public class Arm {
   private final ArmIO m_io;
   private final ArmIOInputsAutoLogged m_inputs = new ArmIOInputsAutoLogged();
   private final Alert motorDisconnectedAlert;
-  private final BooleanSupplier m_disablePIDs;
+  // private final BooleanSupplier m_disablePIDs;
 
   // Track previous disabled state to detect rising edge
-  private boolean m_wasDisabled = false;
+  // private boolean m_wasDisabled = false;
 
   private TrapezoidProfile m_armProfile =
       new TrapezoidProfile(new Constraints(kArmMaxVelocity, kArmMaxAcceleration));
@@ -57,9 +55,9 @@ public class Arm {
 
   private DoubleSupplier m_wristAngleRadSupplier = () -> kWristStartingPositionRadians;
 
-  public Arm(ArmIO io, BooleanSupplier disablePIDs) {
+  public Arm(ArmIO io) {
     m_io = io;
-    m_disablePIDs = disablePIDs;
+    // m_disablePIDs = disablePIDs;
 
     m_plant =
         LinearSystemId.createSingleJointedArmSystem(
@@ -99,26 +97,26 @@ public class Arm {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
-    if (!m_pidOff) {
-      boolean isDisabled = m_disablePIDs.getAsBoolean();
-      if (!isDisabled) {
-        runArmSetpoint(
-            m_armGoal != null
-                ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
-                : getPositionRadians());
-      } else if (!m_wasDisabled) {
-        // Only call stop() on the rising edge of m_disablePIDs
-        stop();
-      }
-      m_wasDisabled = isDisabled;
+    // if (!m_pidOff) {
+    //   boolean isDisabled = m_disablePIDs.getAsBoolean();
+    //   if (!isDisabled) {
+    //     runArmSetpoint(
+    //         m_armGoal != null
+    //             ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
+    //             : getPositionRadians());
+    //   } else if (!m_wasDisabled) {
+    //     // Only call stop() on the rising edge of m_disablePIDs
+    //     stop();
+    //   }
+    //   m_wasDisabled = isDisabled;
 
-      m_io.setVoltage(
-          m_regulator
-              .calculate(
-                  VecBuilder.fill(getPositionRadians(), getVelocityRadPerSec()),
-                  VecBuilder.fill(Units.degreesToRadians(m_setpoint.getAsDouble()), 0.0))
-              .get(0, 0));
-    }
+    //   m_io.setVoltage(
+    //       m_regulator
+    //           .calculate(
+    //               VecBuilder.fill(getPositionRadians(), getVelocityRadPerSec()),
+    //               VecBuilder.fill(Units.degreesToRadians(m_setpoint.getAsDouble()), 0.0))
+    //           .get(0, 0));
+    // }
     // Update alerts
     motorDisconnectedAlert.set(!m_inputs.armConnected);
     m_isSetpointAchievedInvalid = false;
