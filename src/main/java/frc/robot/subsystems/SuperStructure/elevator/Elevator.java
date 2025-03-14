@@ -4,26 +4,27 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Robot;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -47,10 +48,10 @@ public class Elevator {
 
   private LinearSystem<N2, N1, N2> m_plant;
   private LinearQuadraticRegulator<N2, N1, N2> m_regulator;
-  private DoubleSupplier m_setpoint =
-      TunableDouble.register("Elevator/OverrideSetpoint", kElevatorStartingPositionMeters);
+  private LinearPlantInversionFeedforward<N2, N1, N2> m_feedForward;
+  private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
 
-  private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
+  private ElevatorLevel m_elevatorGoal = ElevatorLevel.TEST;
   private boolean m_isSetpointAchievedInvalid = false;
 
   public Elevator(ElevatorIO io, BooleanSupplier disableBrakeMode) {
@@ -58,31 +59,27 @@ public class Elevator {
     m_disableBrakeMode = disableBrakeMode;
     m_wasDisabled = m_disableBrakeMode.getAsBoolean();
 
-    m_plant =
-        LinearSystemId.createElevatorSystem(
-            DCMotor.getNeo550(2),
-            kElevatorMassKg,
-            kElevatorWheelRadiusMeters,
-            kElevatorMotorReduction);
+    m_plant = LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
-    m_regulator.latencyCompensate(m_plant, 0.02, 0.025);
+            m_plant, VecBuilder.fill(0.02, 0.1), VecBuilder.fill(12.0), 0.02);
+    if (Robot.isReal()) {
+      m_regulator.latencyCompensate(m_plant, 0.02, 0.025);
+    }
+    m_feedForward = new LinearPlantInversionFeedforward<>(m_plant, 0.02);
+    m_elevatorController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
 
     motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
     motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
+
+    SmartDashboard.putBoolean("ElevatorStateSpace", true);
   }
 
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
-    m_io.setVoltage(
-        m_regulator
-            .calculate(
-                VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()),
-                VecBuilder.fill(m_setpoint.getAsDouble(), 0.0))
-            .get(0, 0));
+    runElevatorSetpoint(m_elevatorGoal.setpointMeters.getAsDouble());
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
@@ -115,11 +112,19 @@ public class Elevator {
     if (m_goal.position != setpointMeters) {
       m_goal = new TrapezoidProfile.State(setpointMeters, 0.0);
     }
+
     TrapezoidProfile.State current = getCurrentState();
-    TrapezoidProfile.State setpoint = m_elevatorProfile.calculate(0.02, current, m_goal);
+    m_setpoint = m_elevatorProfile.calculate(0.02, current, m_goal);
+    Vector<N2> nextR = VecBuilder.fill(m_setpoint.position, m_setpoint.velocity);
+
     m_io.setVoltage(
-        m_elevatorFeedforward.calculate(setpoint.velocity)
-            + m_elevatorController.calculate(current.position, setpoint.position));
+        SmartDashboard.getBoolean("ElevatorStateSpace", true)
+            ? m_regulator
+                .calculate(VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()), nextR)
+                .plus(m_feedForward.calculate(nextR))
+                .get(0, 0)
+            : m_elevatorFeedforward.calculate(m_setpoint.velocity)
+                + m_elevatorController.calculate(current.position, m_setpoint.position));
   }
 
   public void runCharacterization(double outputVolts) {
@@ -167,8 +172,8 @@ public class Elevator {
     return m_elevatorGoal;
   }
 
-  public double getSetpointRadians() {
-    return m_elevatorController.getSetpoint();
+  public double getSetpointMeters() {
+    return m_setpoint.position;
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/SetpointAchieved")

@@ -81,8 +81,7 @@ public class SuperStructure extends SubsystemBase {
   public ElevatorLevel getElevatorGoal() {
     ElevatorLevel goal = m_elevator.getGoal();
     Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
-    Logger.recordOutput(
-        "SuperStructure/Elevator/SetPointPosition", m_elevator.getSetpointRadians());
+    Logger.recordOutput("SuperStructure/Elevator/SetPointPosition", m_elevator.getSetpointMeters());
     return goal;
   }
 
@@ -256,6 +255,10 @@ public class SuperStructure extends SubsystemBase {
   public void armOpenLoopEnd() {
     m_arm.setPIDOff(false);
     m_arm.runArmSetpoint(m_arm.getPositionRadians());
+  }
+
+  public void setElevatorGoal(ElevatorLevel goal) {
+    m_elevator.setGoal(goal);
   }
 
   private void visualizationSetup() {

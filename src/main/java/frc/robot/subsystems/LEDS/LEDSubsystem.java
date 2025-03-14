@@ -7,6 +7,7 @@ package frc.robot.subsystems.LEDS;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLED.ColorOrder;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -40,6 +41,7 @@ public class LEDSubsystem {
     m_buffer = new AddressableLEDBuffer(kLength);
     m_leds.setLength(kLength);
     m_leds.setData(m_buffer);
+    m_leds.setColorOrder(ColorOrder.kRGB);
     m_leds.start();
 
     states = LEDStates.IDLE;

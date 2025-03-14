@@ -36,6 +36,7 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -359,7 +360,13 @@ public class RobotContainer {
         .b()
         .onTrue(m_poseController.getQuestNav().determineOffsetToRobotCenter(m_drive));
 
-    m_driverController.y().onTrue(new InstantCommand(() -> m_drive.resetGyro()));
+    // m_driverController.y().onTrue(new InstantCommand(() -> m_drive.resetGyro()));
+    m_driverController
+        .x()
+        .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L2)));
+    m_driverController
+        .y()
+        .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3)));
 
     m_bogusCallTrigger
         .onTrue(

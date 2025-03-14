@@ -19,7 +19,7 @@ public class SuperStructureConstants {
     public static final double kElevatorMassKg = 12.0; // from CAD, elevator + arm + wrist
     public static final double kElevatorStartingPositionMeters = 0.0;
     public static final double kElevatorMinHeightMeters = 0.0;
-    public static final double kElevatorMaxHeightMeters = Units.inchesToMeters(56.625);
+    public static final double kElevatorMaxHeightMeters = 0.78;
     public static final double kElevatorCarriageHeight = Units.inchesToMeters(7.375);
     public static final double kElevatorStage1MaxTravel = Units.inchesToMeters(30.0);
     // relative to robot origin
@@ -33,15 +33,17 @@ public class SuperStructureConstants {
     public static final double kElevatorMotorReduction = 35.0 * (22.0 / 18.0) * 1.25 * 1.72; // real
     public static final double kElevatorWheelRadiusMeters = 0.045; // real
     // Motor Rotations -> Elevator Meters
-    public static final double kElevatorEncoderPositionFactor =
-        Math.PI * 2 * kElevatorWheelRadiusMeters / kElevatorMotorReduction;
+    public static final double kElevatorEncoderPositionFactor = 1.0 / 346.2;
+    // Math.PI * 2 * kElevatorWheelRadiusMeters / kElevatorMotorReduction;
     // Motor RPM -> Elevator Meters/Sec
     public static final double kElevatorEncoderVelocityFactor =
-        (Math.PI * 2 * kElevatorWheelRadiusMeters) / 60 / kElevatorMotorReduction;
+        kElevatorEncoderPositionFactor / 60.0;
+    // (Math.PI * 2 * kElevatorWheelRadiusMeters) / 60 / kElevatorMotorReduction;
 
-    public static final double kElevatorKs = 0.29106;
-    public static final double kElevatorKv = 12.41;
-    public static final double kElevatorKg = 0.40538;
+    public static final double kElevatorKs = 0.11723;
+    public static final double kElevatorKv = 43.594;
+    public static final double kElevatorKa = 1.561;
+    public static final double kElevatorKg = 0.024669;
     public static final double kElevatorKp = 30.0;
     public static final double kElevatorKd = 0.0;
 
@@ -62,7 +64,8 @@ public class SuperStructureConstants {
       L2(TunableDouble.register("Elevator/L2", 0.4)),
       ALGAE_L3(TunableDouble.register("Elevator/L3ALGAE", 0.57)),
       L3(TunableDouble.register("Elevator/L3", 0.77)),
-      L4(() -> kElevatorMaxHeightMeters);
+      L4(() -> kElevatorMaxHeightMeters),
+      TEST(TunableDouble.register("Elevator/TEST", STOW.setpointMeters.getAsDouble()));
 
       public DoubleSupplier setpointMeters;
     }
