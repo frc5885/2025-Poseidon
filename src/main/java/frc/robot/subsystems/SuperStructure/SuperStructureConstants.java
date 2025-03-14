@@ -20,8 +20,7 @@ public class SuperStructureConstants {
     public static final double kElevatorStartingPositionMeters = 0.0;
     public static final double kElevatorMinHeightMeters = 0.0;
     public static final double kElevatorMaxHeightMeters = 0.78;
-    public static final double kElevatorCarriageHeight = Units.inchesToMeters(7.375);
-    public static final double kElevatorStage1MaxTravel = Units.inchesToMeters(30.0);
+    public static final double kElevatorCarriageHeight = Units.inchesToMeters(36.0);
     // relative to robot origin
     public static final Translation2d kElevatorTranslation =
         new Translation2d(Units.inchesToMeters(9.5), 0.0);

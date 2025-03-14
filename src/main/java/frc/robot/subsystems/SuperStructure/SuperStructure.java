@@ -222,8 +222,7 @@ public class SuperStructure extends SubsystemBase {
     m_elevatorRoot =
         m_canvas.getRoot("ElevatorRoot", m_canvasWidth / 2 + kElevatorTranslation.getX(), 0.15);
     m_elevatorRoot.append(
-        new LoggedMechanismLigament2d(
-            "Elevator", kElevatorMaxHeightMeters + kElevatorCarriageHeight, 90.0));
+        new LoggedMechanismLigament2d("Elevator", kElevatorMaxHeightMeters + 0.1, 90.0));
     m_carriageRoot =
         m_canvas.getRoot(
             "CarriageRoot", m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05, 0.15);
@@ -261,17 +260,10 @@ public class SuperStructure extends SubsystemBase {
 
     // Log pose 3d
     Logger.recordOutput(
-        "SuperStructure/Mechanism3d/0-ElevatorStage1",
-        new Pose3d(
-            0.0,
-            0.0,
-            m_elevator.getPositionMeters() * kElevatorStage1MaxTravel / kElevatorMaxHeightMeters,
-            new Rotation3d()));
-    Logger.recordOutput(
-        "SuperStructure/Mechanism3d/1-ElevatorCarriage",
+        "SuperStructure/Mechanism3d/0-ElevatorCarriage",
         new Pose3d(0.0, 0.0, m_elevator.getPositionMeters(), new Rotation3d()));
     Logger.recordOutput(
-        "SuperStructure/Mechanism3d/2-Arm",
+        "SuperStructure/Mechanism3d/1-Arm",
         new Pose3d(
             kElevatorTranslation.getX() + 0.06,
             0,
