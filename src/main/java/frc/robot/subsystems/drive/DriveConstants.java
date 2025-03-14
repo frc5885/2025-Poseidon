@@ -100,14 +100,17 @@ public class DriveConstants {
   public static final double kDriveKv = 0.13630;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
-  public static final double kDriveSimKs = 0.0;
-  public static final double kDriveSimKv = 0.1713;
+  public static final double kDriveSimKs = 0.047123;
+  public static final double kDriveSimKv = 0.15668;
+  public static final double kDriveSimKa = 0.013224;
 
   // Turn PID configuration
   public static final double kTurnKp = 5.5;
   public static final double kTurnKd = 0.0;
   public static final double kTurnSimP = 8.0;
   public static final double kTurnSimD = 0.0;
+  public static final double kTurnSimKv = 0.42421;
+  public static final double kTurnSimKa = 0.008291;
   public static final double kTurnPIDMinInput = 0; // Radians
   public static final double kTurnPIDMaxInput = 2 * Math.PI; // Radians
   // these seem to work much better multiplied by ~10, no idea why

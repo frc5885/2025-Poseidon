@@ -126,7 +126,6 @@ public class Arm {
 
   public void runArmOpenLoop(double outputVolts) {
     m_pidOff = true;
-    // TODO MUST match the real implementation!
     if (outputVolts > 0) {
       m_io.setVoltage(isWithinMaximum(getPositionRadians()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {

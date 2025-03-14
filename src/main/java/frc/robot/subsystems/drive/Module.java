@@ -15,17 +15,39 @@ package frc.robot.subsystems.drive;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
   private final ModuleIO m_io;
   private final ModuleIOInputsAutoLogged m_inputs = new ModuleIOInputsAutoLogged();
   private final int m_index;
+
+  private final LinearSystem<N1, N1, N1> m_drivePlant;
+  private final LinearPlantInversionFeedforward<N1, N1, N1> m_driveFF;
+  private final LinearQuadraticRegulator<N1, N1, N1> m_driveRegulator;
+  private final LinearSystem<N2, N1, N2> m_turnPlant;
+  private final LinearPlantInversionFeedforward<N2, N1, N2> m_turnFF;
+  private final LinearQuadraticRegulator<N2, N1, N2> m_turnRegulator;
+  private boolean isClosedLoop = false;
+  private double m_driveFFVolts = 0.0;
+  private PIDController m_driveController;
+  private PIDController m_turnController;
 
   private final Alert m_driveDisconnectedAlert;
   private final Alert m_turnDisconnectedAlert;
@@ -34,6 +56,23 @@ public class Module {
   public Module(ModuleIO io, int index) {
     m_io = io;
     m_index = index;
+
+    SmartDashboard.putBoolean("DriveStateSpace", true);
+    m_drivePlant = LinearSystemId.identifyVelocitySystem(kDriveSimKv, kDriveSimKa);
+    m_driveFF = new LinearPlantInversionFeedforward<>(m_drivePlant, 0.02);
+    m_driveRegulator =
+        new LinearQuadraticRegulator<>(
+            m_drivePlant, VecBuilder.fill(0.1E-10), VecBuilder.fill(12.0), 0.02);
+    m_turnPlant = LinearSystemId.identifyPositionSystem(kTurnSimKv, kTurnSimKa);
+    m_turnFF = new LinearPlantInversionFeedforward<>(m_turnPlant, 0.02);
+    m_turnRegulator =
+        new LinearQuadraticRegulator<>(
+            m_turnPlant, VecBuilder.fill(0.01, 0.5), VecBuilder.fill(8.0), 0.02);
+
+    m_driveController = new PIDController(kDriveSimP, 0.0, kDriveSimD);
+    m_turnController = new PIDController(kTurnSimP, 0.0, kTurnSimD);
+    m_turnController.enableContinuousInput(-Math.PI, Math.PI);
+
     m_driveDisconnectedAlert =
         new Alert(
             "Disconnected drive motor on module " + Integer.toString(m_index) + ".",
@@ -47,6 +86,41 @@ public class Module {
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("Drive/Module" + Integer.toString(m_index), m_inputs);
+
+    if (SmartDashboard.getBoolean("DriveStateSpace", true)) {
+      if (isClosedLoop) {
+        Vector<N1> nextDriveR = VecBuilder.fill(m_driveController.getSetpoint());
+
+        m_io.setDriveOpenLoop(
+            m_driveRegulator
+                .calculate(VecBuilder.fill(m_inputs.driveVelocityRadPerSec), nextDriveR)
+                .plus(m_driveFF.calculate(nextDriveR))
+                .get(0, 0));
+
+        double current = m_inputs.turnAbsolutePosition.getRadians();
+        double error = MathUtil.angleModulus(m_turnController.getSetpoint() - current);
+        Vector<N2> nextTurnR = VecBuilder.fill(current + error, 0.0);
+
+        m_io.setTurnOpenLoop(
+            m_turnRegulator
+                .calculate(VecBuilder.fill(current, m_inputs.turnVelocityRadPerSec), nextTurnR)
+                .plus(m_turnFF.calculate(nextTurnR))
+                .get(0, 0));
+      } else {
+        m_driveController.reset();
+        m_turnController.reset();
+      }
+    } else {
+      if (isClosedLoop) {
+        m_io.setDriveOpenLoop(
+            m_driveFFVolts + m_driveController.calculate(m_inputs.driveVelocityRadPerSec));
+        m_io.setTurnOpenLoop(
+            m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+      } else {
+        m_driveController.reset();
+        m_turnController.reset();
+      }
+    }
 
     // Calculate positions for odometry
     int sampleCount = m_inputs.odometryTimestamps.length; // All signals are sampled together
@@ -68,19 +142,23 @@ public class Module {
     state.optimize(getAngle());
     state.cosineScale(m_inputs.turnPosition);
 
-    // Apply setpoints
-    m_io.setDriveVelocity(state.speedMetersPerSecond / kWheelRadiusMeters);
-    m_io.setTurnPosition(state.angle);
+    isClosedLoop = true;
+    double velocityRadPerSec = state.speedMetersPerSecond / kWheelRadiusMeters;
+    m_driveFFVolts = kDriveSimKs * Math.signum(velocityRadPerSec) + kDriveSimKv * velocityRadPerSec;
+    m_driveController.setSetpoint(velocityRadPerSec);
+    m_turnController.setSetpoint(state.angle.getRadians());
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
+    isClosedLoop = false;
     m_io.setDriveOpenLoop(output);
-    m_io.setTurnPosition(new Rotation2d());
+    // TODO may need to lock the module from turning
   }
 
   /** Runs the turn motor with the specified output. */
   public void runTurnOpenLoop(double output) {
+    isClosedLoop = false;
     m_io.setTurnOpenLoop(output);
   }
 
@@ -141,9 +219,5 @@ public class Module {
   /** Returns the module velocity in rad/sec. */
   public double getFFCharacterizationVelocity() {
     return m_inputs.driveVelocityRadPerSec;
-  }
-
-  public void setClosedLoop() {
-    m_io.setClosedLoop();
   }
 }

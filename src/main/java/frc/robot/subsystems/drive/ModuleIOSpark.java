@@ -17,23 +17,16 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.util.TunablePIDController;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
@@ -50,11 +43,6 @@ public class ModuleIOSpark implements ModuleIO {
   private final RelativeEncoder m_driveEncoder;
   private final RelativeEncoder m_turnEncoder;
   private final AnalogInput m_turnAbsoluteEncoder;
-
-  // Closed loop controllers
-  private final SparkClosedLoopController m_driveController;
-  private final SparkClosedLoopController m_turnController;
-  private final TunablePIDController m_turnPID;
 
   // Queue inputs from odometry thread
   private final Queue<Double> m_timestampQueue;
@@ -105,8 +93,6 @@ public class ModuleIOSpark implements ModuleIO {
               case 3 -> kBackRightAbsoluteEncoderPort;
               default -> 0;
             });
-    m_driveController = m_driveSpark.getClosedLoopController();
-    m_turnController = m_turnSpark.getClosedLoopController();
 
     // Configure drive motor
     var driveConfig = new SparkMaxConfig();
@@ -120,12 +106,6 @@ public class ModuleIOSpark implements ModuleIO {
         .velocityConversionFactor(kDriveEncoderVelocityFactor)
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
-    driveConfig
-        .closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .pidf(
-            kDriveKp, 0.0,
-            kDriveKd, 0.0);
     driveConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -157,18 +137,6 @@ public class ModuleIOSpark implements ModuleIO {
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
     turnConfig
-        .closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .positionWrappingEnabled(true)
-        .positionWrappingInputRange(kTurnPIDMinInput, kTurnPIDMaxInput)
-        .pidf(kTurnKp, 0.0, kTurnKd, 0.0);
-    // turnConfig
-    //     .closedLoop
-    //     .maxMotion
-    //     .allowedClosedLoopError(turnMaxErrorTolerance)
-    //     .maxVelocity(turnMaxVelocityRadPerSec)
-    //     .maxAcceleration(turnMaxAccelerationRadPerSecSq);
-    turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
         .primaryEncoderPositionPeriodMs((int) (1000.0 / kOdometryFrequency))
@@ -199,10 +167,6 @@ public class ModuleIOSpark implements ModuleIO {
         SparkOdometryThread.getInstance().registerSignal(m_driveSpark, m_driveEncoder::getPosition);
     m_turnPositionQueue =
         SparkOdometryThread.getInstance().registerSignal(m_turnSpark, m_turnEncoder::getPosition);
-
-    // Configure turn PID
-    m_turnPID =
-        new TunablePIDController(kTurnKp, 0.0, kTurnKd, kTurnMaxErrorTolerance, "Turn", false);
   }
 
   @Override
@@ -262,25 +226,5 @@ public class ModuleIOSpark implements ModuleIO {
   @Override
   public void setTurnOpenLoop(double output) {
     m_turnSpark.setVoltage(output);
-  }
-
-  @Override
-  public void setDriveVelocity(double velocityRadPerSec) {
-    double ffVolts = kDriveKs * Math.signum(velocityRadPerSec) + kDriveKv * velocityRadPerSec;
-    m_driveController.setReference(
-        velocityRadPerSec,
-        ControlType.kVelocity,
-        ClosedLoopSlot.kSlot0,
-        ffVolts,
-        ArbFFUnits.kVoltage);
-  }
-
-  @Override
-  public void setTurnPosition(Rotation2d rotation) {
-    double setpoint =
-        MathUtil.inputModulus(
-            rotation.plus(m_zeroRotation).getRadians(), kTurnPIDMinInput, kTurnPIDMaxInput);
-    // turnController.setReference(setpoint, ControlType.kMAXMotionPositionControl);
-    m_turnSpark.setVoltage(m_turnPID.calculate(m_turnEncoder.getPosition(), setpoint));
   }
 }

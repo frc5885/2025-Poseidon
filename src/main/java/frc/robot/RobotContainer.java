@@ -270,7 +270,6 @@ public class RobotContainer {
     m_autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    // TODO not needed for now
     m_autoChooser.addOption(
         "Elevator SysId (Quasistatic Forward)",
         m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));

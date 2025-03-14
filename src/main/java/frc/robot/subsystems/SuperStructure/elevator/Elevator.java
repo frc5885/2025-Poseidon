@@ -101,7 +101,6 @@ public class Elevator {
   }
 
   public void runElevatorOpenLoop(double outputVolts) {
-    // TODO MUST match the real implementation!
     if (outputVolts > 0) {
       m_io.setVoltage(isWithinMaximum(getPositionMeters()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {
