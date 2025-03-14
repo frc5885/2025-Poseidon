@@ -162,6 +162,8 @@ public class Elevator {
 
   public void setBrakeMode(boolean brakeModeEnabled) {
     m_io.setBrakeMode(brakeModeEnabled);
+    stop();
+    m_runClosedLoop = false;
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/AdjustmentCoefficient")
