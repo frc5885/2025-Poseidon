@@ -47,7 +47,7 @@ public class SuperStructureConstants {
     public static final double kElevatorKd = 0.0;
     public static final double kElevatorLatencyCompensationMs = 0.025;
 
-    public static final double kElevatorErrorToleranceMeters = 0.005;
+    public static final double kElevatorErrorToleranceMeters = 0.01;
 
     @AllArgsConstructor
     public static enum ElevatorLevel {
