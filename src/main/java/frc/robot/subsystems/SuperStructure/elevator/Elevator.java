@@ -59,7 +59,7 @@ public class Elevator {
     m_plant = LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.1, 0.15), VecBuilder.fill(12.0), 0.02);
+            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
     if (Constants.kCurrentMode == Mode.REAL) {
       m_regulator.latencyCompensate(m_plant, 0.02, kElevatorLatencyCompensationMs);
     }
