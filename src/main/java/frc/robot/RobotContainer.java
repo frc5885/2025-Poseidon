@@ -31,11 +31,12 @@ import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.io.operatorPanel.OperatorPanel;
-import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
-import frc.robot.subsystems.Collector.Feeder.Feeder;
-import frc.robot.subsystems.Collector.Feeder.FeederIO;
-import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
-import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
+import frc.robot.subsystems.Feeder.Feeder;
+import frc.robot.subsystems.Feeder.FeederConstants;
+import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
+import frc.robot.subsystems.Feeder.FeederIO;
+import frc.robot.subsystems.Feeder.FeederIOSim;
+import frc.robot.subsystems.Feeder.FeederIOSpark;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
@@ -168,7 +169,7 @@ public class RobotContainer {
         //         new FeederIOSpark(),
         //         new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         m_feeder =
-            new Feeder(new FeederIOSpark(), new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
+            new Feeder(new FeederIOSpark(), new BeamBreakIOReal(FeederConstants.kBeamBreakId));
         // m_endEffector =
         //     new EndEffector(
         //         new AlgaeClawIOSpark(),
@@ -377,7 +378,9 @@ public class RobotContainer {
         .b()
         .whileTrue(
             new StartEndCommand(
-                () -> m_feeder.runFeeder(12.0), () -> m_feeder.runFeeder(0.0), m_feeder));
+                () -> m_feeder.setFeederState(FeederState.FEEDING),
+                () -> m_feeder.setFeederState(FeederState.IDLE),
+                m_feeder));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv

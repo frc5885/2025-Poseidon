@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Collector.Feeder;
+package frc.robot.subsystems.Feeder;
 
 import static frc.robot.util.SparkUtil.*;
 
@@ -10,7 +10,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.Collector.CollectorConstants.FeederConstants;
 import java.util.function.DoubleSupplier;
 
 public class FeederIOSpark implements FeederIO {
@@ -28,7 +27,7 @@ public class FeederIOSpark implements FeederIO {
     SparkMaxConfig feeder1Config = new SparkMaxConfig();
     feeder1Config
         .inverted(FeederConstants.kMotor1Inverted)
-        .idleMode(IdleMode.kCoast)
+        .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(FeederConstants.kCurrentLimit)
         .voltageCompensation(12.0);
     feeder1Config.encoder.uvwMeasurementPeriod(10).uvwAverageDepth(2);

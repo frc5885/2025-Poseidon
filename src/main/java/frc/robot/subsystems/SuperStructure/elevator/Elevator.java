@@ -133,7 +133,7 @@ public class Elevator {
                       .plus(kElevatorKs * Math.signum(setpoint.velocity) + kElevatorKg))
               .get(0, 0);
       m_io.setVoltage(MathUtil.clamp(voltage, -12.0, 12.0));
-    } else {  
+    } else {
       m_io.setVoltage(
           m_feedforwardPID.calculate(setpoint.velocity)
               + m_pidController.calculate(current.position, setpoint.position));
