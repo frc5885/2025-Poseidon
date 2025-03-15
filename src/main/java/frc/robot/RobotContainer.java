@@ -271,6 +271,17 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_autoChooser.addOption(
+        "Turn SysId (Quasistatic Forward)",
+        m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Turn SysId (Quasistatic Reverse)",
+        m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Turn SysId (Dynamic Forward)", m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Turn SysId (Dynamic Reverse)", m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    m_autoChooser.addOption(
         "Elevator SysId (Quasistatic Forward)",
         m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
     m_autoChooser.addOption(

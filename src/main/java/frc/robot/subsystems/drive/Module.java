@@ -58,16 +58,17 @@ public class Module {
     m_index = index;
 
     SmartDashboard.putBoolean("DriveStateSpace", true);
-    m_drivePlant = LinearSystemId.identifyVelocitySystem(kDriveSimKv, kDriveSimKa);
+    m_drivePlant = LinearSystemId.identifyVelocitySystem(kDriveKv, kDriveKa);
     m_driveFF = new LinearPlantInversionFeedforward<>(m_drivePlant, 0.02);
     m_driveRegulator =
         new LinearQuadraticRegulator<>(
-            m_drivePlant, VecBuilder.fill(0.1E-10), VecBuilder.fill(12.0), 0.02);
-    m_turnPlant = LinearSystemId.identifyPositionSystem(kTurnSimKv, kTurnSimKa);
+            m_drivePlant, VecBuilder.fill(0.1), VecBuilder.fill(12.0), 0.02);
+
+    m_turnPlant = LinearSystemId.identifyPositionSystem(kTurnKv, kTurnKa);
     m_turnFF = new LinearPlantInversionFeedforward<>(m_turnPlant, 0.02);
     m_turnRegulator =
         new LinearQuadraticRegulator<>(
-            m_turnPlant, VecBuilder.fill(0.01, 0.5), VecBuilder.fill(8.0), 0.02);
+            m_turnPlant, VecBuilder.fill(0.01, 1E10), VecBuilder.fill(8.0), 0.02);
 
     m_driveController = new PIDController(kDriveSimP, 0.0, kDriveSimD);
     m_turnController = new PIDController(kTurnSimP, 0.0, kTurnSimD);
@@ -89,12 +90,13 @@ public class Module {
 
     if (SmartDashboard.getBoolean("DriveStateSpace", true)) {
       if (isClosedLoop) {
-        Vector<N1> nextDriveR = VecBuilder.fill(m_driveController.getSetpoint());
+        double driveSetpoint = m_driveController.getSetpoint();
+        Vector<N1> nextDriveR = VecBuilder.fill(driveSetpoint);
 
         m_io.setDriveOpenLoop(
             m_driveRegulator
                 .calculate(VecBuilder.fill(m_inputs.driveVelocityRadPerSec), nextDriveR)
-                .plus(m_driveFF.calculate(nextDriveR))
+                .plus(m_driveFF.calculate(nextDriveR).plus(kDriveKs * Math.signum(driveSetpoint)))
                 .get(0, 0));
 
         double current = m_inputs.turnAbsolutePosition.getRadians();
@@ -146,14 +148,21 @@ public class Module {
     double velocityRadPerSec = state.speedMetersPerSecond / kWheelRadiusMeters;
     m_driveFFVolts = kDriveSimKs * Math.signum(velocityRadPerSec) + kDriveSimKv * velocityRadPerSec;
     m_driveController.setSetpoint(velocityRadPerSec);
-    m_turnController.setSetpoint(state.angle.getRadians());
+    m_turnController.setSetpoint(
+        MathUtil.angleModulus(state.angle.plus(m_io.getZeroRotation()).getRadians()));
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
     isClosedLoop = false;
     m_io.setDriveOpenLoop(output);
-    // TODO may need to lock the module from turning
+    m_turnController.setSetpoint(MathUtil.angleModulus(m_io.getZeroRotation().getRadians()));
+    m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+  }
+
+  public void runTurnCharacterization(double output) {
+    isClosedLoop = false;
+    m_io.setTurnOpenLoop(output);
   }
 
   /** Runs the turn motor with the specified output. */

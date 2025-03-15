@@ -96,8 +96,9 @@ public class DriveConstants {
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
   public static final double kDriveKd = 0.0;
-  public static final double kDriveKs = 0.13025;
-  public static final double kDriveKv = 0.13630;
+  public static final double kDriveKs = 0.039644;
+  public static final double kDriveKv = 0.13951;
+  public static final double kDriveKa = 0.0052922;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
   public static final double kDriveSimKs = 0.047123;
@@ -109,6 +110,10 @@ public class DriveConstants {
   public static final double kTurnKd = 0.0;
   public static final double kTurnSimP = 8.0;
   public static final double kTurnSimD = 0.0;
+  public static final double kTurnKs = 0.15515;
+  public static final double kTurnKv = 0.42405;
+  public static final double kTurnKa = 0.010624;
+
   public static final double kTurnSimKv = 0.42421;
   public static final double kTurnSimKa = 0.008291;
   public static final double kTurnPIDMinInput = 0; // Radians

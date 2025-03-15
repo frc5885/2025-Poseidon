@@ -227,4 +227,9 @@ public class ModuleIOSpark implements ModuleIO {
   public void setTurnOpenLoop(double output) {
     m_turnSpark.setVoltage(output);
   }
+
+  @Override
+  public Rotation2d getZeroRotation() {
+    return m_zeroRotation;
+  }
 }
