@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.DriveCommands;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
@@ -253,6 +254,7 @@ public class RobotContainer {
 
     // Set up auto routines
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
     // m_autoChooser.addDefaultOption(
     //     "4_coral_auto",
@@ -374,39 +376,19 @@ public class RobotContainer {
     //             () -> m_superStructure.runElevatorOpenLoop(0.0),
     //             m_superStructure));
 
-    m_driverController
-        .b()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_feeder.setFeederState(FeederState.FEEDING),
-                () -> m_feeder.setFeederState(FeederState.IDLE),
-                m_feeder));
-
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
     // ============================================================================
 
     // INTAKE CORAL
-    // m_driverController
-    //     // this is still not perfect but good enough for now
-    //     // the arm transitioning to INTAKE should finish before a coral could possibly be intaked
-    //     // fully
-    //     .rightBumper()
-    //     .onTrue(
-    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-    //             .unless(m_endEffector::isCoralHeld))
-    //     .whileTrue(
-    //         new ParallelDeadlineGroup(
-    //                 new IntakeCoralCommand(m_collector, m_endEffector),
-    //                 DriveCommands.driveToGamePiece(
-    //                     m_drive,
-    //                     () -> -m_driverController.getLeftY(),
-    //                     () -> -m_driverController.getLeftX(),
-    //                     () -> -m_driverController.getRightX(),
-    //                     () -> m_vision.getTargetX(2).getRadians(),
-    //                     true))
-    //             .unless(m_endEffector::isCoralHeld))
-    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
+    m_driverController
+        .rightBumper()
+        .debounce(0.1)
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_feeder.setFeederState(FeederState.FEEDING),
+                () -> m_feeder.setFeederState(FeederState.IDLE),
+                m_feeder));
 
     // EJECT GAME PIECE
     // m_driverController

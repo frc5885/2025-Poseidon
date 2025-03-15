@@ -30,6 +30,7 @@ public class LEDSubsystem {
   private final AddressableLEDBufferView m_view;
   private static final int kLength = 33;
   private static final int kLEDPort = 0;
+  private static double autoStartTime = 0;
 
   @Setter @Getter private boolean coralHeld = false;
   @Setter @Getter private boolean algaeHeld = false;
@@ -92,6 +93,10 @@ public class LEDSubsystem {
     m_leds.setData(m_buffer);
   }
 
+  public static void setAutoStartTime() {
+    autoStartTime = Timer.getFPGATimestamp();
+  }
+
   @RequiredArgsConstructor
   public static enum LEDStates {
     IDLE(
@@ -114,8 +119,22 @@ public class LEDSubsystem {
     HOLDING_PIECE(LEDPattern.solid(Color.kGreen).breathe(Seconds.of(2.0))),
     RESETTING_SUPERSTRUCTURE(LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0))),
     AUTO(
-        LEDPattern.gradient(GradientType.kDiscontinuous, Color.kRed, Color.kYellow, Color.kGreen)
-            .mask(LEDPattern.progressMaskLayer(() -> Timer.getMatchTime() / 15.0))),
+        LEDPattern.gradient(
+                GradientType.kDiscontinuous,
+                Color.kRed,
+                Color.kRed,
+                Color.kRed,
+                Color.kRed,
+                Color.kYellow,
+                Color.kYellow,
+                Color.kYellow,
+                Color.kGreen,
+                Color.kGreen,
+                Color.kGreen,
+                Color.kGreen)
+            .mask(
+                LEDPattern.progressMaskLayer(
+                    () -> (15.0 - (Timer.getFPGATimestamp() - autoStartTime)) / 15.0))),
     BOGUS_CALL(
         LEDPattern.solid(Color.kBlue)
             .blink(Seconds.of(0.1))

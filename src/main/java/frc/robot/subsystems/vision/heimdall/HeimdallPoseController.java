@@ -157,7 +157,8 @@ public class HeimdallPoseController {
   public void addVisionMeasurement(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
+      Matrix<N3, N1> visionMeasurementStdDevs,
+      double averageTagDistance) {
 
     // Add vision measurement to odometry estimator
     m_odometryEstimator.addVisionMeasurement(
@@ -181,19 +182,17 @@ public class HeimdallPoseController {
     }
 
     // Calculate the new transform by blending the current and target transforms
-    Transform2d newQuestToField =
-        blendTransforms(
-            currentQuestToField,
-            targetQuestToField,
-            kTranslationConvergenceFactor,
-            kRotationConvergenceFactor);
+    if (averageTagDistance < 1.0) {
+      Transform2d newQuestToField =
+          blendTransforms(currentQuestToField, targetQuestToField, 0.1, 0.1);
 
-    // Update QuestNav with the new blended transform
-    m_questNav.updateQuestToFieldTransform(newQuestToField);
+      // Update QuestNav with the new blended transform
+      m_questNav.updateQuestToFieldTransform(newQuestToField);
+      Logger.recordOutput("Heimdall/QuestConvergence/BlendedTransform", newQuestToField);
+    }
 
     Logger.recordOutput("Heimdall/QuestConvergence/CurrentTransform", currentQuestToField);
     Logger.recordOutput("Heimdall/QuestConvergence/TargetTransform", targetQuestToField);
-    Logger.recordOutput("Heimdall/QuestConvergence/BlendedTransform", newQuestToField);
   }
 
   /** Resets both odometry and Quest (forcing a sync). */

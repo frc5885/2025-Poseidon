@@ -152,7 +152,8 @@ public class Vision extends SubsystemBase {
           m_consumer.accept(
               observation.pose().toPose2d(),
               observation.timestamp(),
-              VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+              VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev),
+              observation.averageTagDistance());
         }
 
         // Log camera datadata
@@ -204,6 +205,7 @@ public class Vision extends SubsystemBase {
     public void accept(
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
-        Matrix<N3, N1> visionMeasurementStdDevs);
+        Matrix<N3, N1> visionMeasurementStdDevs,
+        double averageTagDistance);
   }
 }
