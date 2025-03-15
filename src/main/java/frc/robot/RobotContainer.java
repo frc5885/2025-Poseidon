@@ -22,11 +22,20 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.io.beambreak.BeamBreakIO;
+import frc.robot.io.beambreak.BeamBreakIOReal;
+import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.io.operatorPanel.OperatorPanel;
+import frc.robot.subsystems.Collector.CollectorConstants.IntakeConstants;
+import frc.robot.subsystems.Collector.Feeder.Feeder;
+import frc.robot.subsystems.Collector.Feeder.FeederIO;
+import frc.robot.subsystems.Collector.Feeder.FeederIOSim;
+import frc.robot.subsystems.Collector.Feeder.FeederIOSpark;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
@@ -76,6 +85,7 @@ public class RobotContainer {
   private final SuperStructure m_superStructure;
   //   private final Collector m_collector;
   //   private final EndEffector m_endEffector;
+  private final Feeder m_feeder;
 
   // SIM
   private SwerveDriveSimulation m_driveSimulation = null;
@@ -97,7 +107,7 @@ public class RobotContainer {
   private final Trigger m_manualTroughScoreTrigger;
   /** right trigger and button 4 false */
   private final Trigger m_automaticCoralScoreTrigger;
-  /** bogus call button 7 */
+  /** bogus call button 8 */
   private final Trigger m_bogusCallTrigger;
   /** disable brake mode button 5 */
   private final Trigger m_disableBrakeModeTrigger;
@@ -157,6 +167,8 @@ public class RobotContainer {
         //         new IntakeIOSpark(),
         //         new FeederIOSpark(),
         //         new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
+        m_feeder =
+            new Feeder(new FeederIOSpark(), new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         // m_endEffector =
         //     new EndEffector(
         //         new AlgaeClawIOSpark(),
@@ -203,6 +215,7 @@ public class RobotContainer {
         // m_collector =
         //     new Collector(
         //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
+        m_feeder = new Feeder(new FeederIOSim(), new BeamBreakIOSim());
         // m_endEffector =
         //     new EndEffector(
         //         new AlgaeClawIOSim(),
@@ -225,6 +238,7 @@ public class RobotContainer {
         m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
         // m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
+        m_feeder = new Feeder(new FeederIO() {}, new BeamBreakIO() {});
         // m_endEffector =
         //     new EndEffector(
         //         new AlgaeClawIO() {},
@@ -343,6 +357,27 @@ public class RobotContainer {
     m_driverController
         .y()
         .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3)));
+
+    // m_driverController
+    //     .x()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(-12.0),
+    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             m_superStructure));
+    // m_driverController
+    //     .y()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_superStructure.runElevatorOpenLoop(12.0),
+    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             m_superStructure));
+
+    m_driverController
+        .b()
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_feeder.runFeeder(12.0), () -> m_feeder.runFeeder(0.0), m_feeder));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv

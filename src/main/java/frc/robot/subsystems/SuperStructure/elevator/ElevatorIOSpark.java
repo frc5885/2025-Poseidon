@@ -110,23 +110,21 @@ public class ElevatorIOSpark implements ElevatorIO {
 
   @Override
   public void setBrakeMode(boolean brakeModeEnabled) {
-    m_elevatorConfig1.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
-    m_elevatorConfig2.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
+    // m_elevatorConfig1.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
+    // m_elevatorConfig2.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
     tryUntilOk(
         m_elevatorSpark1,
         5,
         () ->
             m_elevatorSpark1.configure(
-                m_elevatorConfig1,
-                ResetMode.kNoResetSafeParameters,
-                PersistMode.kNoPersistParameters));
+                config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters));
     tryUntilOk(
         m_elevatorSpark2,
         5,
         () ->
             m_elevatorSpark2.configure(
-                m_elevatorConfig2,
-                ResetMode.kNoResetSafeParameters,
-                PersistMode.kNoPersistParameters));
+                config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters));
   }
 }

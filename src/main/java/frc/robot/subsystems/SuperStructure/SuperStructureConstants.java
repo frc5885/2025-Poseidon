@@ -14,7 +14,7 @@ public class SuperStructureConstants {
     public static final int kElevatorSparkId2 = 31;
     public static final boolean kElevatorM1Inverted = false;
     public static final boolean kElevatorM2Opposite = true;
-    public static final int kElevatorMotorCurrentLimit = 20;
+    public static final int kElevatorMotorCurrentLimit = 30;
 
     public static final double kElevatorMassKg = 12.0; // from CAD, elevator + arm + wrist
     public static final double kElevatorStartingPositionMeters = 0.0;
@@ -26,28 +26,28 @@ public class SuperStructureConstants {
         new Translation2d(Units.inchesToMeters(9.5), 0.0);
 
     // In Meters/Sec
-    public static final double kElevatorMaxVelocity = 1.5; // from sim, TBD
+    public static final double kElevatorMaxVelocity = 1.0;
     // In Meters/SecSq
-    public static final double kElevatorMaxAcceleration = 5.5; // from sim, TBD
+    public static final double kElevatorMaxAcceleration = 5.0;
     public static final double kElevatorMotorReduction = 35.0 * (22.0 / 18.0) * 1.25 * 1.72; // real
     public static final double kElevatorWheelRadiusMeters = 0.045; // real
     // Motor Rotations -> Elevator Meters
-    public static final double kElevatorEncoderPositionFactor = 1.0 / 89.0;
+    public static final double kElevatorEncoderPositionFactor = 1.0 / 86.0;
     // Math.PI * 2 * kElevatorWheelRadiusMeters / kElevatorMotorReduction;
     // Motor RPM -> Elevator Meters/Sec
     public static final double kElevatorEncoderVelocityFactor =
         kElevatorEncoderPositionFactor / 60.0;
     // (Math.PI * 2 * kElevatorWheelRadiusMeters) / 60 / kElevatorMotorReduction;
 
-    public static final double kElevatorKs = 0.11723;
-    public static final double kElevatorKv = 43.594;
-    public static final double kElevatorKa = 1.561;
-    public static final double kElevatorKg = 0.024669;
-    public static final double kElevatorKp = 30.0;
+    public static final double kElevatorKs = 0.29236;
+    public static final double kElevatorKv = 10.292;
+    public static final double kElevatorKa = 0.68893;
+    public static final double kElevatorKg = 0.065582;
+    public static final double kElevatorKp = 5.0;
     public static final double kElevatorKd = 0.0;
     public static final double kElevatorLatencyCompensationMs = 0.025;
 
-    public static final double kElevatorErrorToleranceMeters = 0.02;
+    public static final double kElevatorErrorToleranceMeters = 0.005;
 
     @AllArgsConstructor
     public static enum ElevatorLevel {

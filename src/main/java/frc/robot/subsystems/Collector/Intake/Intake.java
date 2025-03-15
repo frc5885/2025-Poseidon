@@ -2,8 +2,6 @@ package frc.robot.subsystems.Collector.Intake;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.io.beambreak.BeamBreakIO;
-import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.Logger;
 

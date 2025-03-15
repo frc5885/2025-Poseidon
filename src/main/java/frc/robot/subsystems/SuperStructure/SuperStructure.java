@@ -78,7 +78,7 @@ public class SuperStructure extends SubsystemBase {
   @AutoLogOutput(key = "SuperStructure/Elevator/Goal")
   public ElevatorLevel getElevatorGoal() {
     ElevatorLevel goal = m_goalState.elevatorGoal;
-    Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
+    Logger.recordOutput("SuperStructure/Elevator/GoalPosition", m_elevator.getGoalPosition());
     return goal;
   }
 
