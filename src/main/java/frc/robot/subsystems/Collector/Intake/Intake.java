@@ -12,15 +12,12 @@ public class Intake {
   private final Alert m_motor2DisconnectedAlert;
   private final IntakeIO m_intakeIO;
   private final IntakeIOInputsAutoLogged m_intakeInputs = new IntakeIOInputsAutoLogged();
-  private final BeamBreakIO m_beamBreakIO;
-  private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
 
   // track state internally
   private boolean m_isIntakeExtended = false;
 
-  public Intake(IntakeIO io, BeamBreakIO beamBreakIO) {
+  public Intake(IntakeIO io) {
     m_intakeIO = io;
-    m_beamBreakIO = beamBreakIO;
 
     m_motor1DisconnectedAlert = new Alert("Intake Motor1 disconnected!", AlertType.kError);
     m_motor2DisconnectedAlert = new Alert("Intake Motor2 disconnected!", AlertType.kError);
@@ -28,9 +25,7 @@ public class Intake {
 
   public void periodic() {
     m_intakeIO.updateInputs(m_intakeInputs);
-    m_beamBreakIO.updateInputs(m_beamBreakInputs);
     Logger.processInputs("Collector/Intake", m_intakeInputs);
-    Logger.processInputs("Collector/Intake/BeamBreak", m_beamBreakInputs);
 
     // Update alerts
     m_motor1DisconnectedAlert.set(!m_intakeInputs.motor1Connected);
@@ -61,14 +56,6 @@ public class Intake {
   public void retract() {
     m_intakeIO.retractIntake();
     m_isIntakeExtended = false;
-  }
-
-  public boolean isBeamBreakTriggered() {
-    return m_beamBreakInputs.state;
-  }
-
-  public BeamBreakIO getBeamBreakIO() {
-    return m_beamBreakIO;
   }
 
   public IntakeSimulation getMapleIntakeSim() {

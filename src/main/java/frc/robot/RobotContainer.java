@@ -99,7 +99,7 @@ public class RobotContainer {
   private final Trigger m_automaticCoralScoreTrigger;
   /** bogus call button 7 */
   private final Trigger m_bogusCallTrigger;
-  /** disable brake mode button 6 */
+  /** disable brake mode button 5 */
   private final Trigger m_disableBrakeModeTrigger;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
@@ -125,7 +125,7 @@ public class RobotContainer {
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
     m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
     m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
-    m_disableBrakeModeTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(6));
+    m_disableBrakeModeTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(4));
 
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {

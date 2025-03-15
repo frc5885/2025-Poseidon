@@ -32,7 +32,7 @@ public class SuperStructureConstants {
     public static final double kElevatorMotorReduction = 35.0 * (22.0 / 18.0) * 1.25 * 1.72; // real
     public static final double kElevatorWheelRadiusMeters = 0.045; // real
     // Motor Rotations -> Elevator Meters
-    public static final double kElevatorEncoderPositionFactor = 1.0 / 346.2;
+    public static final double kElevatorEncoderPositionFactor = 1.0 / 89.0;
     // Math.PI * 2 * kElevatorWheelRadiusMeters / kElevatorMotorReduction;
     // Motor RPM -> Elevator Meters/Sec
     public static final double kElevatorEncoderVelocityFactor =

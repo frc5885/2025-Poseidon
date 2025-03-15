@@ -22,8 +22,8 @@ public class Collector extends SubsystemBase {
 
   /** Creates a new Collector. */
   public Collector(IntakeIO intakeIO, FeederIO feederIO, BeamBreakIO beamBreakIO) {
-    m_intake = new Intake(intakeIO, beamBreakIO);
-    m_feeder = new Feeder(feederIO);
+    m_intake = new Intake(intakeIO);
+    m_feeder = new Feeder(feederIO, beamBreakIO);
   }
 
   @Override
@@ -61,14 +61,6 @@ public class Collector extends SubsystemBase {
 
   public void retractIntake() {
     m_intake.retract();
-  }
-
-  public boolean isCollected() {
-    return m_intake.isBeamBreakTriggered();
-  }
-
-  public BeamBreakIO getBeamBreakIO() {
-    return m_intake.getBeamBreakIO();
   }
 
   public IntakeSimulation getMapleIntakeSim() {

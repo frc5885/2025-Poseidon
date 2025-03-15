@@ -117,12 +117,16 @@ public class ElevatorIOSpark implements ElevatorIO {
         5,
         () ->
             m_elevatorSpark1.configure(
-                m_elevatorConfig1, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+                m_elevatorConfig1,
+                ResetMode.kNoResetSafeParameters,
+                PersistMode.kNoPersistParameters));
     tryUntilOk(
         m_elevatorSpark2,
         5,
         () ->
             m_elevatorSpark2.configure(
-                m_elevatorConfig2, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+                m_elevatorConfig2,
+                ResetMode.kNoResetSafeParameters,
+                PersistMode.kNoPersistParameters));
   }
 }
