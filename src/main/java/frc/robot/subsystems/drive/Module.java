@@ -62,13 +62,13 @@ public class Module {
     m_driveFF = new LinearPlantInversionFeedforward<>(m_drivePlant, 0.02);
     m_driveRegulator =
         new LinearQuadraticRegulator<>(
-            m_drivePlant, VecBuilder.fill(0.1), VecBuilder.fill(12.0), 0.02);
+            m_drivePlant, VecBuilder.fill(0.0001), VecBuilder.fill(12.0), 0.02);
 
     m_turnPlant = LinearSystemId.identifyPositionSystem(kTurnKv, kTurnKa);
     m_turnFF = new LinearPlantInversionFeedforward<>(m_turnPlant, 0.02);
     m_turnRegulator =
         new LinearQuadraticRegulator<>(
-            m_turnPlant, VecBuilder.fill(0.01, 1E10), VecBuilder.fill(8.0), 0.02);
+            m_turnPlant, VecBuilder.fill(0.2, 10.0), VecBuilder.fill(12.0), 0.02);
 
     m_driveController = new PIDController(kDriveSimP, 0.0, kDriveSimD);
     m_turnController = new PIDController(kTurnSimP, 0.0, kTurnSimD);
