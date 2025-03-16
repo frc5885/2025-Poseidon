@@ -65,18 +65,6 @@ public class Elevator {
     }
     m_feedForwardLQR = new LinearPlantInversionFeedforward<>(m_plant, 0.02);
 
-    // KalmanFilter<N2, N1, N2> m_observer =
-    //     new KalmanFilter<>(
-    //         Nat.N2(),
-    //         Nat.N2(),
-    //         m_plant,
-    //         VecBuilder.fill(3.0, 3.0),
-    //         VecBuilder.fill(0.01, 0.01),
-    //         0.02);
-
-    // LinearSystemLoop<N2, N1, N2> m_loop = new LinearSystemLoop<>(m_plant, m_regulator,
-    // m_observer, 12.0, 0.02);
-
     // for PID + FF
     m_pidController =
         new TunablePIDController(
@@ -123,6 +111,7 @@ public class Elevator {
     Logger.recordOutput("SuperStructure/Elevator/SetpointVelocity", setpoint.velocity);
 
     if (SmartDashboard.getBoolean("ElevatorStateSpace", true)) {
+      // state space
       Vector<N2> nextR = VecBuilder.fill(setpoint.position, setpoint.velocity);
       double voltage =
           m_regulator
@@ -134,6 +123,7 @@ public class Elevator {
               .get(0, 0);
       m_io.setVoltage(MathUtil.clamp(voltage, -12.0, 12.0));
     } else {
+      // PID + FF
       m_io.setVoltage(
           m_feedforwardPID.calculate(setpoint.velocity)
               + m_pidController.calculate(current.position, setpoint.position));
@@ -225,7 +215,7 @@ public class Elevator {
                 null,
                 null,
                 (state) ->
-                    Logger.recordOutput("SuperStructure/ElevatorSysIDState", state.toString())),
+                    Logger.recordOutput("SuperStructure/Elevator/SysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, superStructure));
   }

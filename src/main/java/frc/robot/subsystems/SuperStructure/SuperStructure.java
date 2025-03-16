@@ -243,7 +243,7 @@ public class SuperStructure extends SubsystemBase {
             new LoggedMechanismLigament2d(
                 "Arm",
                 kArmLengthMeters,
-                Units.radiansToDegrees(kArmStartingPositionRadians),
+                Units.radiansToDegrees(kArmStartingPositionRads),
                 10.0,
                 new Color8Bit(0, 255, 0)));
   }
@@ -255,7 +255,7 @@ public class SuperStructure extends SubsystemBase {
         0.15 + m_elevator.getPositionMeters());
     m_armRoot.setPosition(
         m_armRootTranslation.getX(), m_armRootTranslation.getY() + m_elevator.getPositionMeters());
-    m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
+    m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRads()));
     Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
 
     // Log pose 3d
@@ -268,7 +268,7 @@ public class SuperStructure extends SubsystemBase {
             kElevatorTranslation.getX() + 0.06,
             0,
             m_armRootTranslation.getY() + m_elevator.getPositionMeters(),
-            new Rotation3d(0, -m_arm.getPositionRadians(), 0)));
+            new Rotation3d(0, -m_arm.getPositionRads(), 0)));
   }
 
   /* Returns the pose of the end effector for game piece visualization */
