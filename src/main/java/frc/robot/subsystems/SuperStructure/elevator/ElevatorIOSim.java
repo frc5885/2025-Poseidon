@@ -15,7 +15,7 @@ public class ElevatorIOSim implements ElevatorIO {
   public ElevatorIOSim() {
     m_elevatorSim =
         new ElevatorSim(
-          LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa),
+            LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa),
             DCMotor.getNEO(2),
             kElevatorMinHeightMeters,
             kElevatorMaxHeightMeters,

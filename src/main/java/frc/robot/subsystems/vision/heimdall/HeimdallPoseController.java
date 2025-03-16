@@ -21,7 +21,6 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.questnav.QuestNav;
 import frc.robot.subsystems.vision.questnav.QuestNavIO;
 import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
-import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
 import org.littletonrobotics.junction.Logger;
 
 public class HeimdallPoseController {
@@ -43,8 +42,8 @@ public class HeimdallPoseController {
 
   // Convergence factors - control how quickly the transform is updated
   // Lower values mean slower but smoother convergence
-  private static final double kTranslationConvergenceFactor = 0.01; // 1% adjustment per cycle
-  private static final double kRotationConvergenceFactor = 0.015; // 1.5% adjustment per cycle
+  private static final double kTranslationConvergenceFactor = 0.05; // 5% adjustment per cycle
+  private static final double kRotationConvergenceFactor = 0.05; // 5% adjustment per cycle
 
   // First-time initialization flag
   private boolean m_isFirstUpdate = true;
@@ -59,7 +58,7 @@ public class HeimdallPoseController {
         m_questNav = new QuestNav(new QuestNavIOReal());
         break;
       case SIM:
-        m_questNav = new QuestNav(new QuestNavIOSim(m_odometryEstimator::getEstimatedPosition));
+        m_questNav = new QuestNav(new QuestNavIO() {});
         break;
       default:
         m_questNav = new QuestNav(new QuestNavIO() {});
@@ -182,9 +181,14 @@ public class HeimdallPoseController {
     }
 
     // Calculate the new transform by blending the current and target transforms
-    if (averageTagDistance < 1.0) {
+    Logger.recordOutput("Heimdall/AverageTagDistance", averageTagDistance);
+    if (averageTagDistance < 1.5) {
+      double transFactor =
+          kTranslationConvergenceFactor / averageTagDistance; // higher factor for closer tags
+      double rotFactor =
+          kRotationConvergenceFactor / averageTagDistance; // higher factor for closer tags
       Transform2d newQuestToField =
-          blendTransforms(currentQuestToField, targetQuestToField, 0.1, 0.1);
+          blendTransforms(currentQuestToField, targetQuestToField, transFactor, rotFactor);
 
       // Update QuestNav with the new blended transform
       m_questNav.updateQuestToFieldTransform(newQuestToField);
