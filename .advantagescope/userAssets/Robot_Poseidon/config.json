@@ -21,13 +21,32 @@
       "rotations": [
         {
           "axis": "z",
-          "degrees": -15
+          "degrees": 3.1
         }
       ],
       "position": [
-        0.254,
-        0.318,
-        0
+        0.22,
+        0.187,
+        0.329
+      ],
+      "resolution": [
+        1280,
+        720
+      ],
+      "fov": 70
+    },
+    {
+      "name": "RightCamera",
+      "rotations": [
+        {
+          "axis": "z",
+          "degrees": -3.1
+        }
+      ],
+      "position": [
+        0.22,
+        -0.187,
+        0.329
       ],
       "resolution": [
         1280,
@@ -58,28 +77,11 @@
       "zeroedRotations": [
         {
           "axis": "x",
-          "degrees": 90
+          "degrees": -90
         },
         {
-          "axis": "z",
+          "axis": "y",
           "degrees": 180
-        }
-      ],
-      "zeroedPosition": [
-        0.238,
-        0,
-        0.242
-      ]
-    },
-    {
-      "zeroedRotations": [
-        {
-          "axis": "x",
-          "degrees": 90
-        },
-        {
-          "axis": "z",
-          "degrees": 90
         }
       ],
       "zeroedPosition": []

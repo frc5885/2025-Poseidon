@@ -17,7 +17,7 @@ public class SuperStructureConstants {
     public static final double kElevatorStartingPositionMeters = 0.0;
     public static final double kElevatorMinHeightMeters = 0.0;
     public static final double kElevatorMaxHeightMeters = 0.78;
-    public static final double kElevatorCarriageHeight = Units.inchesToMeters(36.0);
+    public static final double kElevatorCarriageHeight = Units.inchesToMeters(35.0);
     // relative to robot origin
     public static final Translation2d kElevatorTranslation =
         new Translation2d(Units.inchesToMeters(9.5), 0.0);
@@ -64,10 +64,10 @@ public class SuperStructureConstants {
     public static final boolean kArmInverted = true;
     public static final int kArmMotorCurrentLimit = 20;
 
-    public static final double kArmLengthMeters = Units.inchesToMeters(14.0);
-    public static final double kArmStartingPositionRads = Units.degreesToRadians(84);
-    public static final double kArmMinAngleRads = Units.degreesToRadians(-45);
-    public static final double kArmMaxAngleRads = Units.degreesToRadians(90.0);
+    public static final double kArmLengthMeters = 0.58;
+    public static final double kArmStartingPositionRads = Units.degreesToRadians(-90);
+    public static final double kArmMinAngleRads = Units.degreesToRadians(-90);
+    public static final double kArmMaxAngleRads = Units.degreesToRadians(120);
 
     // In Rad/Sec
     public static final double kArmMaxVelocity = 5.0; // from sim, TBD

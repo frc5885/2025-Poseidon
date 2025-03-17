@@ -231,13 +231,9 @@ public class SuperStructure extends SubsystemBase {
             "Carriage", kElevatorCarriageHeight, 90.0, 10.0, new Color8Bit(255, 0, 0)));
     m_armRootTranslation =
         new Translation2d(
-            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
-            0.15 + kElevatorCarriageHeight / 2);
+            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05, 0.15 + kElevatorCarriageHeight);
     m_armRoot =
-        m_canvas.getRoot(
-            "ArmRoot",
-            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
-            0.15 + kElevatorCarriageHeight / 2);
+        m_canvas.getRoot("ArmRoot", m_armRootTranslation.getX(), m_armRootTranslation.getY());
     m_armMech =
         m_armRoot.append(
             new LoggedMechanismLigament2d(
@@ -265,7 +261,7 @@ public class SuperStructure extends SubsystemBase {
     Logger.recordOutput(
         "SuperStructure/Mechanism3d/1-Arm",
         new Pose3d(
-            kElevatorTranslation.getX() + 0.06,
+            kElevatorTranslation.getX(),
             0,
             m_armRootTranslation.getY() + m_elevator.getPositionMeters(),
             new Rotation3d(0, -m_arm.getPositionRads(), 0)));
@@ -275,7 +271,6 @@ public class SuperStructure extends SubsystemBase {
   public Pose3d getEndEffectorPose3d() {
     return new Pose3d(
         kElevatorTranslation.getX()
-            + 0.06
             + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
         0,
         m_armRootTranslation.getY()

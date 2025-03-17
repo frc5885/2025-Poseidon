@@ -316,7 +316,7 @@ public class RobotContainer {
 
     // Set suppliers for the game piece visualizer
     GamePieceVisualizer.setRobotPoseSupplier(m_drive::getPose);
-    // GamePieceVisualizer.setEndEffectorPoseSupplier(m_superStructure::getEndEffectorPose3d);
+    GamePieceVisualizer.setEndEffectorPoseSupplier(m_superStructure::getEndEffectorPose3d);
   }
 
   /**
