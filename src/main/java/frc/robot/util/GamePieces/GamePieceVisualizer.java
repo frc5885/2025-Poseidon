@@ -154,7 +154,8 @@ public class GamePieceVisualizer {
         new Transform3d(
                 endEffectorPoseSupplier.get().getTranslation(),
                 endEffectorPoseSupplier.get().getRotation())
-            .plus(new Transform3d(0.1, 0.0, 0.0, new Rotation3d()));
+            .plus(
+                new Transform3d(-0.05, 0.0, 0.0, new Rotation3d(0, Units.degreesToRadians(90), 0)));
     return new Pose3d(robotPoseSupplier.get()).transformBy(indexerTransform);
   }
 
@@ -166,9 +167,7 @@ public class GamePieceVisualizer {
         new Transform3d(
                 endEffectorPoseSupplier.get().getTranslation(),
                 endEffectorPoseSupplier.get().getRotation())
-            .plus(
-                new Transform3d(
-                    0.07, 0.0, -0.37, new Rotation3d(0, Units.degreesToRadians(45), 0)));
+            .plus(new Transform3d(0.1, 0.0, 0, new Rotation3d()));
     return new Pose3d(robotPoseSupplier.get()).transformBy(indexerTransform);
   }
 }

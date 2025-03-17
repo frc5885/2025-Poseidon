@@ -401,9 +401,10 @@ public class Drive extends SubsystemBase {
   public void addVisionMeasurement(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
+      Matrix<N3, N1> visionMeasurementStdDevs,
+      double averageTagDistance) {
     m_poseController.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs, averageTagDistance);
   }
 
   /** Returns the maximum linear speed in meters per sec. */

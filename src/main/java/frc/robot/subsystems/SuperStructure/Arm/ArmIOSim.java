@@ -4,6 +4,7 @@ import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmCon
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class ArmIOSim implements ArmIO {
@@ -14,25 +15,24 @@ public class ArmIOSim implements ArmIO {
   public ArmIOSim() {
     m_armSim =
         new SingleJointedArmSim(
-            DCMotor.getNeo550(1),
+            LinearSystemId.identifyPositionSystem(kArmKv, kArmKa),
+            DCMotor.getNEO(1),
             kArmMotorReduction,
-            kArmStowedMOI_kgm2,
             kArmLengthMeters,
             kArmMinAngleRads,
             kArmMaxAngleRads,
-            true,
-            kArmStartingPositionRadians);
+            false,
+            kArmStartingPositionRads);
   }
 
   @Override
   public void updateInputs(ArmIOInputs inputs) {
     m_armSim.update(0.02);
-    inputs.armConnected = true;
-    // inputs.absolutePositionRads = m_armSim.getAngleRads();
+    inputs.motorConnected = true;
     inputs.positionRads = m_armSim.getAngleRads();
-    inputs.armVelocityRadPerSec = m_armSim.getVelocityRadPerSec();
-    inputs.armAppliedVolts = m_appliedVolts;
-    inputs.armCurrentAmps = m_armSim.getCurrentDrawAmps();
+    inputs.velocityRadsPerSec = m_armSim.getVelocityRadPerSec();
+    inputs.appliedVolts = m_appliedVolts;
+    inputs.currentAmps = m_armSim.getCurrentDrawAmps();
   }
 
   @Override

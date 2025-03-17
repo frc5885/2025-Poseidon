@@ -21,7 +21,6 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.questnav.QuestNav;
 import frc.robot.subsystems.vision.questnav.QuestNavIO;
 import frc.robot.subsystems.vision.questnav.QuestNavIOReal;
-import frc.robot.subsystems.vision.questnav.QuestNavIOSim;
 import org.littletonrobotics.junction.Logger;
 
 public class HeimdallPoseController {
@@ -43,8 +42,10 @@ public class HeimdallPoseController {
 
   // Convergence factors - control how quickly the transform is updated
   // Lower values mean slower but smoother convergence
-  private static final double kTranslationConvergenceFactor = 0.01; // 1% adjustment per cycle
-  private static final double kRotationConvergenceFactor = 0.015; // 1.5% adjustment per cycle
+  private static final double kTranslationConvergenceFactor = 0.1; // 10% adjustment per cycle
+  private static final double kRotationConvergenceFactor = 0.05; // 5% adjustment per cycle
+  private static final double kOptimalDistance =
+      0.5; // the distance at which the convergence factors will be highest
 
   // First-time initialization flag
   private boolean m_isFirstUpdate = true;
@@ -59,7 +60,7 @@ public class HeimdallPoseController {
         m_questNav = new QuestNav(new QuestNavIOReal());
         break;
       case SIM:
-        m_questNav = new QuestNav(new QuestNavIOSim(m_odometryEstimator::getEstimatedPosition));
+        m_questNav = new QuestNav(new QuestNavIO() {});
         break;
       default:
         m_questNav = new QuestNav(new QuestNavIO() {});
@@ -157,7 +158,8 @@ public class HeimdallPoseController {
   public void addVisionMeasurement(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
+      Matrix<N3, N1> visionMeasurementStdDevs,
+      double averageTagDistance) {
 
     // Add vision measurement to odometry estimator
     m_odometryEstimator.addVisionMeasurement(
@@ -181,19 +183,21 @@ public class HeimdallPoseController {
     }
 
     // Calculate the new transform by blending the current and target transforms
+    Logger.recordOutput("Heimdall/AverageTagDistance", averageTagDistance);
+    // Calculate distance-based factor that peaks at optimal distance and falls off symmetrically
+    double distanceRatio = Math.abs(averageTagDistance - kOptimalDistance) / kOptimalDistance;
+    double factor = Math.max(0.0, Math.min(1.0, 1.0 - distanceRatio));
+    double transFactor = kTranslationConvergenceFactor * factor; // higher factor for closer tags
+    double rotFactor = kRotationConvergenceFactor * factor; // higher factor for closer tags
     Transform2d newQuestToField =
-        blendTransforms(
-            currentQuestToField,
-            targetQuestToField,
-            kTranslationConvergenceFactor,
-            kRotationConvergenceFactor);
+        blendTransforms(currentQuestToField, targetQuestToField, transFactor, rotFactor);
 
     // Update QuestNav with the new blended transform
     m_questNav.updateQuestToFieldTransform(newQuestToField);
 
     Logger.recordOutput("Heimdall/QuestConvergence/CurrentTransform", currentQuestToField);
-    Logger.recordOutput("Heimdall/QuestConvergence/TargetTransform", targetQuestToField);
     Logger.recordOutput("Heimdall/QuestConvergence/BlendedTransform", newQuestToField);
+    Logger.recordOutput("Heimdall/QuestConvergence/TargetTransform", targetQuestToField);
   }
 
   /** Resets both odometry and Quest (forcing a sync). */

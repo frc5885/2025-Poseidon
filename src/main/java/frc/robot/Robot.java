@@ -131,6 +131,7 @@ public class Robot extends LoggedRobot {
       m_autonomousCommand.schedule();
     }
 
+    LEDSubsystem.setAutoStartTime();
     LEDSubsystem.getInstance().setStates(LEDStates.AUTO);
   }
 

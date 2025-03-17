@@ -49,7 +49,9 @@ public class ArmIOSpark implements ArmIO {
         () ->
             m_armSpark.configure(
                 armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    tryUntilOk(m_armSpark, 5, () -> m_armEncoder.setPosition(kArmStartingPositionRadians));
+
+    // arm start position
+    tryUntilOk(m_armSpark, 5, () -> m_armEncoder.setPosition(kArmStartingPositionRads));
   }
 
   @Override
@@ -62,17 +64,29 @@ public class ArmIOSpark implements ArmIO {
     ifOk(
         m_armSpark,
         m_armEncoder::getVelocity,
-        (velocityRadPerSec) -> inputs.armVelocityRadPerSec = velocityRadPerSec);
+        (velocityRadsPerSec) -> inputs.velocityRadsPerSec = velocityRadsPerSec);
     ifOk(
         m_armSpark,
         new DoubleSupplier[] {m_armSpark::getAppliedOutput, m_armSpark::getBusVoltage},
-        (appliedVoltage) -> inputs.armAppliedVolts = appliedVoltage[0] * appliedVoltage[1]);
-    ifOk(m_armSpark, m_armSpark::getOutputCurrent, (current) -> inputs.armCurrentAmps = current);
-    inputs.armConnected = m_armConnectedDebouncer.calculate(!sparkStickyFault);
+        (appliedVoltage) -> inputs.appliedVolts = appliedVoltage[0] * appliedVoltage[1]);
+    ifOk(m_armSpark, m_armSpark::getOutputCurrent, (current) -> inputs.currentAmps = current);
+    inputs.motorConnected = m_armConnectedDebouncer.calculate(!sparkStickyFault);
   }
 
   @Override
   public void setVoltage(double outputVolts) {
     m_armSpark.setVoltage(outputVolts);
+  }
+
+  @Override
+  public void setBrakeMode(boolean brakeModeEnabled) {
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.idleMode(brakeModeEnabled ? IdleMode.kBrake : IdleMode.kCoast);
+    tryUntilOk(
+        m_armSpark,
+        5,
+        () ->
+            m_armSpark.configure(
+                config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters));
   }
 }

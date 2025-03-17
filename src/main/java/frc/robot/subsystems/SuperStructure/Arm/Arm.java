@@ -2,160 +2,134 @@ package frc.robot.subsystems.SuperStructure.Arm;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
-import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.kWristStartingPositionRadians;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
-import edu.wpi.first.math.numbers.*;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.Robot;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
-import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Arm {
   private final ArmIO m_io;
   private final ArmIOInputsAutoLogged m_inputs = new ArmIOInputsAutoLogged();
-  private final Alert motorDisconnectedAlert;
-  private final BooleanSupplier m_disablePIDs;
 
-  // Track previous disabled state to detect rising edge
-  private boolean m_wasDisabled = false;
+  private final Alert motorDisconnectedAlert;
 
   private TrapezoidProfile m_armProfile =
       new TrapezoidProfile(new Constraints(kArmMaxVelocity, kArmMaxAcceleration));
-  private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
-  private TunablePIDController m_armController;
-  private ArmFeedforward m_armFeedforward;
+  private TunablePIDController m_pidController;
+  private ArmFeedforward m_feedforwardPID;
   private SysIdRoutine m_sysIdRoutine;
 
   private LinearSystem<N2, N1, N2> m_plant;
   private LinearQuadraticRegulator<N2, N1, N2> m_regulator;
-  private DoubleSupplier m_setpoint =
-      TunableDouble.register("Arm/OverrideSetpoint", kArmStartingPositionRadians);
+  private LinearPlantInversionFeedforward<N2, N1, N2> m_feedForwardLQR;
 
-  private ArmGoals m_armGoal = ArmGoals.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
-  private boolean m_pidOff = false;
 
-  private DoubleSupplier m_wristAngleRadSupplier = () -> kWristStartingPositionRadians;
+  private TrapezoidProfile.State m_goalState =
+      new TrapezoidProfile.State(kArmStartingPositionRads, 0.0);
+  private TrapezoidProfile.State m_prevSetpoint = m_goalState;
+  private boolean m_runClosedLoop = true;
 
-  public Arm(ArmIO io, BooleanSupplier disablePIDs) {
+  public Arm(ArmIO io) {
     m_io = io;
-    m_disablePIDs = disablePIDs;
 
-    m_plant =
-        LinearSystemId.createSingleJointedArmSystem(
-            DCMotor.getNeo550(1), kArmStowedMOI_kgm2, kArmMotorReduction);
+    // for state space
+    m_plant = LinearSystemId.identifyPositionSystem(kArmKv, kArmKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.1E-10, 9.9E10), VecBuilder.fill(9.9E10), 0.02);
-
-    switch (Constants.kCurrentMode) {
-      case REAL:
-        m_armController =
-            new TunablePIDController(kArmKp, 0.0, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
-        m_armFeedforward = new ArmFeedforward(kArmKs, kArmStowedKg, kArmKv);
-        break;
-      case SIM:
-        m_armController =
-            new TunablePIDController(
-                kArmSimKp, 0.0, kArmSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
-        m_armFeedforward = new ArmFeedforward(0.0, kArmSimKg, kArmSimKv);
-        break;
-      case REPLAY:
-        m_armController =
-            new TunablePIDController(
-                kArmSimKp, 0.0, kArmSimKd, kArmErrorToleranceRads, "ArmSimPID", true);
-        m_armFeedforward = new ArmFeedforward(0.0, kArmSimKg, kArmSimKv);
-        break;
-      default:
-        m_armController = new TunablePIDController(0.0, 0.0, 0.0, 0.0, "", false);
-        m_armFeedforward = new ArmFeedforward(0.0, 0.0, 0.0);
-        break;
+            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
+    if (Constants.kCurrentMode == Mode.REAL) {
+      m_regulator.latencyCompensate(m_plant, 0.02, kArmLatencyCompensationMs);
     }
+    m_feedForwardLQR = new LinearPlantInversionFeedforward<>(m_plant, 0.02);
 
-    motorDisconnectedAlert = new Alert("Arm disconnected", AlertType.kError);
+    // for PID + FF
+    m_pidController =
+        new TunablePIDController(kArmKp, 0.0, kArmKd, kArmErrorToleranceRads, "ArmPID", true);
+    m_feedforwardPID = new ArmFeedforward(kArmKs, kArmKg, kArmKv, kArmKa);
+
+    motorDisconnectedAlert = new Alert("Arm motor disconnected", AlertType.kError);
+
+    SmartDashboard.putBoolean("ArmStateSpace", true);
   }
 
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Arm", m_inputs);
 
-    if (!m_pidOff) {
-      boolean isDisabled = m_disablePIDs.getAsBoolean();
-      if (!isDisabled) {
-        runArmSetpoint(
-            m_armGoal != null
-                ? Units.degreesToRadians(m_armGoal.setpointDegrees.getAsDouble())
-                : getPositionRadians());
-      } else if (!m_wasDisabled) {
-        // Only call stop() on the rising edge of m_disablePIDs
-        stop();
-      }
-      m_wasDisabled = isDisabled;
+    if (m_runClosedLoop) runClosedLoopControl();
 
-      m_io.setVoltage(
-          m_regulator
-              .calculate(
-                  VecBuilder.fill(getPositionRadians(), getVelocityRadPerSec()),
-                  VecBuilder.fill(Units.degreesToRadians(m_setpoint.getAsDouble()), 0.0))
-              .get(0, 0));
-    }
     // Update alerts
-    motorDisconnectedAlert.set(!m_inputs.armConnected);
+    motorDisconnectedAlert.set(!m_inputs.motorConnected);
+
     m_isSetpointAchievedInvalid = false;
   }
 
   public void runArmOpenLoop(double outputVolts) {
-    m_pidOff = true;
+    // disable closed loop when running open loop
+    m_runClosedLoop = false;
     if (outputVolts > 0) {
-      m_io.setVoltage(isWithinMaximum(getPositionRadians()) ? outputVolts : 0.0);
+      m_io.setVoltage(isWithinMaximum(getPositionRads()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {
-      m_io.setVoltage(isWithinMinimum(getPositionRadians()) ? outputVolts : 0.0);
+      m_io.setVoltage(isWithinMinimum(getPositionRads()) ? outputVolts : 0.0);
     } else {
       m_io.setVoltage(outputVolts);
     }
   }
 
-  public void runArmSetpoint(double setpointRadians) {
-    if (m_goal.position != setpointRadians) {
-      m_goal = new TrapezoidProfile.State(setpointRadians, 0.0);
-    }
+  public void runClosedLoopControl() {
     TrapezoidProfile.State current = getCurrentState();
-    TrapezoidProfile.State setpoint = m_armProfile.calculate(0.02, current, m_goal);
+    TrapezoidProfile.State setpoint = m_armProfile.calculate(0.02, m_prevSetpoint, m_goalState);
+    m_prevSetpoint = setpoint;
+    Logger.recordOutput("SuperStructure/Arm/SetpointPosition", setpoint.position);
+    Logger.recordOutput("SuperStructure/Arm/SetpointVelocity", setpoint.velocity);
 
-    double compensatedKg = kArmStowedKg;
-    if (Robot.isReal()) {
-      compensatedKg =
-          kArmOutKg + (kArmOutKg - kArmStowedKg) * Math.cos(m_wristAngleRadSupplier.getAsDouble());
+    if (SmartDashboard.getBoolean("ArmStateSpace", true)) {
+      // state space
+      Vector<N2> nextR = VecBuilder.fill(setpoint.position, setpoint.velocity);
+      double voltage =
+          m_regulator
+              .calculate(VecBuilder.fill(getPositionRads(), getVelocityRadsPerSec()), nextR)
+              .plus(
+                  m_feedForwardLQR
+                      .calculate(nextR)
+                      .plus(
+                          kArmKs * Math.signum(setpoint.velocity)
+                              + kArmKg * Math.cos(setpoint.position)))
+              .get(0, 0);
+      m_io.setVoltage(MathUtil.clamp(voltage, -12.0, 12.0));
+    } else {
+      // PID + FF
+      m_io.setVoltage(
+          m_feedforwardPID.calculate(setpoint.position, setpoint.velocity)
+              + m_pidController.calculate(current.position, setpoint.position));
     }
-    m_armFeedforward.setKg(compensatedKg);
-    Logger.recordOutput("SuperStructure/Arm/ArmKg", compensatedKg);
-
-    m_io.setVoltage(
-        m_armFeedforward.calculate(setpoint.position, setpoint.velocity)
-            + m_armController.calculate(current.position, setpoint.position));
   }
 
   public void runCharacterization(double outputVolts) {
+    // disable closed loop when running characterization
+    m_runClosedLoop = false;
     m_io.setVoltage(outputVolts);
   }
 
@@ -163,50 +137,64 @@ public class Arm {
     m_io.setVoltage(0.0);
   }
 
-  private boolean isWithinMaximum(double positionRadians) {
-    return positionRadians < kArmMaxAngleRads;
+  /**
+   * Stops the arm and sets the goalPosition to the current position. This will hold the arm in
+   * place until a new goal is set.
+   */
+  public void stopAndHold() {
+    m_io.setVoltage(0.0);
+
+    // set setpoint (this will enable closed loop)
+    setGoalPosition(getPositionRads());
   }
 
-  private boolean isWithinMinimum(double positionRadians) {
-    return positionRadians > kArmMinAngleRads;
+  private boolean isWithinMaximum(double positionRads) {
+    return positionRads < kArmMaxAngleRads;
   }
 
-  public void setWristAngleRadSupplier(DoubleSupplier wristAngleRadSupplier) {
-    m_wristAngleRadSupplier = wristAngleRadSupplier;
+  private boolean isWithinMinimum(double positionRads) {
+    return positionRads > kArmMaxAngleRads;
   }
 
-  public double getPositionRadians() {
-    // return m_inputs.absolutePositionRads;
+  public double getPositionRads() {
     return m_inputs.positionRads;
   }
 
-  public double getVelocityRadPerSec() {
-    return m_inputs.armVelocityRadPerSec;
+  public double getVelocityRadsPerSec() {
+    return m_inputs.velocityRadsPerSec;
+  }
+
+  public void setBrakeMode(boolean brakeModeEnabled) {
+    m_io.setBrakeMode(brakeModeEnabled);
+    stop();
+    m_runClosedLoop = false;
   }
 
   public TrapezoidProfile.State getCurrentState() {
-    return new TrapezoidProfile.State(getPositionRadians(), getVelocityRadPerSec());
+    return new TrapezoidProfile.State(getPositionRads(), getVelocityRadsPerSec());
   }
 
-  public void setGoal(ArmGoals armGoal) {
-    if (m_armGoal == armGoal) {
-      return;
-    }
-    m_isSetpointAchievedInvalid = true;
-    m_armGoal = armGoal;
+  public void setGoalPosition(double positionRads) {
+    setGoalState(new TrapezoidProfile.State(positionRads, 0.0));
   }
 
-  public ArmGoals getGoal() {
-    return m_armGoal;
+  public void setGoalState(TrapezoidProfile.State goal) {
+    m_goalState = goal;
+    // enable closed loop when a goal is set
+    m_runClosedLoop = true;
   }
 
-  public double getSetpointRadians() {
-    return m_armController.getSetpoint();
+  public double getGoalPosition() {
+    return getGoalState().position;
+  }
+
+  public TrapezoidProfile.State getGoalState() {
+    return m_goalState;
   }
 
   @AutoLogOutput(key = "SuperStructure/Arm/SetpointAchieved")
   public boolean isSetpointAchieved() {
-    return (Math.abs(m_goal.position - getPositionRadians()) < kArmErrorToleranceRads)
+    return (Math.abs(m_goalState.position - getPositionRads()) < kArmErrorToleranceRads)
         && !m_isSetpointAchievedInvalid;
   }
 
@@ -215,11 +203,10 @@ public class Arm {
     m_sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                Volts.of(0.7).per(Second),
-                Volts.of(5),
                 null,
-                (state) ->
-                    Logger.recordOutput("SuperStructure/Arm/ArmSysIDState", state.toString())),
+                null,
+                null,
+                (state) -> Logger.recordOutput("SuperStructure/Arm/SysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, superStructure));
   }
@@ -234,9 +221,5 @@ public class Arm {
     return Commands.run(() -> runCharacterization(0.0))
         .withTimeout(1.0)
         .andThen(m_sysIdRoutine.dynamic(direction));
-  }
-
-  public void setPIDOff(boolean flag) {
-    m_pidOff = flag;
   }
 }

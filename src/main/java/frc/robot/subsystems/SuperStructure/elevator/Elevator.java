@@ -3,104 +3,96 @@ package frc.robot.subsystems.SuperStructure.Elevator;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.util.TunableDouble;
 import frc.robot.util.TunablePIDController;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator {
   private final ElevatorIO m_io;
   private final ElevatorIOInputsAutoLogged m_inputs = new ElevatorIOInputsAutoLogged();
-  private final BooleanSupplier m_disableBrakeMode;
-
-  // Track previous disabled state to detect rising edge
-  private boolean m_wasDisabled = false;
 
   private final Alert motor1DisconnectedAlert;
   private final Alert motor2DisconnectedAlert;
 
   private TrapezoidProfile m_elevatorProfile =
       new TrapezoidProfile(new Constraints(kElevatorMaxVelocity, kElevatorMaxAcceleration));
-  private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
-  private TunablePIDController m_elevatorController;
-  private ElevatorFeedforward m_elevatorFeedforward;
+  private TunablePIDController m_pidController;
+  private ElevatorFeedforward m_feedforwardPID;
   private SysIdRoutine m_sysIdRoutine;
 
   private LinearSystem<N2, N1, N2> m_plant;
   private LinearQuadraticRegulator<N2, N1, N2> m_regulator;
-  private DoubleSupplier m_setpoint =
-      TunableDouble.register("Elevator/OverrideSetpoint", kElevatorStartingPositionMeters);
+  private LinearPlantInversionFeedforward<N2, N1, N2> m_feedForwardLQR;
 
-  private ElevatorLevel m_elevatorGoal = ElevatorLevel.STOW;
   private boolean m_isSetpointAchievedInvalid = false;
 
-  public Elevator(ElevatorIO io, BooleanSupplier disableBrakeMode) {
-    m_io = io;
-    m_disableBrakeMode = disableBrakeMode;
-    m_wasDisabled = m_disableBrakeMode.getAsBoolean();
+  private TrapezoidProfile.State m_goalState =
+      new TrapezoidProfile.State(kElevatorStartingPositionMeters, 0.0);
+  private TrapezoidProfile.State m_prevSetpoint = m_goalState;
+  private boolean m_runClosedLoop = true;
 
-    m_plant =
-        LinearSystemId.createElevatorSystem(
-            DCMotor.getNeo550(2),
-            kElevatorMassKg,
-            kElevatorWheelRadiusMeters,
-            kElevatorMotorReduction);
+  public Elevator(ElevatorIO io) {
+    m_io = io;
+
+    // for state space
+    m_plant = LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
             m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
-    m_regulator.latencyCompensate(m_plant, 0.02, 0.025);
+    if (Constants.kCurrentMode == Mode.REAL) {
+      m_regulator.latencyCompensate(m_plant, 0.02, kElevatorLatencyCompensationMs);
+    }
+    m_feedForwardLQR = new LinearPlantInversionFeedforward<>(m_plant, 0.02);
+
+    // for PID + FF
+    m_pidController =
+        new TunablePIDController(
+            kElevatorKp, 0.0, kElevatorKd, kElevatorErrorToleranceMeters, "ElevatorPID", true);
+    m_feedforwardPID = new ElevatorFeedforward(kElevatorKs, kElevatorKg, kElevatorKv, kElevatorKa);
 
     motor1DisconnectedAlert = new Alert("Elevator motor1 disconnected", AlertType.kError);
     motor2DisconnectedAlert = new Alert("Elevator motor2 disconnected", AlertType.kError);
+
+    SmartDashboard.putBoolean("ElevatorStateSpace", true);
   }
 
   public void periodic() {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("SuperStructure/Elevator", m_inputs);
 
-    m_io.setVoltage(
-        m_regulator
-            .calculate(
-                VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()),
-                VecBuilder.fill(m_setpoint.getAsDouble(), 0.0))
-            .get(0, 0));
+    if (m_runClosedLoop) runClosedLoopControl();
 
     // Update alerts
     motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
     motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
 
     m_isSetpointAchievedInvalid = false;
-
-    // toggle brake mode if needed
-    if (m_disableBrakeMode.getAsBoolean() && !m_wasDisabled) {
-      m_io.setBrakeMode(false);
-      m_wasDisabled = true;
-    } else if (!m_disableBrakeMode.getAsBoolean() && m_wasDisabled) {
-      m_io.setBrakeMode(true);
-      m_wasDisabled = false;
-    }
   }
 
   public void runElevatorOpenLoop(double outputVolts) {
+    // disable closed loop when running open loop
+    m_runClosedLoop = false;
     if (outputVolts > 0) {
       m_io.setVoltage(isWithinMaximum(getPositionMeters()) ? outputVolts : 0.0);
     } else if (outputVolts < 0) {
@@ -110,23 +102,53 @@ public class Elevator {
     }
   }
 
-  public void runElevatorSetpoint(double setpointMeters) {
-    if (m_goal.position != setpointMeters) {
-      m_goal = new TrapezoidProfile.State(setpointMeters, 0.0);
-    }
+  public void runClosedLoopControl() {
     TrapezoidProfile.State current = getCurrentState();
-    TrapezoidProfile.State setpoint = m_elevatorProfile.calculate(0.02, current, m_goal);
-    m_io.setVoltage(
-        m_elevatorFeedforward.calculate(setpoint.velocity)
-            + m_elevatorController.calculate(current.position, setpoint.position));
+    TrapezoidProfile.State setpoint =
+        m_elevatorProfile.calculate(0.02, m_prevSetpoint, m_goalState);
+    m_prevSetpoint = setpoint;
+    Logger.recordOutput("SuperStructure/Elevator/SetpointPosition", setpoint.position);
+    Logger.recordOutput("SuperStructure/Elevator/SetpointVelocity", setpoint.velocity);
+
+    if (SmartDashboard.getBoolean("ElevatorStateSpace", true)) {
+      // state space
+      Vector<N2> nextR = VecBuilder.fill(setpoint.position, setpoint.velocity);
+      double voltage =
+          m_regulator
+              .calculate(VecBuilder.fill(getPositionMeters(), getVelocityMetersPerSec()), nextR)
+              .plus(
+                  m_feedForwardLQR
+                      .calculate(nextR)
+                      .plus(kElevatorKs * Math.signum(setpoint.velocity) + kElevatorKg))
+              .get(0, 0);
+      m_io.setVoltage(MathUtil.clamp(voltage, -12.0, 12.0));
+    } else {
+      // PID + FF
+      m_io.setVoltage(
+          m_feedforwardPID.calculate(setpoint.velocity)
+              + m_pidController.calculate(current.position, setpoint.position));
+    }
   }
 
   public void runCharacterization(double outputVolts) {
+    // disable closed loop when running characterization
+    m_runClosedLoop = false;
     m_io.setVoltage(outputVolts);
   }
 
   public void stop() {
     m_io.setVoltage(0.0);
+  }
+
+  /**
+   * Stops the elevator and sets the goalPosition to the current position. This will hold the
+   * elevator in place until a new goal is set.
+   */
+  public void stopAndHold() {
+    m_io.setVoltage(0.0);
+
+    // set setpoint (this will enable closed loop)
+    setGoalPosition(getPositionMeters());
   }
 
   private boolean isWithinMaximum(double positionMeters) {
@@ -145,6 +167,12 @@ public class Elevator {
     return m_inputs.velocityMetersPerSec;
   }
 
+  public void setBrakeMode(boolean brakeModeEnabled) {
+    m_io.setBrakeMode(brakeModeEnabled);
+    stop();
+    m_runClosedLoop = false;
+  }
+
   @AutoLogOutput(key = "SuperStructure/Elevator/AdjustmentCoefficient")
   public double getAdjustmentCoefficient() {
     return Math.abs(getPositionMeters() / kElevatorMaxHeightMeters);
@@ -154,25 +182,27 @@ public class Elevator {
     return new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec());
   }
 
-  public void setGoal(ElevatorLevel elevatorGoal) {
-    if (m_elevatorGoal == elevatorGoal) {
-      return;
-    }
-    m_isSetpointAchievedInvalid = true;
-    m_elevatorGoal = elevatorGoal;
+  public void setGoalPosition(double positionMeters) {
+    setGoalState(new TrapezoidProfile.State(positionMeters, 0.0));
   }
 
-  public ElevatorLevel getGoal() {
-    return m_elevatorGoal;
+  public void setGoalState(TrapezoidProfile.State goal) {
+    m_goalState = goal;
+    // enable closed loop when a goal is set
+    m_runClosedLoop = true;
   }
 
-  public double getSetpointRadians() {
-    return -1.0;
+  public double getGoalPosition() {
+    return getGoalState().position;
+  }
+
+  public TrapezoidProfile.State getGoalState() {
+    return m_goalState;
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/SetpointAchieved")
   public boolean isSetpointAchieved() {
-    return (Math.abs(m_goal.position - getPositionMeters()) < kElevatorErrorToleranceMeters)
+    return (Math.abs(m_goalState.position - getPositionMeters()) < kElevatorErrorToleranceMeters)
         && !m_isSetpointAchievedInvalid;
   }
 
@@ -185,7 +215,7 @@ public class Elevator {
                 null,
                 null,
                 (state) ->
-                    Logger.recordOutput("SuperStructure/ElevatorSysIDState", state.toString())),
+                    Logger.recordOutput("SuperStructure/Elevator/SysIDState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, superStructure));
   }
