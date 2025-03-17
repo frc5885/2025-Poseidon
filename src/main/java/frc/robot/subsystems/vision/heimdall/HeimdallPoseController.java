@@ -42,8 +42,10 @@ public class HeimdallPoseController {
 
   // Convergence factors - control how quickly the transform is updated
   // Lower values mean slower but smoother convergence
-  private static final double kTranslationConvergenceFactor = 0.05; // 5% adjustment per cycle
+  private static final double kTranslationConvergenceFactor = 0.1; // 10% adjustment per cycle
   private static final double kRotationConvergenceFactor = 0.05; // 5% adjustment per cycle
+  private static final double kOptimalDistance =
+      0.5; // the distance at which the convergence factors will be highest
 
   // First-time initialization flag
   private boolean m_isFirstUpdate = true;
@@ -182,20 +184,19 @@ public class HeimdallPoseController {
 
     // Calculate the new transform by blending the current and target transforms
     Logger.recordOutput("Heimdall/AverageTagDistance", averageTagDistance);
-    if (averageTagDistance < 1.5) {
-      double transFactor =
-          kTranslationConvergenceFactor / averageTagDistance; // higher factor for closer tags
-      double rotFactor =
-          kRotationConvergenceFactor / averageTagDistance; // higher factor for closer tags
-      Transform2d newQuestToField =
-          blendTransforms(currentQuestToField, targetQuestToField, transFactor, rotFactor);
+    // Calculate distance-based factor that peaks at optimal distance and falls off symmetrically
+    double distanceRatio = Math.abs(averageTagDistance - kOptimalDistance) / kOptimalDistance;
+    double factor = Math.max(0.0, Math.min(1.0, 1.0 - distanceRatio));
+    double transFactor = kTranslationConvergenceFactor * factor; // higher factor for closer tags
+    double rotFactor = kRotationConvergenceFactor * factor; // higher factor for closer tags
+    Transform2d newQuestToField =
+        blendTransforms(currentQuestToField, targetQuestToField, transFactor, rotFactor);
 
-      // Update QuestNav with the new blended transform
-      m_questNav.updateQuestToFieldTransform(newQuestToField);
-      Logger.recordOutput("Heimdall/QuestConvergence/BlendedTransform", newQuestToField);
-    }
+    // Update QuestNav with the new blended transform
+    m_questNav.updateQuestToFieldTransform(newQuestToField);
 
     Logger.recordOutput("Heimdall/QuestConvergence/CurrentTransform", currentQuestToField);
+    Logger.recordOutput("Heimdall/QuestConvergence/BlendedTransform", newQuestToField);
     Logger.recordOutput("Heimdall/QuestConvergence/TargetTransform", targetQuestToField);
   }
 
