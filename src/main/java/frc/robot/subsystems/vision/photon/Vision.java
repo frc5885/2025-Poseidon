@@ -29,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservation;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservationType;
-import frc.robot.subsystems.vision.photon.VisionIO.VisionIOInputs;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -38,17 +37,21 @@ import org.littletonrobotics.junction.Logger;
 public class Vision extends SubsystemBase {
   private final VisionConsumer m_consumer;
   private final VisionIO[] m_io;
-  private final VisionIOInputs[] m_inputs;
+  private final VisionIOInputsAutoLogged[] m_inputs;
   private final Alert[] m_disconnectedAlerts;
+  // private final SparkMax m_power = new SparkMax(VisionConstants.kCameraPowerId,
+  // MotorType.kBrushed);
+  // private final PWM m_source = new PWM(kCameraPowerChannel);
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     m_consumer = consumer;
     m_io = io;
+    // m_source.setPulseTimeMicroseconds(1550);
 
     // Initialize inputs
-    m_inputs = new VisionIOInputs[io.length];
+    m_inputs = new VisionIOInputsAutoLogged[io.length];
     for (int i = 0; i < m_inputs.length; i++) {
-      m_inputs[i] = new VisionIOInputs();
+      m_inputs[i] = new VisionIOInputsAutoLogged();
     }
 
     // Initialize disconnected alerts
@@ -73,6 +76,7 @@ public class Vision extends SubsystemBase {
   public void periodic() {
     for (int i = 0; i < m_io.length; i++) {
       m_io[i].updateInputs(m_inputs[i]);
+      Logger.processInputs("Vision/Camera" + Integer.toString(i), m_inputs[i]);
     }
 
     // Initialize logging values
@@ -148,7 +152,8 @@ public class Vision extends SubsystemBase {
           m_consumer.accept(
               observation.pose().toPose2d(),
               observation.timestamp(),
-              VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+              VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev),
+              observation.averageTagDistance());
         }
 
         // Log camera datadata
@@ -200,6 +205,7 @@ public class Vision extends SubsystemBase {
     public void accept(
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
-        Matrix<N3, N1> visionMeasurementStdDevs);
+        Matrix<N3, N1> visionMeasurementStdDevs,
+        double averageTagDistance);
   }
 }

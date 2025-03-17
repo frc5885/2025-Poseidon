@@ -13,6 +13,6 @@ public class BeamBreakIOReal implements BeamBreakIO {
   }
 
   public void updateInputs(BeamBreakIOInputs inputs) {
-    inputs.state = m_beamBreakDebouncer.calculate(m_beamBreak.get());
+    inputs.state = m_beamBreakDebouncer.calculate(!m_beamBreak.get());
   }
 }

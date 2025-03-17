@@ -6,7 +6,6 @@ package frc.robot.subsystems.SuperStructure;
 
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.*;
 import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.*;
-import static frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.*;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -22,11 +21,7 @@ import frc.robot.subsystems.SuperStructure.Arm.Arm;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Elevator.Elevator;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ArmConstants.ArmGoals;
 import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.WristConstants.WristGoals;
-import frc.robot.subsystems.SuperStructure.Wrist.Wrist;
-import frc.robot.subsystems.SuperStructure.Wrist.WristIO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,7 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -45,10 +39,9 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
-  private final Wrist m_wrist;
 
-  private SuperStructureState m_state = SuperStructureState.STOWED;
-  private SuperStructureState m_finalGoal = SuperStructureState.STOWED;
+  private SuperStructureState m_goalState = SuperStructureState.STOWED;
+  private SuperStructureState m_finalGoalState = SuperStructureState.STOWED;
   private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
@@ -56,90 +49,53 @@ public class SuperStructure extends SubsystemBase {
   private LoggedMechanismRoot2d m_carriageRoot;
   private LoggedMechanismRoot2d m_armRoot;
   private LoggedMechanismLigament2d m_armMech;
-  private LoggedMechanismLigament2d m_wristMech;
 
   private double m_canvasWidth = 3.0;
   private Translation2d m_armRootTranslation;
 
-  private Runnable m_extendIntakeCmd = null;
-  private Runnable m_retractIntakeCmd = null;
-
-  public SuperStructure(
-      ElevatorIO elevatorIO, ArmIO armIO, WristIO wristIO, BooleanSupplier disablePIDs) {
-    m_elevator = new Elevator(elevatorIO, disablePIDs);
-    m_arm = new Arm(armIO, disablePIDs);
-    m_wrist = new Wrist(wristIO, disablePIDs);
-    m_wrist.setArmAngleSuppliers(m_arm::getPositionRadians, m_arm::getVelocityRadPerSec);
-    m_arm.setWristAngleRadSupplier(m_wrist::getPositionRadians);
+  public SuperStructure(ElevatorIO elevatorIO, ArmIO armIO) {
+    m_elevator = new Elevator(elevatorIO);
+    m_arm = new Arm(armIO);
 
     visualizationSetup();
 
     m_elevator.sysIdSetup(this);
     m_arm.sysIdSetup(this);
-    m_wrist.sysIdSetup(this);
   }
 
   @Override
   public void periodic() {
     m_elevator.periodic();
     m_arm.periodic();
-    m_wrist.periodic();
 
     visualizationUpdate();
   }
 
-  @AutoLogOutput(key = "SuperStructure/Elevator/Goal")
-  public ElevatorLevel getElevatorGoal() {
-    ElevatorLevel goal = m_elevator.getGoal();
-    Logger.recordOutput("SuperStructure/Elevator/GoalPosition", goal.setpointMeters);
-    Logger.recordOutput(
-        "SuperStructure/Elevator/SetPointPosition", m_elevator.getSetpointRadians());
-    return goal;
-  }
-
-  public DoubleSupplier getAdjustmentCoefficient() {
+  public DoubleSupplier getElevatorAdjustmentCoefficient() {
     return m_elevator::getAdjustmentCoefficient;
   }
 
-  @AutoLogOutput(key = "SuperStructure/Arm/Goal")
-  public ArmGoals getArmGoal() {
-    ArmGoals goal = m_arm.getGoal();
-    Logger.recordOutput(
-        "SuperStructure/Arm/GoalPosition",
-        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
-    Logger.recordOutput("SuperStructure/Arm/SetPointPosition", m_arm.getSetpointRadians());
-    return goal;
-  }
-
-  @AutoLogOutput(key = "SuperStructure/Wrist/Goal")
-  public WristGoals getWristGoal() {
-    WristGoals goal = m_wrist.getGoal();
-    Logger.recordOutput(
-        "SuperStructure/Wrist/GoalPosition",
-        Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
-    Logger.recordOutput("SuperStructure/Wrist/SetPointPosition", m_wrist.getSetpointRadians());
+  @AutoLogOutput(key = "SuperStructure/Elevator/Goal")
+  public ElevatorLevel getElevatorGoal() {
+    ElevatorLevel goal = m_goalState.elevatorGoal;
+    Logger.recordOutput("SuperStructure/Elevator/GoalPosition", m_elevator.getGoalPosition());
     return goal;
   }
 
   @AutoLogOutput(key = "SuperStructure/Goal")
   public SuperStructureState getSuperStructureGoal() {
-    return m_state;
-  }
-
-  public void setIntakeFunctions(Runnable extendIntake, Runnable retractIntake) {
-    m_extendIntakeCmd = extendIntake;
-    m_retractIntakeCmd = retractIntake;
+    return m_goalState;
   }
 
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
-    m_finalGoal = state;
-    Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoal);
+    m_finalGoalState = state;
+    Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoalState);
     List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
     Logger.recordOutput("SuperStructure/States", states.toString());
 
     return new SequentialCommandGroup(
         states.stream()
-            .filter(desiredState -> desiredState != m_state)
+            .filter(desiredState -> desiredState != m_goalState)
             .map(this::setSingleState)
             .toArray(Command[]::new));
   }
@@ -204,50 +160,41 @@ public class SuperStructure extends SubsystemBase {
   }
 
   private Command setSingleState(SuperStructureState goal) {
-    // If goal is either STOWING or UNSTOWING, run the intake commands around the state command.
-    if (goal == SuperStructureState.STOWING || goal == SuperStructureState.UNSTOWING) {
-      // Only retract if the final goal is not INTAKE_CORAL
-      boolean shouldRetract = m_finalGoal != SuperStructureState.INTAKE_CORAL;
-
-      return Commands.sequence(
-          runIfNotNull(m_extendIntakeCmd),
-          createStateCommand(goal),
-          shouldRetract ? runIfNotNull(m_retractIntakeCmd) : Commands.none());
-    }
-    // Otherwise, just run the state command.
-    return createStateCommand(goal);
-  }
-
-  // Helper that returns a runOnce command if the provided command is non-null, or a no-op command.
-  private Command runIfNotNull(Runnable cmd) {
-    return cmd != null ? Commands.runOnce(cmd::run) : Commands.none();
-  }
-
-  // Creates a command that sets the elevator, arm, and wrist to the specified goal state.
-  private Command createStateCommand(SuperStructureState goal) {
     return Commands.run(
             () -> {
-              m_elevator.setGoal(goal.elevatorGoal);
-              m_arm.setGoal(goal.armGoal);
-              m_wrist.setGoal(goal.wristGoal);
+              setElevatorGoal(goal.elevatorGoal);
             },
             this)
         .until(this::isGoalAchieved)
-        .finallyDo(() -> m_state = goal);
+        .finallyDo(() -> m_goalState = goal);
   }
 
-  // used to determine if the superstructure achieved the combined([elevator, arm, wrist]) goal
+  // used to determine if the superstructure achieved the combined([elevator, arm]) goal
   // state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
-    return m_elevator.isSetpointAchieved()
-        && m_arm.isSetpointAchieved()
-        && m_wrist.isSetpointAchieved();
+    return m_elevator.isSetpointAchieved();
   }
 
   @AutoLogOutput(key = "SuperStructure/isFinalGoalAchieved")
   public boolean isFinalGoalAchieved() {
-    return m_state == m_finalGoal && isGoalAchieved();
+    return m_goalState.equals(m_finalGoalState) && isGoalAchieved();
+  }
+
+  public void setElevatorGoal(ElevatorLevel goal) {
+    m_elevator.setGoalPosition(goal.setpointMeters.getAsDouble());
+  }
+
+  public void runElevatorOpenLoop(double voltage) {
+    m_elevator.runElevatorOpenLoop(voltage);
+  }
+
+  public void runArmOpenLoop(double voltage) {
+    m_arm.runArmOpenLoop(voltage);
+  }
+
+  public void setBrakeMode(boolean brakeModeEnabled) {
+    m_elevator.setBrakeMode(brakeModeEnabled);
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */
@@ -270,35 +217,12 @@ public class SuperStructure extends SubsystemBase {
     return m_arm.getSysIdDynamic(direction);
   }
 
-  /** Returns a command to run a wrist quasistatic test in the specified direction. */
-  public Command wristSysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return m_wrist.getSysIdQuasistatic(direction);
-  }
-
-  /** Returns a command to run a wrist dynamic test in the specified direction. */
-  public Command wristSysIdDynamic(SysIdRoutine.Direction direction) {
-    return m_wrist.getSysIdDynamic(direction);
-  }
-
-  public void runElevatorOpenLoop(double voltage) {
-    m_elevator.runElevatorOpenLoop(voltage);
-  }
-
-  public void runArmOpenLoop(double voltage) {
-    m_arm.runArmOpenLoop(voltage);
-  }
-
-  public void runWristOpenLoop(double voltage) {
-    m_wrist.runWristOpenLoop(voltage);
-  }
-
   private void visualizationSetup() {
     m_canvas = new LoggedMechanism2d(m_canvasWidth, 3.0);
     m_elevatorRoot =
         m_canvas.getRoot("ElevatorRoot", m_canvasWidth / 2 + kElevatorTranslation.getX(), 0.15);
     m_elevatorRoot.append(
-        new LoggedMechanismLigament2d(
-            "Elevator", kElevatorMaxHeightMeters + kElevatorCarriageHeight, 90.0));
+        new LoggedMechanismLigament2d("Elevator", kElevatorMaxHeightMeters + 0.1, 90.0));
     m_carriageRoot =
         m_canvas.getRoot(
             "CarriageRoot", m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05, 0.15);
@@ -307,36 +231,17 @@ public class SuperStructure extends SubsystemBase {
             "Carriage", kElevatorCarriageHeight, 90.0, 10.0, new Color8Bit(255, 0, 0)));
     m_armRootTranslation =
         new Translation2d(
-            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
-            0.15 + kElevatorCarriageHeight / 2);
+            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05, 0.15 + kElevatorCarriageHeight);
     m_armRoot =
-        m_canvas.getRoot(
-            "ArmRoot",
-            m_canvasWidth / 2 + kElevatorTranslation.getX() + 0.05,
-            0.15 + kElevatorCarriageHeight / 2);
+        m_canvas.getRoot("ArmRoot", m_armRootTranslation.getX(), m_armRootTranslation.getY());
     m_armMech =
         m_armRoot.append(
             new LoggedMechanismLigament2d(
                 "Arm",
                 kArmLengthMeters,
-                Units.radiansToDegrees(kArmStartingPositionRadians),
+                Units.radiansToDegrees(kArmStartingPositionRads),
                 10.0,
                 new Color8Bit(0, 255, 0)));
-    m_wristMech =
-        m_armMech.append(
-            new LoggedMechanismLigament2d(
-                "Wrist",
-                kWristLengthMeters,
-                Units.radiansToDegrees(kWristStartingPositionRadians),
-                10.0,
-                new Color8Bit(0, 255, 255)));
-    // parts of algae claw (don't need to update because they're fixed relative to wrist)
-    m_wristMech.append(
-        new LoggedMechanismLigament2d(
-            "AlgaeClaw1", kWristLengthMeters, -149, 10.0, new Color8Bit(0, 255, 255)));
-    m_wristMech.append(
-        new LoggedMechanismLigament2d(
-            "AlgaeClaw2", kWristLengthMeters, -84, 10.0, new Color8Bit(0, 255, 255)));
   }
 
   private void visualizationUpdate() {
@@ -346,41 +251,31 @@ public class SuperStructure extends SubsystemBase {
         0.15 + m_elevator.getPositionMeters());
     m_armRoot.setPosition(
         m_armRootTranslation.getX(), m_armRootTranslation.getY() + m_elevator.getPositionMeters());
-    m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRadians()));
-    m_wristMech.setAngle(Units.radiansToDegrees(m_wrist.getPositionRadians()));
+    m_armMech.setAngle(Units.radiansToDegrees(m_arm.getPositionRads()));
     Logger.recordOutput("SuperStructure/Mechanism2d", m_canvas);
 
     // Log pose 3d
     Logger.recordOutput(
-        "SuperStructure/Mechanism3d/0-ElevatorStage1",
-        new Pose3d(
-            0.0,
-            0.0,
-            m_elevator.getPositionMeters() * kElevatorStage1MaxTravel / kElevatorMaxHeightMeters,
-            new Rotation3d()));
-    Logger.recordOutput(
-        "SuperStructure/Mechanism3d/1-ElevatorCarriage",
+        "SuperStructure/Mechanism3d/0-ElevatorCarriage",
         new Pose3d(0.0, 0.0, m_elevator.getPositionMeters(), new Rotation3d()));
     Logger.recordOutput(
-        "SuperStructure/Mechanism3d/2-Arm",
+        "SuperStructure/Mechanism3d/1-Arm",
         new Pose3d(
-            kElevatorTranslation.getX() + 0.06,
+            kElevatorTranslation.getX(),
             0,
             m_armRootTranslation.getY() + m_elevator.getPositionMeters(),
-            new Rotation3d(0, -m_arm.getPositionRadians(), 0)));
-    Logger.recordOutput("SuperStructure/Mechanism3d/3-Wrist", getEndEffectorPose3d());
+            new Rotation3d(0, -m_arm.getPositionRads(), 0)));
   }
 
   /* Returns the pose of the end effector for game piece visualization */
   public Pose3d getEndEffectorPose3d() {
     return new Pose3d(
         kElevatorTranslation.getX()
-            + 0.06
             + kArmLengthMeters * Math.cos(Units.degreesToRadians(m_armMech.getAngle())),
         0,
         m_armRootTranslation.getY()
             + m_elevator.getPositionMeters()
             + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
-        new Rotation3d(0.0, -m_wrist.getRealWorldPositionRadians(), 0.0));
+        new Rotation3d());
   }
 }

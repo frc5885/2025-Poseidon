@@ -66,7 +66,7 @@ public class DriveConstants {
 
   // Drive motor configuration
   public static final int kDriveMotorCurrentLimit = 35;
-  public static final double kWheelRadiusMeters = Units.inchesToMeters(1.943);
+  public static final double kWheelRadiusMeters = Units.inchesToMeters(1.944);
   public static final double kDriveMotorReduction = 6.75 / 1.0; // SDS Mk4i L2
   public static final DCMotor kDriveGearbox = DCMotor.getNEO(1);
 
@@ -126,11 +126,11 @@ public class DriveConstants {
   public static final double kMaxModuleRotationVelocityRadiansPerSec = 15; // measured in sim
 
   // PathPlanner configuration
-  public static final double kRobotMassKg = 60; // TODO: measure
-  public static final double kRobotMOI = 5.0; // can be calculated from sysID, check PP docs
+  public static final double kRobotMassKg = 36; // TODO: measure
+  public static final double kRobotMOI = 3.0; // can be calculated from sysID, check PP docs
   public static final double kWheelCOF = 0.899; // maple sim constant for colsons
-  public static final double kDistanceTolerance = 0.1; // meters
-  public static final double kRotationTolerance = 5; // degrees
+  public static final double kDistanceTolerance = 0.02; // meters
+  public static final double kRotationTolerance = 4.0; // degrees
   public static final RobotConfig kPPConfig =
       new RobotConfig(
           kRobotMassKg,
@@ -145,14 +145,14 @@ public class DriveConstants {
           kModuleTranslations);
 
   public static final PPHolonomicDriveController kPPController =
-      new PPHolonomicDriveController(new PIDConstants(2.0, 0.2), new PIDConstants(2.0, 0.2));
+      new PPHolonomicDriveController(new PIDConstants(2.0, 0.0), new PIDConstants(2.0, 0.0));
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(
           kMaxSpeedMetersPerSec,
           kMaxAccelerationMetersPerSecSq,
-          kMaxAngularSpeedRadiansPerSec * 0.6,
-          kMaxAngularAccelerationRadiansPerSecSq * 0.6,
+          kMaxAngularSpeedRadiansPerSec,
+          kMaxAngularAccelerationRadiansPerSecSq,
           12.0);
 
   public static final PathConstraints kPathConstraintsSlow =

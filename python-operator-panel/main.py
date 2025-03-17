@@ -40,11 +40,15 @@ pygame.font.init()
 font = pygame.font.SysFont(None, 48)
 small_font = pygame.font.SysFont(None, 36)
 
+
 # Reef graphics
 reef = pygame.image.load("python-operator-panel/reef.png")
 
 branch = pygame.image.load("python-operator-panel/branch.png").convert_alpha()
 branch = pygame.transform.scale(branch, (126, 402))
+
+programIcon = pygame.image.load('python-operator-panel\WiredcatsVectorLogo.png')
+pygame.display.set_icon(programIcon)
 
 class Spinner:
     def __init__(self, center, radius):

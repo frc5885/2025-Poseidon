@@ -8,10 +8,15 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 
 /** Subsystem to interface with a Meta Quest headset acting as a positional sensor. */
@@ -24,8 +29,10 @@ public class QuestNav extends SubsystemBase {
   // Transform to map between the quest's local coordinate system and field coordinates
   // The translation and rotation get handled separately
   private Transform2d m_questToField = new Transform2d();
-  private Transform2d m_initialQuestToField = new Transform2d();
-  private boolean m_hasBeenSynced = false;
+
+  // For offset calibration
+  private Translation2d _calculatedOffsetToRobotCenter = new Translation2d();
+  private int _calculatedOffsetToRobotCenterCount = 0;
 
   /**
    * Creates a new QuestNav subsystem and uses the robot pose to initialize the quest-to-field
@@ -55,27 +62,7 @@ public class QuestNav extends SubsystemBase {
    * @param realRobotPose The desired robot pose in field coordinates
    */
   public void setRobotPose(Pose2d realRobotPose) {
-    // Get our "robot in quest coordinates" (raw Quest pose transformed by the inverse robot->Quest
-    // transform)
-    Pose2d robotInQuestCoords =
-        getRawQuestPose().transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
-
-    Rotation2d questToFieldAngleOffset =
-        realRobotPose.getRotation().minus(robotInQuestCoords.getRotation());
-
-    // Rotate the Quest translation by the needed offset, then find how far apart
-    // the rotated Quest translation is from the real robot pose in field coords
-    Translation2d rotatedQuestTranslation =
-        robotInQuestCoords.getTranslation().rotateBy(questToFieldAngleOffset);
-    Translation2d questToFieldTranslationOffset =
-        realRobotPose.getTranslation().minus(rotatedQuestTranslation);
-
-    // Create and store the overall transform
-    m_questToField = new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
-    if (!m_hasBeenSynced) {
-      m_initialQuestToField = m_questToField;
-      m_hasBeenSynced = true;
-    }
+    m_questToField = calculateQuestToField(realRobotPose);
   }
 
   /**
@@ -112,19 +99,18 @@ public class QuestNav extends SubsystemBase {
         robotInFieldRotated.getRotation());
   }
 
-  /** Returns the current robot pose in field coordinates using the initial sync transform */
-  public Pose2d getRobotPoseFromInitialSync() {
-    Pose2d questInQuestCoords = getRawQuestPose();
-    Pose2d robotInQuestCoords =
-        questInQuestCoords.transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
-    Rotation2d fieldRotation =
-        robotInQuestCoords.getRotation().plus(m_initialQuestToField.getRotation());
-    Translation2d rotatedTranslation =
-        robotInQuestCoords.getTranslation().rotateBy(m_initialQuestToField.getRotation());
-    Pose2d robotInFieldRotated = new Pose2d(rotatedTranslation, fieldRotation);
-    return new Pose2d(
-        robotInFieldRotated.getTranslation().plus(m_initialQuestToField.getTranslation()),
-        robotInFieldRotated.getRotation());
+  /**
+   * Updates the Quest-to-field transform.
+   *
+   * @param newTransform
+   */
+  public void updateQuestToFieldTransform(Transform2d newTransform) {
+    m_questToField = newTransform;
+  }
+
+  /** Returns the Quest-to-field transform. */
+  public Transform2d getQuestToFieldTransform() {
+    return m_questToField;
   }
 
   /** Returns the raw Quest HMD pose (X, Y, Z, rotation) */
@@ -143,5 +129,81 @@ public class QuestNav extends SubsystemBase {
   /** Get whether or not the Quest is connected */
   public boolean isConnected() {
     return m_questNavIOInputs.connected;
+  }
+
+  /**
+   * Calculates the transform that maps Quest coordinates to field coordinates.
+   *
+   * <p>This method takes in a robot pose in field coordinates and compares it to the robot’s
+   * current pose in Quest coordinates. It then calculates the translation and rotation offsets
+   * needed to align Quest coordinates with the field reference frame.
+   *
+   * @param robotPose The desired robot pose in field coordinates
+   * @return The transform that maps Quest coordinates to field coordinates
+   */
+  public Transform2d calculateQuestToField(Pose2d robotPose) {
+    // Get our "robot in quest coordinates" (raw Quest pose transformed by the inverse robot->Quest
+    // transform)
+    Pose2d robotInQuestCoords =
+        getRawQuestPose().transformBy(QuestNavConstants.kRobotToQuestTransform.inverse());
+
+    Rotation2d questToFieldAngleOffset =
+        robotPose.getRotation().minus(robotInQuestCoords.getRotation());
+
+    // Rotate the Quest translation by the needed offset, then find how far apart
+    // the rotated Quest translation is from the real robot pose in field coords
+    Translation2d rotatedQuestTranslation =
+        robotInQuestCoords.getTranslation().rotateBy(questToFieldAngleOffset);
+    Translation2d questToFieldTranslationOffset =
+        robotPose.getTranslation().minus(rotatedQuestTranslation);
+
+    // Create the overall transform
+    return new Transform2d(questToFieldTranslationOffset, questToFieldAngleOffset);
+  }
+
+  // From FRC Team 5010
+  private Translation2d calculateOffsetToRobotCenter() {
+    Pose2d currentPose2d = getRobotPose();
+
+    Rotation2d angle = currentPose2d.getRotation();
+    Translation2d displacement = currentPose2d.getTranslation();
+
+    double x =
+        ((angle.getCos() - 1) * displacement.getX() + angle.getSin() * displacement.getY())
+            / (2 * (1 - angle.getCos()));
+    double y =
+        ((-1 * angle.getSin()) * displacement.getX() + (angle.getCos() - 1) * displacement.getY())
+            / (2 * (1 - angle.getCos()));
+
+    return new Translation2d(x, y);
+  }
+
+  public Command determineOffsetToRobotCenter(Drive drivetrain) {
+    return Commands.repeatingSequence(
+        Commands.run(
+                () -> {
+                  drivetrain.runVelocity(new ChassisSpeeds(0, 0, 0.314));
+                },
+                drivetrain)
+            .withTimeout(0.5),
+        Commands.runOnce(
+            () -> {
+              // Update current offset
+              Translation2d offset = calculateOffsetToRobotCenter();
+
+              _calculatedOffsetToRobotCenter =
+                  _calculatedOffsetToRobotCenter
+                      .times(
+                          (double) _calculatedOffsetToRobotCenterCount
+                              / (_calculatedOffsetToRobotCenterCount + 1))
+                      .plus(offset.div(_calculatedOffsetToRobotCenterCount + 1));
+              _calculatedOffsetToRobotCenterCount++;
+
+              SmartDashboard.putNumberArray(
+                  "Quest Calculated Offset to Robot Center",
+                  new double[] {
+                    _calculatedOffsetToRobotCenter.getX(), _calculatedOffsetToRobotCenter.getY()
+                  });
+            }));
   }
 }

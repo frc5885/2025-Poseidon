@@ -7,6 +7,7 @@ package frc.robot.subsystems.LEDS;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLED.ColorOrder;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -26,10 +27,10 @@ public class LEDSubsystem {
   private final AddressableLED m_leds;
   private final AddressableLEDBuffer m_buffer;
   private LEDStates states;
-  private final AddressableLEDBufferView m_left;
-  private final AddressableLEDBufferView m_right;
-  private static final int kLength = 60;
+  private final AddressableLEDBufferView m_view;
+  private static final int kLength = 33;
   private static final int kLEDPort = 0;
+  private static double autoStartTime = 0;
 
   @Setter @Getter private boolean coralHeld = false;
   @Setter @Getter private boolean algaeHeld = false;
@@ -41,11 +42,11 @@ public class LEDSubsystem {
     m_buffer = new AddressableLEDBuffer(kLength);
     m_leds.setLength(kLength);
     m_leds.setData(m_buffer);
+    m_leds.setColorOrder(ColorOrder.kRGB);
     m_leds.start();
 
     states = LEDStates.IDLE;
-    m_left = m_buffer.createView(0, kLength / 2 - 1);
-    m_right = m_buffer.createView(kLength / 2, kLength - 1).reversed();
+    m_view = m_buffer.createView(0, kLength - 1);
   }
 
   public static synchronized LEDSubsystem getInstance() {
@@ -67,8 +68,7 @@ public class LEDSubsystem {
   }
 
   public void periodic() {
-    states.getPattern().applyTo(m_left);
-    states.getPattern().applyTo(m_right);
+    states.getPattern().applyTo(m_view);
 
     if (isPhotonDied) {
       states = LEDStates.PHOTON_DIED;
@@ -87,8 +87,14 @@ public class LEDSubsystem {
     Logger.recordOutput(
         "LED",
         IntStream.range(0, kLength / 2)
-            .mapToObj(i -> m_left.getLED(i).toHexString())
+            .mapToObj(i -> m_view.getLED(i).toHexString())
             .toArray(String[]::new));
+
+    m_leds.setData(m_buffer);
+  }
+
+  public static void setAutoStartTime() {
+    autoStartTime = Timer.getFPGATimestamp();
   }
 
   @RequiredArgsConstructor
@@ -113,8 +119,26 @@ public class LEDSubsystem {
     HOLDING_PIECE(LEDPattern.solid(Color.kGreen).breathe(Seconds.of(2.0))),
     RESETTING_SUPERSTRUCTURE(LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0))),
     AUTO(
-        LEDPattern.gradient(GradientType.kDiscontinuous, Color.kRed, Color.kYellow, Color.kGreen)
-            .mask(LEDPattern.progressMaskLayer(() -> Timer.getMatchTime() / 15.0)));
+        LEDPattern.gradient(
+                GradientType.kDiscontinuous,
+                Color.kRed,
+                Color.kRed,
+                Color.kRed,
+                Color.kRed,
+                Color.kYellow,
+                Color.kYellow,
+                Color.kYellow,
+                Color.kGreen,
+                Color.kGreen,
+                Color.kGreen,
+                Color.kGreen)
+            .mask(
+                LEDPattern.progressMaskLayer(
+                    () -> (15.0 - (Timer.getFPGATimestamp() - autoStartTime)) / 15.0))),
+    BOGUS_CALL(
+        LEDPattern.solid(Color.kBlue)
+            .blink(Seconds.of(0.1))
+            .overlayOn(LEDPattern.solid(Color.kRed)));
 
     @Getter private final LEDPattern pattern;
   }
