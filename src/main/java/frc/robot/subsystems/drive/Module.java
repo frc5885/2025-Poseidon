@@ -31,6 +31,8 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -68,10 +70,15 @@ public class Module {
     m_turnFF = new LinearPlantInversionFeedforward<>(m_turnPlant, 0.02);
     m_turnRegulator =
         new LinearQuadraticRegulator<>(
-            m_turnPlant, VecBuilder.fill(1.0, 30.0), VecBuilder.fill(12.0), 0.02);
+            m_turnPlant, VecBuilder.fill(0.2, 10.0), VecBuilder.fill(12.0), 0.02);
 
-    m_driveController = new PIDController(kDriveSimP, 0.0, kDriveSimD);
-    m_turnController = new PIDController(kTurnSimP, 0.0, kTurnSimD);
+    if (Constants.kCurrentMode == Mode.REAL) {
+      m_driveRegulator.latencyCompensate(m_drivePlant, 0.02, kModuleLatencyCompensationMs);
+      m_turnRegulator.latencyCompensate(m_turnPlant, 0.02, kModuleLatencyCompensationMs);
+    }
+
+    m_driveController = new PIDController(kDriveKp, 0.0, kDriveKd);
+    m_turnController = new PIDController(kTurnKp, 0.0, kTurnKd);
     m_turnController.enableContinuousInput(-Math.PI, Math.PI);
 
     m_driveDisconnectedAlert =
@@ -146,17 +153,16 @@ public class Module {
 
     isClosedLoop = true;
     double velocityRadPerSec = state.speedMetersPerSecond / kWheelRadiusMeters;
-    m_driveFFVolts = kDriveSimKs * Math.signum(velocityRadPerSec) + kDriveSimKv * velocityRadPerSec;
+    m_driveFFVolts = kDriveKs * Math.signum(velocityRadPerSec) + kDriveKv * velocityRadPerSec;
     m_driveController.setSetpoint(velocityRadPerSec);
-    m_turnController.setSetpoint(
-        MathUtil.angleModulus(state.angle.plus(m_io.getZeroRotation()).getRadians()));
+    m_turnController.setSetpoint(state.angle.plus(m_io.getZeroRotation()).getRadians());
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
     isClosedLoop = false;
     m_io.setDriveOpenLoop(output);
-    m_turnController.setSetpoint(MathUtil.angleModulus(m_io.getZeroRotation().getRadians()));
+    m_turnController.setSetpoint(m_io.getZeroRotation().getRadians());
     m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
   }
 

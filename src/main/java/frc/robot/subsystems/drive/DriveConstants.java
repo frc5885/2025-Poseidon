@@ -126,6 +126,8 @@ public class DriveConstants {
   //     Units.radiansPerSecondToRotationsPerMinute(28.0 / 0.17); // measured as 28.0/0.17
   public static final double kTurnMaxErrorTolerance = Units.degreesToRadians(2.0);
 
+  public static final double kModuleLatencyCompensationMs = 0.025;
+
   // Speed and acceleration constraints
   public static final double kMaxSpeedMetersPerSec = 3.6; // measured in sim
   public static final double kMaxAccelerationMetersPerSecSq = 5.4; // measured in sim
