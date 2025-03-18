@@ -112,7 +112,8 @@ public class DriveConstants {
   public static final double kTurnSimD = 0.0;
   public static final double kTurnKs = 0.15515;
   public static final double kTurnKv = 0.42405;
-  public static final double kTurnKa = 0.010624;
+  // public static final double kTurnKa = 0.010624;
+  public static final double kTurnKa = 0.008291;
 
   public static final double kTurnSimKv = 0.42421;
   public static final double kTurnSimKa = 0.008291;
