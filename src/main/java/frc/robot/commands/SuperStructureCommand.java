@@ -31,8 +31,8 @@ public class SuperStructureCommand extends Command {
   @Override
   public void initialize() {
     SuperStructureState newState = m_stateSupplier.get();
-    if (LEDSubsystem.getInstance().isAlgaeHeld() && newState == SuperStructureState.IDLE) {
-      newState = SuperStructureState.INTAKE_CORAL;
+    if (LEDSubsystem.getInstance().isAlgaeHeld() && newState == SuperStructureState.IDLE_CORAL) {
+      newState = SuperStructureState.IDLE_ALGAE;
     }
     m_command = m_superStructure.setSuperStructureGoal(newState);
     m_command.initialize();

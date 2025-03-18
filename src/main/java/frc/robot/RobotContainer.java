@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.SuperStructureCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -46,7 +47,6 @@ import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
-import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -279,7 +279,6 @@ public class RobotContainer {
     // m_autoChooser.addOption(
     //     "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    // TODO not needed for now
     m_autoChooser.addOption(
         "Elevator SysId (Quasistatic Forward)",
         m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -292,18 +291,18 @@ public class RobotContainer {
     m_autoChooser.addOption(
         "Elevator SysId (Dynamic Reverse)",
         m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Quasistatic Forward)",
-    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Quasistatic Reverse)",
-    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Dynamic Forward)",
-    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Arm SysId (Dynamic Reverse)",
-    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Arm SysId (Quasistatic Forward)",
+        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Arm SysId (Quasistatic Reverse)",
+        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Arm SysId (Dynamic Forward)",
+        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Arm SysId (Dynamic Reverse)",
+        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
 
@@ -354,26 +353,21 @@ public class RobotContainer {
                             ::toPose2d),
                 Set.of(m_drive)));
 
-    m_driverController
-        .x()
-        .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L2)));
-    m_driverController
-        .y()
-        .onTrue(new InstantCommand(() -> m_superStructure.setElevatorGoal(ElevatorLevel.ALGAE_L3)));
+    m_driverController.b().onTrue(new SuperStructureCommand(m_superStructure, m_stateChooser::get));
 
     // m_driverController
     //     .x()
     //     .whileTrue(
     //         new StartEndCommand(
-    //             () -> m_superStructure.runElevatorOpenLoop(-12.0),
-    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             () -> m_superStructure.runArmOpenLoop(-12.0),
+    //             () -> m_superStructure.runArmOpenLoop(0.0),
     //             m_superStructure));
     // m_driverController
     //     .y()
     //     .whileTrue(
     //         new StartEndCommand(
-    //             () -> m_superStructure.runElevatorOpenLoop(12.0),
-    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             () -> m_superStructure.runArmOpenLoop(12.0),
+    //             () -> m_superStructure.runArmOpenLoop(0.0),
     //             m_superStructure));
 
     // ============================================================================

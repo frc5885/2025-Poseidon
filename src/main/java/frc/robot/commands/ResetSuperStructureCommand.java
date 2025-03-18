@@ -15,7 +15,7 @@ public class ResetSuperStructureCommand extends SequentialCommandGroup {
         new InstantCommand(
             () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
         new WaitUntilFarFromCommand(drive::getPose, 0.5).unless(() -> DriverStation.isTest()),
-        new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE),
+        new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE_CORAL),
         new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
   }
 }

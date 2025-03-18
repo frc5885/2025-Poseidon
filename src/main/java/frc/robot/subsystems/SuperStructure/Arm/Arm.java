@@ -58,7 +58,7 @@ public class Arm {
     m_plant = LinearSystemId.identifyPositionSystem(kArmKv, kArmKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
+            m_plant, VecBuilder.fill(0.1, 10.0), VecBuilder.fill(12.0), 0.02);
     if (Constants.kCurrentMode == Mode.REAL) {
       m_regulator.latencyCompensate(m_plant, 0.02, kArmLatencyCompensationMs);
     }

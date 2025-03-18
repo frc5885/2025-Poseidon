@@ -82,6 +82,13 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Arm/Goal")
+  public ArmGoals getArmGoal() {
+    ArmGoals goal = m_goalState.armGoal;
+    Logger.recordOutput("SuperStructure/Arm/GoalPosition", m_arm.getGoalPosition());
+    return goal;
+  }
+
   @AutoLogOutput(key = "SuperStructure/Goal")
   public SuperStructureState getSuperStructureGoal() {
     return m_goalState;
@@ -90,7 +97,7 @@ public class SuperStructure extends SubsystemBase {
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
     m_finalGoalState = state;
     Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoalState);
-    List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
+    List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), m_finalGoalState);
     Logger.recordOutput("SuperStructure/States", states.toString());
 
     return new SequentialCommandGroup(
@@ -163,6 +170,7 @@ public class SuperStructure extends SubsystemBase {
     return Commands.run(
             () -> {
               setElevatorGoal(goal.elevatorGoal);
+              setArmGoal(goal.armGoal);
             },
             this)
         .until(this::isGoalAchieved)
@@ -173,7 +181,7 @@ public class SuperStructure extends SubsystemBase {
   // state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
-    return m_elevator.isSetpointAchieved();
+    return m_elevator.isSetpointAchieved() && m_arm.isSetpointAchieved();
   }
 
   @AutoLogOutput(key = "SuperStructure/isFinalGoalAchieved")
@@ -183,6 +191,10 @@ public class SuperStructure extends SubsystemBase {
 
   public void setElevatorGoal(ElevatorLevel goal) {
     m_elevator.setGoalPosition(goal.setpointMeters.getAsDouble());
+  }
+
+  public void setArmGoal(ArmGoals goal) {
+    m_arm.setGoalPosition(Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
   }
 
   public void runElevatorOpenLoop(double voltage) {

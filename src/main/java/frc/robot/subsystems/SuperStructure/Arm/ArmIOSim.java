@@ -21,7 +21,7 @@ public class ArmIOSim implements ArmIO {
             kArmLengthMeters,
             kArmMinAngleRads,
             kArmMaxAngleRads,
-            false,
+            true,
             kArmStartingPositionRads);
   }
 

@@ -44,16 +44,11 @@ public class SuperStructureConstants {
 
     @AllArgsConstructor
     public static enum ElevatorLevel {
-      STOW(() -> kElevatorMinHeightMeters),
-      CORAL_STATION_TRANSITION(TunableDouble.register("Elevator/CORAL_STATION_TRANSITION", 0.4)),
-      CORAL_STATION(TunableDouble.register("Elevator/CORAL_STATION", 0.5)),
-      L1(TunableDouble.register("Elevator/L1", 0.1)),
-      ALGAE_L2(TunableDouble.register("Elevator/L2ALGAE", 0.1)),
-      L2(TunableDouble.register("Elevator/L2", 0.4)),
-      ALGAE_L3(TunableDouble.register("Elevator/L3ALGAE", 0.57)),
-      L3(TunableDouble.register("Elevator/L3", 0.77)),
-      L4(() -> kElevatorMaxHeightMeters),
-      TEST(TunableDouble.register("Elevator/TEST", STOW.setpointMeters.getAsDouble()));
+      STOW(() -> kElevatorStartingPositionMeters),
+      IDLE(TunableDouble.register("Elevator/IDLE", 0.1)),
+      L2(TunableDouble.register("Elevator/L2", 0.15)),
+      L4(TunableDouble.register("Elevator/L4", 0.65)),
+      NET(TunableDouble.register("Elevator/NET", 0.7));
 
       public DoubleSupplier setpointMeters;
     }
@@ -79,12 +74,12 @@ public class SuperStructureConstants {
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = kArmEncoderPositionFactor / 60;
 
-    public static final double kArmKs = 0.36613; // real
-    public static final double kArmKv = 2.7196; // real
-    public static final double kArmKa = 0.01;
-    public static final double kArmKg = 0.01;
-    public static final double kArmKp = 8.0;
-    public static final double kArmKd = 0.1;
+    public static final double kArmKs = 0.38376; // sim
+    public static final double kArmKv = 4.7198; // sim
+    public static final double kArmKa = 0.11375; // sim
+    public static final double kArmKg = 0.55678; // sim
+    public static final double kArmKp = 5.0;
+    public static final double kArmKd = 0.0;
     public static final double kArmLatencyCompensationMs = 0.025;
 
     public static final double kArmErrorToleranceRads = Units.degreesToRadians(5.0);
@@ -92,12 +87,14 @@ public class SuperStructureConstants {
     @AllArgsConstructor
     public static enum ArmGoals {
       // Setpoints MUST be in radians when declared and degrees here! Please
-      IDLE(TunableDouble.register("Arm/IDLE", 50.0)),
       STOW(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
-      INTAKE(() -> 0.0),
-      CORAL_STATION(TunableDouble.register("Arm/CORAL_STATION", 40.0)),
-      REEF(TunableDouble.register("Arm/REEF", 45.0)),
-      ALGAE_FLOOR(TunableDouble.register("Arm/ALGAE_FLOOR", -45.0));
+      IDLE_CORAL(TunableDouble.register("Arm/IDLE_CORAL", -80.0)),
+      IDLE_ALGAE(TunableDouble.register("Arm/IDLE_ALGAE", -60.0)),
+      ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -10.0)),
+      ALGAE_L3(TunableDouble.register("Arm/ALGAE_L3", 30.0)),
+      CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -65.0)),
+      CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 40.0)),
+      NET(TunableDouble.register("Arm/NET", 65.0));
 
       public DoubleSupplier setpointDegrees;
     }

@@ -30,8 +30,7 @@ public class ScoreAlgaeProcessor extends SequentialCommandGroup {
                 false)
             .unless(() -> DriverStation.isTest()),
         new ParallelCommandGroup(
-            new SuperStructureCommand(
-                superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR),
+            new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE_ALGAE),
             DriveCommands.preciseChassisAlign(drive, () -> FieldConstants.Processor.centerFace)
                 .unless(() -> DriverStation.isTest())),
         new ScoreAlgaeCommand(endEffector));
