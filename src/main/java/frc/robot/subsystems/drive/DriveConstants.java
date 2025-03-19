@@ -96,18 +96,27 @@ public class DriveConstants {
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
   public static final double kDriveKd = 0.0;
-  public static final double kDriveKs = 0.13025;
-  public static final double kDriveKv = 0.13630;
+  public static final double kDriveKs = 0.039644;
+  public static final double kDriveKv = 0.13951;
+  public static final double kDriveKa = 0.0052922;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
-  public static final double kDriveSimKs = 0.0;
-  public static final double kDriveSimKv = 0.1713;
+  public static final double kDriveSimKs = 0.047123;
+  public static final double kDriveSimKv = 0.15668;
+  public static final double kDriveSimKa = 0.013224;
 
   // Turn PID configuration
   public static final double kTurnKp = 5.5;
   public static final double kTurnKd = 0.0;
   public static final double kTurnSimP = 8.0;
   public static final double kTurnSimD = 0.0;
+  public static final double kTurnKs = 0.15515;
+  public static final double kTurnKv = 0.42405;
+  // public static final double kTurnKa = 0.010624;
+  public static final double kTurnKa = 0.008291;
+
+  public static final double kTurnSimKv = 0.42421;
+  public static final double kTurnSimKa = 0.008291;
   public static final double kTurnPIDMinInput = 0; // Radians
   public static final double kTurnPIDMaxInput = 2 * Math.PI; // Radians
   // these seem to work much better multiplied by ~10, no idea why
@@ -117,13 +126,16 @@ public class DriveConstants {
   //     Units.radiansPerSecondToRotationsPerMinute(28.0 / 0.17); // measured as 28.0/0.17
   public static final double kTurnMaxErrorTolerance = Units.degreesToRadians(2.0);
 
+  public static final double kModuleLatencyCompensationMs = 0.025;
+
   // Speed and acceleration constraints
   public static final double kMaxSpeedMetersPerSec = 3.6; // measured in sim
   public static final double kMaxAccelerationMetersPerSecSq = 5.4; // measured in sim
   public static final double kMaxAngularSpeedRadiansPerSec =
       kMaxSpeedMetersPerSec / kDriveBaseRadius;
   public static final double kMaxAngularAccelerationRadiansPerSecSq = 16; // measured in sim
-  public static final double kMaxModuleRotationVelocityRadiansPerSec = 15; // measured in sim
+  public static final double kMaxModuleRotationVelocityRadiansPerSec = 24.0;
+  public static final double kMaxModuleRotationAccelerationRadiansPerSecSq = 160.0;
 
   // PathPlanner configuration
   public static final double kRobotMassKg = 36; // TODO: measure
@@ -145,7 +157,7 @@ public class DriveConstants {
           kModuleTranslations);
 
   public static final PPHolonomicDriveController kPPController =
-      new PPHolonomicDriveController(new PIDConstants(2.0, 0.0), new PIDConstants(2.0, 0.0));
+      new PPHolonomicDriveController(new PIDConstants(3.0, 0.0), new PIDConstants(3.0, 0.0));
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(

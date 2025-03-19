@@ -46,9 +46,7 @@ public interface ModuleIO {
   /** Run the turn motor at the specified open loop value. */
   public default void setTurnOpenLoop(double output) {}
 
-  /** Run the drive motor at the specified velocity. */
-  public default void setDriveVelocity(double velocityRadPerSec) {}
-
-  /** Run the turn motor to the specified rotation. */
-  public default void setTurnPosition(Rotation2d rotation) {}
+  public default Rotation2d getZeroRotation() {
+    return new Rotation2d();
+  }
 }
