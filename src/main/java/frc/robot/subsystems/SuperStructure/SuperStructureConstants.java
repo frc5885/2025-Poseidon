@@ -87,13 +87,18 @@ public class SuperStructureConstants {
     @AllArgsConstructor
     public static enum ArmGoals {
       // Setpoints MUST be in radians when declared and degrees here! Please
-      STOW(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
-      IDLE_CORAL(TunableDouble.register("Arm/IDLE_CORAL", -80.0)),
+      // STOW(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
+      // IDLE_CORAL(TunableDouble.register("Arm/IDLE_CORAL", -80.0)),
+      IDLE(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
       IDLE_ALGAE(TunableDouble.register("Arm/IDLE_ALGAE", -60.0)),
       ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -10.0)),
       ALGAE_L3(TunableDouble.register("Arm/ALGAE_L3", 30.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -65.0)),
+      // TODO
+      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -65.0)),
       CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 40.0)),
+      // TODO
+      SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", 40.0)),
       NET(TunableDouble.register("Arm/NET", 65.0));
 
       public DoubleSupplier setpointDegrees;

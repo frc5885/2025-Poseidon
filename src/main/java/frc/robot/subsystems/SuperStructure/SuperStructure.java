@@ -40,8 +40,8 @@ public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
 
-  private SuperStructureState m_goalState = SuperStructureState.STOWED;
-  private SuperStructureState m_finalGoalState = SuperStructureState.STOWED;
+  private SuperStructureState m_goalState = SuperStructureState.IDLE;
+  private SuperStructureState m_finalGoalState = SuperStructureState.IDLE;
   private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
