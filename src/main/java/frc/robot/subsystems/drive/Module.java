@@ -43,13 +43,10 @@ public class Module {
   private final LinearSystem<N1, N1, N1> m_drivePlant;
   private final LinearPlantInversionFeedforward<N1, N1, N1> m_driveFF;
   private final LinearQuadraticRegulator<N1, N1, N1> m_driveRegulator;
-  private final LinearSystem<N2, N1, N2> m_turnPlant;
-  private final LinearPlantInversionFeedforward<N2, N1, N2> m_turnFF;
-  private final LinearQuadraticRegulator<N2, N1, N2> m_turnRegulator;
-  private boolean isClosedLoop = false;
   private double m_driveFFVolts = 0.0;
   private PIDController m_driveController;
   private PIDController m_turnController;
+  private boolean isClosedLoop = false;
 
   private final Alert m_driveDisconnectedAlert;
   private final Alert m_turnDisconnectedAlert;
@@ -66,15 +63,8 @@ public class Module {
         new LinearQuadraticRegulator<>(
             m_drivePlant, VecBuilder.fill(0.001), VecBuilder.fill(12.0), 0.02);
 
-    m_turnPlant = LinearSystemId.identifyPositionSystem(kTurnKv, kTurnKa);
-    m_turnFF = new LinearPlantInversionFeedforward<>(m_turnPlant, 0.02);
-    m_turnRegulator =
-        new LinearQuadraticRegulator<>(
-            m_turnPlant, VecBuilder.fill(0.2, 10.0), VecBuilder.fill(12.0), 0.02);
-
     if (Constants.kCurrentMode == Mode.REAL) {
       m_driveRegulator.latencyCompensate(m_drivePlant, 0.02, kModuleLatencyCompensationMs);
-      m_turnRegulator.latencyCompensate(m_turnPlant, 0.02, kModuleLatencyCompensationMs);
     }
 
     m_driveController = new PIDController(kDriveKp, 0.0, kDriveKd);
@@ -106,15 +96,8 @@ public class Module {
                 .plus(m_driveFF.calculate(nextDriveR).plus(kDriveKs * Math.signum(driveSetpoint)))
                 .get(0, 0));
 
-        double current = m_inputs.turnAbsolutePosition.getRadians();
-        double error = MathUtil.angleModulus(m_turnController.getSetpoint() - current);
-        Vector<N2> nextTurnR = VecBuilder.fill(current + error, 0.0);
-
         m_io.setTurnOpenLoop(
-            m_turnRegulator
-                .calculate(VecBuilder.fill(current, m_inputs.turnVelocityRadPerSec), nextTurnR)
-                .plus(m_turnFF.calculate(nextTurnR))
-                .get(0, 0));
+            m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
       } else {
         m_driveController.reset();
         m_turnController.reset();

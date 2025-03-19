@@ -5,6 +5,7 @@
 
 package frc.robot.subsystems.vision.heimdall;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -44,8 +45,6 @@ public class HeimdallPoseController {
   // Lower values mean slower but smoother convergence
   private static final double kTranslationConvergenceFactor = 0.1; // 10% adjustment per cycle
   private static final double kRotationConvergenceFactor = 0.05; // 5% adjustment per cycle
-  private static final double kOptimalDistance =
-      0.5; // the distance at which the convergence factors will be highest
 
   // First-time initialization flag
   private boolean m_isFirstUpdate = true;
@@ -185,8 +184,8 @@ public class HeimdallPoseController {
     // Calculate the new transform by blending the current and target transforms
     Logger.recordOutput("Heimdall/AverageTagDistance", averageTagDistance);
     // Calculate distance-based factor that peaks at optimal distance and falls off symmetrically
-    double distanceRatio = Math.abs(averageTagDistance - kOptimalDistance) / kOptimalDistance;
-    double factor = Math.max(0.0, Math.min(1.0, 1.0 - distanceRatio));
+
+    double factor = MathUtil.clamp(1 - averageTagDistance / 10, 0, 1);
     double transFactor = kTranslationConvergenceFactor * factor; // higher factor for closer tags
     double rotFactor = kRotationConvergenceFactor * factor; // higher factor for closer tags
     Transform2d newQuestToField =

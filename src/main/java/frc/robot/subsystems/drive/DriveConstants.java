@@ -134,7 +134,8 @@ public class DriveConstants {
   public static final double kMaxAngularSpeedRadiansPerSec =
       kMaxSpeedMetersPerSec / kDriveBaseRadius;
   public static final double kMaxAngularAccelerationRadiansPerSecSq = 16; // measured in sim
-  public static final double kMaxModuleRotationVelocityRadiansPerSec = 15; // measured in sim
+  public static final double kMaxModuleRotationVelocityRadiansPerSec = 24.0;
+  public static final double kMaxModuleRotationAccelerationRadiansPerSecSq = 160.0;
 
   // PathPlanner configuration
   public static final double kRobotMassKg = 36; // TODO: measure
