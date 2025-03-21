@@ -33,7 +33,7 @@ public class Feeder extends SubsystemBase {
     Logger.processInputs("Collector/Feeder", m_inputs);
 
     m_beamBreakIO.updateInputs(m_beamBreakInputs);
-    Logger.processInputs("Collector/Intake/BeamBreak", m_beamBreakInputs);
+    Logger.processInputs("Collector/Feeder/BeamBreak", m_beamBreakInputs);
 
     // Update alert
     m_motor1DisconnectedAlert.set(!m_inputs.motor1Connected);

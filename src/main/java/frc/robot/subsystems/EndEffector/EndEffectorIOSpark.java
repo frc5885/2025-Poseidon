@@ -10,14 +10,13 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.EndEffector.EndEffectorIO.EndEffectorIOInputs;
 import java.util.function.DoubleSupplier;
 
 public class EndEffectorIOSpark implements EndEffectorIO {
   private SparkMax m_EndEffectorMotor;
   private RelativeEncoder m_EndEffectorEncoder;
   private SparkMaxConfig m_EndEffectorConfig;
-  private Debouncer m_EndEffectorConnectedDebounce = new Debouncer(0.5);
+  private Debouncer m_endEffectorConnectedDebounce = new Debouncer(0.5);
 
   public EndEffectorIOSpark() {
     m_EndEffectorMotor = new SparkMax(EndEffectorConstants.kMotorId, MotorType.kBrushless);
@@ -66,7 +65,7 @@ public class EndEffectorIOSpark implements EndEffectorIO {
         m_EndEffectorMotor,
         m_EndEffectorMotor::getOutputCurrent,
         (value) -> inputs.currentAmps = value);
-    inputs.EndEffectorConnected = m_EndEffectorConnectedDebounce.calculate(!sparkStickyFault);
+    inputs.endEffectorConnected = m_endEffectorConnectedDebounce.calculate(!sparkStickyFault);
   }
 
   /** Run open loop at the specified voltage. */

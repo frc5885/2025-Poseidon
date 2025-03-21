@@ -9,6 +9,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
@@ -16,9 +18,10 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 
-public class ScoreAlgaeNet extends SequentialCommandGroup {
-  public ScoreAlgaeNet(Drive drive, SuperStructure superStructure, EndEffector endEffector) {
+public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
+  public ScoreAlgaeNetCommand(Drive drive, SuperStructure superStructure, EndEffector endEffector) {
     addCommands(
         new InstantCommand(
             () -> LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.SCORING_LINE_UP)),
@@ -37,8 +40,11 @@ public class ScoreAlgaeNet extends SequentialCommandGroup {
                 drive,
                 () ->
                     new Pose2d(
-                        7.8, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d()))
+                        7.5, AllianceFlipUtil.applyY(drive.getPose().getY()), new Rotation2d()))
             .unless(() -> DriverStation.isTest()),
-        new ScoreAlgaeCommand(endEffector));
+        // exit the score command in simulation so that the visualizer works in sim
+        new ScoreAlgaeCommand(endEffector)
+            .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30),
+        new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)));
   }
 }
