@@ -17,6 +17,8 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -28,6 +30,7 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -46,6 +49,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.TunableDouble;
 import java.util.concurrent.locks.Lock;
@@ -344,7 +348,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return m_kinematics.toChassisSpeeds(getModuleStates());
   }
 
@@ -360,6 +364,28 @@ public class Drive extends SubsystemBase {
     return doNotFlip
         ? AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast)
         : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
+  }
+
+  public Command getPathFollowCommand(Supplier<Pose2d> target) {
+    return AutoBuilder.followPath(
+        new PathPlannerPath(
+            PathPlannerPath.waypointsFromPoses(
+                AllianceFlipUtil.apply(getPose()),
+                target.get().transformBy(new Transform2d(-0.5, 0.0, Rotation2d.kZero)),
+                target.get()),
+            kPathConstraintsFast,
+            null,
+            new GoalEndState(0.0, Rotation2d.kZero)));
+  }
+
+  /**
+   * Build a command to pathfind to a given path, then follow that path.
+   *
+   * @param goalPath The path to pathfind to, then follow
+   * @return A command to pathfind to a given path, then follow the path
+   */
+  public Command getPathFindFollowCommand(Supplier<PathPlannerPath> goalPath) {
+    return AutoBuilder.pathfindThenFollowPath(goalPath.get(), kPathConstraintsFast);
   }
 
   /** Returns the position of each module in radians. */
