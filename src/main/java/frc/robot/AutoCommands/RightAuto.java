@@ -6,6 +6,7 @@ package frc.robot.AutoCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -19,6 +20,8 @@ import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
+import java.util.ArrayList;
+import java.util.List;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -27,58 +30,46 @@ public class RightAuto extends SequentialCommandGroup {
   private Pose2d intakePose = new Pose2d(1.22, 0.88, Rotation2d.fromDegrees(54.27));
   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
 
-  /** Creates a new RightAuto. */
+  // Branches to score coral at
+  private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 10, 11, 0));
+
   public RightAuto(
       Drive drive, SuperStructure superStructure, EndEffector endEffector, Vision vision) {
 
+    // Setup command for simulation and alliance flipping
     addCommands(
-        // setup for sim
         new InstantCommand(
             () -> {
               intakePose = AllianceFlipUtil.apply(intakePose);
               if (Constants.kCurrentMode.equals(Mode.SIM)) {
                 drive.setPose(AllianceFlipUtil.apply(initialPose));
               }
-            }),
+            }));
+    branches.stream()
+        .forEach(
+            branchNum -> {
+              boolean isLastBranch = branchNum == branches.get(branches.size() - 1);
 
-        // score first coral
-        new AutoScoreCoralAtBranchCommand(
-            drive,
-            superStructure,
-            endEffector,
-            () -> FieldConstants.Reef.branchPositions.get(9).get(ReefLevel.L4)),
-        // go intake
-        new ParallelCommandGroup(
-            new ResetSuperStructureCommand(drive, superStructure, false),
-            drive.getDriveToPoseCommand(() -> intakePose, false)),
+              // actual command ===========================================
+              // Score coral
+              Command scoreCommand =
+                  new AutoScoreCoralAtBranchCommand(
+                      drive,
+                      superStructure,
+                      endEffector,
+                      () -> FieldConstants.Reef.branchPositions.get(branchNum).get(ReefLevel.L4));
 
-        // score second coral
-        new AutoScoreCoralAtBranchCommand(
-            drive,
-            superStructure,
-            endEffector,
-            () -> FieldConstants.Reef.branchPositions.get(10).get(ReefLevel.L4)),
-        // go intake
-        new ParallelCommandGroup(
-            new ResetSuperStructureCommand(drive, superStructure, false),
-            drive.getDriveToPoseCommand(() -> intakePose, false)),
+              // Go to intake position
+              Command intakeCommand =
+                  new ParallelCommandGroup(
+                      new ResetSuperStructureCommand(drive, superStructure, false),
+                      drive.getDriveToPoseCommand(() -> intakePose, false));
+              // end of actual command ===========================================
 
-        // score third coral
-        new AutoScoreCoralAtBranchCommand(
-            drive,
-            superStructure,
-            endEffector,
-            () -> FieldConstants.Reef.branchPositions.get(11).get(ReefLevel.L4)),
-        // go intake
-        new ParallelCommandGroup(
-            new ResetSuperStructureCommand(drive, superStructure, false),
-            drive.getDriveToPoseCommand(() -> intakePose, false)),
-
-        // score fourth coral
-        new AutoScoreCoralAtBranchCommand(
-            drive,
-            superStructure,
-            endEffector,
-            () -> FieldConstants.Reef.branchPositions.get(0).get(ReefLevel.L4)));
+              addCommands(scoreCommand);
+              if (!isLastBranch) {
+                addCommands(intakeCommand);
+              }
+            });
   }
 }

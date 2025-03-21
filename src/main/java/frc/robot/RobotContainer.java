@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -31,6 +30,7 @@ import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.RightAuto;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
+import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
@@ -383,18 +383,7 @@ public class RobotContainer {
     // ============================================================================
 
     // INTAKE/HANDOFF CORAL AUTOMATICALLY
-    m_feeder
-        .getHandoffTrigger()
-        .onTrue(
-            new WaitUntilCommand(
-                    () -> m_superStructure.getSuperStructureGoal() == SuperStructureState.IDLE)
-                .andThen(
-                    new SuperStructureCommand(
-                            m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                        .andThen(
-                            new SuperStructureCommand(
-                                m_superStructure, () -> SuperStructureState.IDLE))
-                        .andThen(() -> m_feeder.handoffComplete())));
+    m_feeder.getHandoffTrigger().onTrue(new CoralHandoffCommand(m_superStructure, m_feeder));
 
     // EJECT GAME PIECE
     // m_driverController
