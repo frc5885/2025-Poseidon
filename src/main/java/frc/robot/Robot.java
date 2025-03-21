@@ -133,6 +133,7 @@ public class Robot extends LoggedRobot {
 
     LEDSubsystem.setAutoStartTime();
     LEDSubsystem.getInstance().setStates(LEDStates.AUTO);
+    LEDSubsystem.getInstance().setSquareStates(LEDStates.RED);
   }
 
   /** This function is called periodically during autonomous. */

@@ -27,7 +27,10 @@ public class LEDSubsystem {
   private final AddressableLED m_leds;
   private final AddressableLEDBuffer m_buffer;
   private LEDStates states;
+  private LEDStates squareStates;
   private final AddressableLEDBufferView m_view;
+  AddressableLEDBufferView m_poseidon;
+  AddressableLEDBufferView m_square;
   private static final int kLength = 33 + 46; // 33 for poseidon and 46 for square
   private static final int kLEDPort = 0;
   private static double autoStartTime = 0;
@@ -44,8 +47,11 @@ public class LEDSubsystem {
     m_leds.setData(m_buffer);
     m_leds.setColorOrder(ColorOrder.kRGB);
     m_leds.start();
-
     states = LEDStates.IDLE;
+    squareStates = LEDStates.IDLE;
+
+    m_poseidon = m_buffer.createView(0, 33 - 1);
+    m_square = m_buffer.createView(33, 79 - 1);
     m_view = m_buffer.createView(0, kLength - 1);
   }
 
@@ -67,8 +73,16 @@ public class LEDSubsystem {
     }
   }
 
+  public void setSquareStates(LEDStates newState) {
+    squareStates = newState;
+  }
+
   public void periodic() {
-    states.getPattern().applyTo(m_view);
+    states.getPattern().applyTo(m_poseidon);
+    if (states != LEDStates.AUTO) {
+      squareStates = states;
+    }
+    squareStates.getPattern().applyTo(m_square);
 
     if (isPhotonDied) {
       states = LEDStates.PHOTON_DIED;
@@ -84,10 +98,18 @@ public class LEDSubsystem {
       }
     }
 
+    // log poseidon
     Logger.recordOutput(
-        "LED",
-        IntStream.range(0, kLength / 2)
-            .mapToObj(i -> m_view.getLED(i).toHexString())
+        "PoseidonLED",
+        IntStream.range(0, 32 - 1)
+            .mapToObj(i -> m_poseidon.getLED(i).toHexString())
+            .toArray(String[]::new));
+
+    // log square
+    Logger.recordOutput(
+        "SquareLED",
+        IntStream.range(0, 46 - 1)
+            .mapToObj(i -> m_square.getLED(i).toHexString())
             .toArray(String[]::new));
 
     m_leds.setData(m_buffer);
@@ -104,11 +126,7 @@ public class LEDSubsystem {
             .mask(
                 LEDPattern.steps(Map.of(0.5, Color.kWhite))
                     .scrollAtRelativeSpeed(Percent.per(Second).of(25.0)))),
-    PHOTON_DIED(
-        LEDPattern.solid((Color.kRed))
-            .mask(
-                LEDPattern.steps(Map.of(0.5, Color.kRed))
-                    .scrollAtRelativeSpeed(Percent.per(Second).of(50.0)))),
+    PHOTON_DIED((LEDPattern.solid(Color.kRed).blink(Seconds.of(0.1)))),
     DISABLED(LEDPattern.rainbow(255, 255).scrollAtRelativeSpeed(Percent.per(Second).of(25))),
     INTAKE_RUNNING(LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.1))),
     INTAKE_RUNNING_SEES_PIECE(LEDPattern.solid(Color.kPurple).blink(Seconds.of(0.1))),
@@ -135,6 +153,8 @@ public class LEDSubsystem {
             .mask(
                 LEDPattern.progressMaskLayer(
                     () -> (15.0 - (Timer.getFPGATimestamp() - autoStartTime)) / 15.0))),
+    RED(LEDPattern.solid(Color.kRed)),
+    GREEN(LEDPattern.solid(Color.kGreen)),
     BOGUS_CALL(
         LEDPattern.solid(Color.kBlue)
             .blink(Seconds.of(0.1))
