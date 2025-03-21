@@ -2,6 +2,7 @@ package frc.robot.subsystems.Feeder;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -88,7 +89,7 @@ public class Feeder extends SubsystemBase {
   }
 
   public Trigger getHandoffTrigger() {
-    return new Trigger(() -> m_isHandOffReady);
+    return new Trigger(() -> (m_isHandOffReady && !DriverStation.isAutonomous()));
   }
 
   public void handoffComplete() {

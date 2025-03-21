@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.RightAuto;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
@@ -240,9 +241,8 @@ public class RobotContainer {
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
     m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
-    // m_autoChooser.addDefaultOption(
-    //     "4_coral_auto",
-    //     new RightAuto(m_drive, m_superStructure, m_endEffector, m_collector, m_vision));
+    m_autoChooser.addDefaultOption(
+        "4_coral_auto", new RightAuto(m_drive, m_superStructure, m_endEffector, m_vision));
 
     // Set up SysId routines
     m_autoChooser.addOption(
@@ -409,7 +409,7 @@ public class RobotContainer {
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
-                m_drive, m_superStructure, m_feeder, m_endEffector, m_operatorPanel::getTargetPose))
+                m_drive, m_superStructure, m_endEffector, m_operatorPanel::getTargetPose))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF

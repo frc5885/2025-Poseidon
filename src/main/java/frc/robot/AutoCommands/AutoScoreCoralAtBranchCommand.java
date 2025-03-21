@@ -12,7 +12,6 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
-import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
@@ -39,7 +38,6 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
   public AutoScoreCoralAtBranchCommand(
       Drive drive,
       SuperStructure superStructure,
-      Feeder feeder,
       EndEffector endEffector,
       Supplier<Pose3d> targetPose) {
 
@@ -71,8 +69,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
               LEDSubsystem.getInstance().setStates(LEDStates.SCORING_LINE_UP);
             }),
         new ParallelCommandGroup(
-            new SuperStructureCommand(superStructure, () -> superStructureState)
-                .onlyWhile(feeder::getIsHandoffReady),
+            new SuperStructureCommand(superStructure, () -> superStructureState),
             new DriveToPoseCommand(
                     drive,
                     () -> transitionPose2d,
