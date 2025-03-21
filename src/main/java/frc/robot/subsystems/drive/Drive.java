@@ -67,7 +67,8 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged m_gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] m_modules = new Module[4]; // FL, FR, BL, BR
   private final HeimdallPoseController m_poseController;
-  private final SysIdRoutine m_sysId;
+  private final SysIdRoutine m_driveSysId;
+  private final SysIdRoutine m_turnSysId;
   private final Alert m_gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
   private final Consumer<Pose2d> m_resetSimulationPoseCallBack;
@@ -137,7 +138,7 @@ public class Drive extends SubsystemBase {
         new SwerveSetpoint(getChassisSpeeds(), getModuleStates(), DriveFeedforwards.zeros(4));
 
     // Configure SysId
-    m_sysId =
+    m_driveSysId =
         new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,
@@ -146,6 +147,15 @@ public class Drive extends SubsystemBase {
                 (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+    m_turnSysId =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> Logger.recordOutput("Drive/TurnSysIdState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runTurnCharacterization(voltage.in(Volts)), null, this));
 
     // Reset gyro
     resetGyro();
@@ -258,6 +268,12 @@ public class Drive extends SubsystemBase {
     }
   }
 
+  public void runTurnCharacterization(double output) {
+    for (int i = 0; i < 4; i++) {
+      m_modules[i].runTurnCharacterization(output);
+    }
+  }
+
   /** Spins the modules in place with the specified output */
   public void runTurnOpenLoop(double output) {
     for (int i = 0; i < 4; i++) {
@@ -287,12 +303,28 @@ public class Drive extends SubsystemBase {
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return run(() -> runCharacterization(0.0))
         .withTimeout(1.0)
-        .andThen(m_sysId.quasistatic(direction));
+        .andThen(m_driveSysId.quasistatic(direction));
   }
 
   /** Returns a command to run a dynamic test in the specified direction. */
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(m_sysId.dynamic(direction));
+    return run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_driveSysId.dynamic(direction));
+  }
+
+  /** Returns a command to run a quasistatic test in the specified direction on the turn motor. */
+  public Command turnSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return run(() -> runTurnCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_turnSysId.quasistatic(direction));
+  }
+
+  /** Returns a command to run a dynamic test in the specified direction on the turn motor. */
+  public Command turnSysIdDynamic(SysIdRoutine.Direction direction) {
+    return run(() -> runTurnCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(m_turnSysId.dynamic(direction));
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */

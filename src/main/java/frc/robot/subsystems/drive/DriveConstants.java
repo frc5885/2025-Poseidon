@@ -96,12 +96,9 @@ public class DriveConstants {
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
   public static final double kDriveKd = 0.0;
-  //   public static final double kDriveKs = 0.039644;
-  //   public static final double kDriveKv = 0.13951;
-  //   public static final double kDriveKa = 0.0052922;
-  public static final double kDriveKs = 0.047123;
-  public static final double kDriveKv = 0.15668;
-  public static final double kDriveKa = 0.013224;
+  public static final double kDriveKs = 0.039644;
+  public static final double kDriveKv = 0.13951;
+  public static final double kDriveKa = 0.0052922;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
   public static final double kDriveSimKs = 0.047123;
