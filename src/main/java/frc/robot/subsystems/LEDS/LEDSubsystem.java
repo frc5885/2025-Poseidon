@@ -28,7 +28,7 @@ public class LEDSubsystem {
   private final AddressableLEDBuffer m_buffer;
   private LEDStates states;
   private final AddressableLEDBufferView m_view;
-  private static final int kLength = 33;
+  private static final int kLength = 33 + 46; // 33 for poseidon and 46 for square
   private static final int kLEDPort = 0;
   private static double autoStartTime = 0;
 
