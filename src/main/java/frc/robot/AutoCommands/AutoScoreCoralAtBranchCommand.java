@@ -10,9 +10,9 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveToPoseCommand;
-import frc.robot.commands.ScoreCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
@@ -29,6 +29,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
   private Pose2d transitionPose2d;
   private ReefLevel reefLevel;
   private SuperStructureState superStructureState;
+  private SuperStructureState scoredState;
 
   /**
    * A command that scores a coral at a branch. Moves to the correct branch, moves the
@@ -37,6 +38,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
   public AutoScoreCoralAtBranchCommand(
       Drive drive,
       SuperStructure superStructure,
+      Feeder feeder,
       EndEffector endEffector,
       Supplier<Pose3d> targetPose) {
 
@@ -49,7 +51,16 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                     case L1 -> SuperStructureState.SCORE_CORAL_L1;
                     case L2 -> SuperStructureState.SCORE_CORAL_L2;
                     case L3 -> SuperStructureState.SCORE_CORAL_L3;
+                    case L4 -> SuperStructureState.SCORE_CORAL_L4;
                     default -> SuperStructureState.SCORE_CORAL_L4;
+                  };
+              scoredState =
+                  switch (reefLevel) {
+                    case L1 -> SuperStructureState.IDLE;
+                    case L2 -> SuperStructureState.SCORED_CORAL_L2;
+                    case L3 -> SuperStructureState.SCORED_CORAL_L3;
+                    case L4 -> SuperStructureState.SCORED_CORAL_L4;
+                    default -> SuperStructureState.IDLE;
                   };
               transitionPose2d =
                   targetPose
@@ -59,7 +70,8 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
               LEDSubsystem.getInstance().setStates(LEDStates.SCORING_LINE_UP);
             }),
         new ParallelCommandGroup(
-            new SuperStructureCommand(superStructure, () -> superStructureState),
+            new SuperStructureCommand(superStructure, () -> superStructureState)
+                .onlyWhile(feeder::getIsHandoffReady),
             new DriveToPoseCommand(
                     drive,
                     () -> transitionPose2d,
@@ -69,6 +81,6 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                 .unless(() -> DriverStation.isTest())),
         DriveCommands.preciseChassisAlign(drive, () -> targetPose.get().toPose2d())
             .unless(() -> DriverStation.isTest()),
-        new ScoreCoralCommand(endEffector));
+        new SuperStructureCommand(superStructure, () -> scoredState));
   }
 }

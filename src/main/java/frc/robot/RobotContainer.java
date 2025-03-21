@@ -16,23 +16,33 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.TestAuto;
+import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.io.operatorPanel.OperatorPanel;
+import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.EndEffector.EndEffectorIO;
+import frc.robot.subsystems.EndEffector.EndEffectorIOSim;
+import frc.robot.subsystems.EndEffector.EndEffectorIOSpark;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.Feeder.FeederConstants;
 import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
@@ -86,7 +96,7 @@ public class RobotContainer {
   private final HeimdallPoseController m_poseController;
   private final SuperStructure m_superStructure;
   //   private final Collector m_collector;
-  //   private final EndEffector m_endEffector;
+  private final EndEffector m_endEffector;
   private final Feeder m_feeder;
 
   // SIM
@@ -95,6 +105,7 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
   private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
+  private final Trigger m_coralHandoffTrigger;
   /** leftTrigger and button 1 false */
   private final Trigger m_algaeProcessorTrigger;
   /** leftTrigger and button 1 true */
@@ -171,12 +182,7 @@ public class RobotContainer {
         //         new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         m_feeder =
             new Feeder(new FeederIOSpark(), new BeamBreakIOReal(FeederConstants.kBeamBreakId));
-        // m_endEffector =
-        //     new EndEffector(
-        //         new AlgaeClawIOSpark(),
-        //         new CoralEjectorIOSpark(),
-        //         new BeamBreakIOReal(AlgaeClawConstants.kBeamBreakId),
-        //         new BeamBreakIOReal(CoralEjectorConstants.kBeamBreakId));
+        m_endEffector = new EndEffector(new EndEffectorIOSpark());
 
         break;
 
@@ -218,12 +224,7 @@ public class RobotContainer {
         //     new Collector(
         //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
         m_feeder = new Feeder(new FeederIOSim(), new BeamBreakIOSim());
-        // m_endEffector =
-        //     new EndEffector(
-        //         new AlgaeClawIOSim(),
-        //         new CoralEjectorIOSim(),
-        //         new BeamBreakIOSim(),
-        //         new BeamBreakIOSim());
+        m_endEffector = new EndEffector(new EndEffectorIOSim());
         break;
 
       default:
@@ -241,15 +242,11 @@ public class RobotContainer {
         m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
         // m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
         m_feeder = new Feeder(new FeederIO() {}, new BeamBreakIO() {});
-        // m_endEffector =
-        //     new EndEffector(
-        //         new AlgaeClawIO() {},
-        //         new CoralEjectorIO() {},
-        //         new BeamBreakIO() {},
-        //         new BeamBreakIO() {});
+        m_endEffector = new EndEffector(new EndEffectorIO() {});
         break;
     }
 
+    m_coralHandoffTrigger = new Trigger(m_feeder::getIsHandoffReady);
     // m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
 
     // Set up auto routines
@@ -344,6 +341,10 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
+    // feeder default command runs it constantly
+    m_feeder.setDefaultCommand(
+        new InstantCommand(() -> m_feeder.setFeederState(FeederState.FEEDING), m_feeder));
+
     // Disable PIDs on switch flip
     m_disableBrakeModeTrigger
         .onTrue(
@@ -381,19 +382,28 @@ public class RobotContainer {
     //             () -> m_superStructure.runArmOpenLoop(0.0),
     //             m_superStructure));
 
+    m_driverController
+        .x()
+        .onTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L2));
+    m_driverController
+        .y()
+        .onTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L3));
+
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
     // ============================================================================
 
-    // INTAKE CORAL
-    m_driverController
-        .rightBumper()
-        .debounce(0.1)
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_feeder.setFeederState(FeederState.FEEDING),
-                () -> m_feeder.setFeederState(FeederState.IDLE),
-                m_feeder));
+    // INTAKE CORAL AUTOMATICALLY
+    m_coralHandoffTrigger.onTrue(
+        new WaitUntilCommand(
+                () -> m_superStructure.getSuperStructureGoal() == SuperStructureState.IDLE)
+            .andThen(
+                new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+                    .andThen(
+                        new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE))
+                    .andThen(() -> m_feeder.handoffComplete())));
 
     // EJECT GAME PIECE
     // m_driverController
@@ -413,22 +423,24 @@ public class RobotContainer {
     //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // INTAKE ALGAE REEF
-    // m_algaeReefTrigger
-    //     .whileTrue(
-    //         new AutoIntakeAlgaeReefCommand(
-    //             m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
-    //     .onFalse(
-    //         new SequentialCommandGroup(
-    //             new InstantCommand(
-    //                 () ->
-    // LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
-    //             new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-    //                 .deadlineFor(
-    //                     new RunCommand(() -> m_drive.runVelocity(new ChassisSpeeds(-1, 0, 0))))
-    //                 .unless(() -> DriverStation.isTest()),
-    //             new SuperStructureCommand(m_superStructure, () ->
-    // SuperStructureState.INTAKE_CORAL),
-    //             new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
+    m_algaeReefTrigger
+        .whileTrue(
+            new AutoIntakeAlgaeReefCommand(
+                m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
+        .onFalse(
+            new SequentialCommandGroup(
+                new InstantCommand(
+                    () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
+                new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
+                    .deadlineFor(
+                        new RunCommand(
+                                () -> m_drive.runVelocity(new ChassisSpeeds(-1.0, 0.0, 0.0)),
+                                m_drive)
+                            .unless(() -> DriverStation.isTest()),
+                        new SuperStructureCommand(
+                            m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
+                        new InstantCommand(
+                            () -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)))));
 
     // INTAKE ALGAE FLOOR
     // m_algaeFloorTrigger

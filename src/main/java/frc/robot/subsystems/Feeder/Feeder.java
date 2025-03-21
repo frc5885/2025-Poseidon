@@ -6,7 +6,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
 import frc.robot.subsystems.Feeder.FeederConstants.*;
-import java.util.Arrays;
 import org.littletonrobotics.junction.Logger;
 
 public class Feeder extends SubsystemBase {
@@ -18,6 +17,8 @@ public class Feeder extends SubsystemBase {
   private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
 
   private FeederState m_state = FeederState.IDLE;
+
+  private boolean m_isHandOffReady = false;
 
   public Feeder(FeederIO io, BeamBreakIO beamBreakIO) {
     m_feederIO = io;
@@ -52,6 +53,7 @@ public class Feeder extends SubsystemBase {
         runFeeder(2.0);
         if (!isBeamBreakTriggered()) {
           m_state = FeederState.IDLE;
+          m_isHandOffReady = true;
         }
         break;
     }
@@ -73,13 +75,17 @@ public class Feeder extends SubsystemBase {
     m_feederIO.setVoltage(0.0);
   }
 
-  public boolean isCurrentOverThreshold() {
-    return Arrays.stream(m_inputs.currentAmps).average().getAsDouble()
-        > FeederConstants.kFeederCurrentThreshold;
+  public boolean getIsHandoffReady() {
+    return m_isHandOffReady;
   }
 
+  public void handoffComplete() {
+    m_isHandOffReady = false;
+  }
+
+  /** */
   public void setFeederState(FeederState state) {
-    if (m_state == FeederState.FEEDING_SLOW) return;
+    if (m_state == FeederState.FEEDING_SLOW || m_isHandOffReady) return;
 
     m_state = state;
   }

@@ -5,12 +5,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
-import frc.robot.Constants.Mode;
-import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.EndEffector.EndEffector;
-import frc.robot.subsystems.LEDS.LEDSubsystem;
-import frc.robot.util.GamePieces.GamePieceVisualizer;
 
 public class ScoreAlgaeCommand extends Command {
   private EndEffector m_endEffector;
@@ -22,37 +17,20 @@ public class ScoreAlgaeCommand extends Command {
   }
 
   @Override
-  public void initialize() {
-    // Simulate an algae being scored
-    if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
-      ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).simulateGamePieceOuttake(0.5);
-    }
-    LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.SCORED);
-  }
+  public void initialize() {}
 
   @Override
   public void execute() {
-    m_endEffector.runAlgaeClaw(-12.0);
+    m_endEffector.runEndEffector(-12.0);
   }
 
   @Override
   public void end(boolean interrupted) {
-    m_endEffector.stopAlgaeClaw();
-
-    // Don't simulate a successful outtake if the command was interrupted
-    if (interrupted) {
-      if (m_endEffector.getAlgaeBeamBreakIO() instanceof BeamBreakIOSim) {
-        ((BeamBreakIOSim) m_endEffector.getAlgaeBeamBreakIO()).cancelSimulatedGamePieceChange();
-      }
-    } else {
-      if (Constants.kCurrentMode != Mode.REAL) {
-        GamePieceVisualizer.setHasAlgae(false);
-      }
-    }
+    m_endEffector.stopEndEffector();
   }
 
   @Override
   public boolean isFinished() {
-    return !m_endEffector.isAlgaeHeld();
+    return false;
   }
 }
