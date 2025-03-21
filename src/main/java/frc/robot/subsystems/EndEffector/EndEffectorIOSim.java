@@ -22,7 +22,7 @@ public class EndEffectorIOSim implements EndEffectorIO {
     inputs.appliedVolts = m_appliedVolts;
     inputs.currentAmps = m_EndEffectorFlywheelSim.getCurrentDrawAmps();
     inputs.velocityRPM = m_EndEffectorFlywheelSim.getAngularVelocityRPM();
-    inputs.EndEffectorConnected = true;
+    inputs.endEffectorConnected = true;
   }
 
   public void setVoltage(double volts) {

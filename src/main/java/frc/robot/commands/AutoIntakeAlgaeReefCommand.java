@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
@@ -20,6 +21,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -66,9 +68,14 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
                     DriveConstants.kRotationTolerance,
                     true)
                 .unless(() -> DriverStation.isTest())),
-        DriveCommands.preciseChassisAlign(drive, () -> AllianceFlipUtil.apply(targetPose))
-            .unless(() -> DriverStation.isTest()),
-        new IntakeAlgaeCommand(endEffector));
+        new ParallelDeadlineGroup(
+            DriveCommands.preciseChassisAlign(drive, () -> AllianceFlipUtil.apply(targetPose))
+                .unless(() -> DriverStation.isTest()),
+            new IntakeAlgaeCommand(endEffector)),
+        new InstantCommand(
+            () -> {
+              GamePieceVisualizer.setHasAlgae(true);
+            }));
   }
 
   private SuperStructureState calculateState(Pose2d pose) {

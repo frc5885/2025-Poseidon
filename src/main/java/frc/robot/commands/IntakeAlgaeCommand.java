@@ -30,7 +30,8 @@ public class IntakeAlgaeCommand extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    m_endEffector.stopEndEffector();
+    m_endEffector.holdAlgae();
+    // m_endEffector.stopEndEffector();
   }
 
   @Override

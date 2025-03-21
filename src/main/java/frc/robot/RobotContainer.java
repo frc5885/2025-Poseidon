@@ -16,15 +16,12 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -33,8 +30,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ResetSuperStructureCommand;
+import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
-import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -395,7 +393,7 @@ public class RobotContainer {
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
     // ============================================================================
 
-    // INTAKE CORAL AUTOMATICALLY
+    // INTAKE/HANDOFF CORAL AUTOMATICALLY
     m_coralHandoffTrigger.onTrue(
         new WaitUntilCommand(
                 () -> m_superStructure.getSuperStructureGoal() == SuperStructureState.IDLE)
@@ -431,16 +429,8 @@ public class RobotContainer {
             new SequentialCommandGroup(
                 new InstantCommand(
                     () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
-                new WaitUntilFarFromCommand(m_drive::getPose, 0.5)
-                    .deadlineFor(
-                        new RunCommand(
-                                () -> m_drive.runVelocity(new ChassisSpeeds(-1.0, 0.0, 0.0)),
-                                m_drive)
-                            .unless(() -> DriverStation.isTest()),
-                        new SuperStructureCommand(
-                            m_superStructure, () -> SuperStructureState.INTAKE_CORAL),
-                        new InstantCommand(
-                            () -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)))));
+                new ResetSuperStructureCommand(m_drive, m_superStructure, true),
+                new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
 
     // INTAKE ALGAE FLOOR
     // m_algaeFloorTrigger
@@ -458,11 +448,9 @@ public class RobotContainer {
     //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
 
     // SCORE ALGAE NET
-    // m_algaeNetTrigger
-    //     .whileTrue(
-    //         new ScoreAlgaeNet(m_drive, m_superStructure, m_endEffector)
-    //             .unless(() -> !m_endEffector.isAlgaeHeld()))
-    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+    m_algaeNetTrigger
+        .whileTrue(new ScoreAlgaeNetCommand(m_drive, m_superStructure, m_endEffector))
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // MANUAL TROUGH SUPERSTRUCTURE
     // m_manualTroughSuperStructureTrigger
