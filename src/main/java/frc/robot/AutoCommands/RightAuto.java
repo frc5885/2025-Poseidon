@@ -10,16 +10,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.commands.CoralHandoffCommand;
+import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ResetSuperStructureCommand;
-import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.commands.SuperStructureCommand;
+import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +38,7 @@ public class RightAuto extends SequentialCommandGroup {
   // Branches to score coral at
   private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 10, 11, 0));
 
-  public RightAuto(
-      Drive drive, SuperStructure superStructure, EndEffector endEffector, Vision vision) {
+  public RightAuto(Drive drive, SuperStructure superStructure, Feeder feeder) {
 
     // Setup command for simulation and alliance flipping
     addCommands(
@@ -45,31 +49,97 @@ public class RightAuto extends SequentialCommandGroup {
                 drive.setPose(AllianceFlipUtil.apply(initialPose));
               }
             }));
+
+    // first branch
+    int firstBranchNum = branches.get(0);
+    // drive to pose and move superstructure to scoring, and then score the coral
+    addCommands(
+        new ParallelCommandGroup(
+                DriveCommands.pathfindThenPreciseAlign(
+                    drive,
+                    () ->
+                        FieldConstants.Reef.branchPositions
+                            .get(firstBranchNum)
+                            .get(ReefLevel.L4)
+                            .toPose2d()),
+                new SuperStructureCommand(
+                    superStructure, () -> getScoringSuperStructureState(ReefLevel.L4)))
+            .andThen(
+                new SuperStructureCommand(
+                    superStructure, () -> getScoredSuperStructureState(ReefLevel.L4)))
+            .andThen(() -> GamePieceVisualizer.setHasCoral(false)));
+
     branches.stream()
+        // skip the first branch because we already created a command for it above
+        .skip(1)
         .forEach(
             branchNum -> {
-              boolean isLastBranch = branchNum == branches.get(branches.size() - 1);
 
               // actual command ===========================================
+              // reset superstructure, wait for handoff ready, do handoff, and move to
+              // superstructure scoring position
+              Command ssCmd =
+                  new ResetSuperStructureCommand(drive, superStructure, false)
+                      .andThen(
+                          new WaitUntilCommand(() -> feeder.getIsHandoffReady())
+                              .andThen(new CoralHandoffCommand(superStructure, feeder))
+                              .andThen(
+                                  new SuperStructureCommand(
+                                      superStructure,
+                                      () -> getScoringSuperStructureState(ReefLevel.L4))));
+
+              // along with drive to intake and then drive to reef
+              Command chassisCmd =
+                  drive
+                      .getDriveToPoseCommand(() -> intakePose, false)
+                      .andThen(
+                          DriveCommands.pathfindThenPreciseAlign(
+                              drive,
+                              () ->
+                                  FieldConstants.Reef.branchPositions
+                                      .get(branchNum)
+                                      .get(ReefLevel.L4)
+                                      .toPose2d()));
+
               // Score coral
-              Command scoreCommand =
-                  new AutoScoreCoralAtBranchCommand(
-                      drive,
-                      superStructure,
-                      endEffector,
-                      () -> FieldConstants.Reef.branchPositions.get(branchNum).get(ReefLevel.L4));
+              Command scoreCmd =
+                  new SuperStructureCommand(
+                          superStructure, () -> getScoredSuperStructureState(ReefLevel.L4))
+                      .andThen(() -> GamePieceVisualizer.setHasCoral(false));
 
-              // Go to intake position
-              Command intakeCommand =
-                  new ParallelCommandGroup(
-                      new ResetSuperStructureCommand(drive, superStructure, false),
-                      drive.getDriveToPoseCommand(() -> intakePose, false));
+              // combination of ss and chassis in parallel, then score
+              addCommands(ssCmd.alongWith(chassisCmd), scoreCmd);
               // end of actual command ===========================================
-
-              addCommands(scoreCommand);
-              if (!isLastBranch) {
-                addCommands(intakeCommand);
-              }
             });
+  }
+
+  private SuperStructureState getScoringSuperStructureState(ReefLevel reefLevel) {
+    switch (reefLevel) {
+      case L1:
+        return SuperStructureState.SCORE_CORAL_L1;
+      case L2:
+        return SuperStructureState.SCORE_CORAL_L2;
+      case L3:
+        return SuperStructureState.SCORE_CORAL_L3;
+      case L4:
+        return SuperStructureState.SCORE_CORAL_L4;
+      default:
+        return SuperStructureState.SCORE_CORAL_L4;
+    }
+  }
+
+  private SuperStructureState getScoredSuperStructureState(ReefLevel reefLevel) {
+    switch (reefLevel) {
+      case L1:
+        return SuperStructureState.IDLE;
+      case L2:
+        return SuperStructureState.SCORED_CORAL_L2;
+      case L3:
+        return SuperStructureState.SCORED_CORAL_L3;
+      case L4:
+        return SuperStructureState.SCORED_CORAL_L4;
+      default:
+        return SuperStructureState.SCORED_CORAL_L4;
+    }
   }
 }

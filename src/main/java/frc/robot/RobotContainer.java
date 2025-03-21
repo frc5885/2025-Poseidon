@@ -242,7 +242,7 @@ public class RobotContainer {
     m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
     m_autoChooser.addDefaultOption(
-        "4_coral_auto", new RightAuto(m_drive, m_superStructure, m_endEffector, m_vision));
+        "4_coral_auto", new RightAuto(m_drive, m_superStructure, m_feeder));
 
     // Set up SysId routines
     m_autoChooser.addOption(
