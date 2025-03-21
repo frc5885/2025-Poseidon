@@ -20,6 +20,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.function.Supplier;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
@@ -81,6 +82,10 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                 .unless(() -> DriverStation.isTest())),
         DriveCommands.preciseChassisAlign(drive, () -> targetPose.get().toPose2d())
             .unless(() -> DriverStation.isTest()),
-        new SuperStructureCommand(superStructure, () -> scoredState));
+        new SuperStructureCommand(superStructure, () -> scoredState),
+        new InstantCommand(
+            () -> {
+              GamePieceVisualizer.setHasCoral(false);
+            }));
   }
 }

@@ -94,7 +94,6 @@ public class RobotContainer {
   private final Vision m_vision;
   private final HeimdallPoseController m_poseController;
   private final SuperStructure m_superStructure;
-  //   private final Collector m_collector;
   private final EndEffector m_endEffector;
   private final Feeder m_feeder;
 
@@ -104,7 +103,6 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController m_driverController = new CommandXboxController(0);
   private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
-  private final Trigger m_coralHandoffTrigger;
   /** leftTrigger and button 1 false */
   private final Trigger m_algaeProcessorTrigger;
   /** leftTrigger and button 1 true */
@@ -236,7 +234,6 @@ public class RobotContainer {
         break;
     }
 
-    m_coralHandoffTrigger = new Trigger(m_feeder::getIsHandoffReady);
     // m_drive.setAdjustmentFactor(m_superStructure.getAdjustmentCoefficient());
 
     // Set up auto routines
@@ -386,14 +383,18 @@ public class RobotContainer {
     // ============================================================================
 
     // INTAKE/HANDOFF CORAL AUTOMATICALLY
-    m_coralHandoffTrigger.onTrue(
-        new WaitUntilCommand(
-                () -> m_superStructure.getSuperStructureGoal() == SuperStructureState.IDLE)
-            .andThen(
-                new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-                    .andThen(
-                        new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE))
-                    .andThen(() -> m_feeder.handoffComplete())));
+    m_feeder
+        .getHandoffTrigger()
+        .onTrue(
+            new WaitUntilCommand(
+                    () -> m_superStructure.getSuperStructureGoal() == SuperStructureState.IDLE)
+                .andThen(
+                    new SuperStructureCommand(
+                            m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
+                        .andThen(
+                            new SuperStructureCommand(
+                                m_superStructure, () -> SuperStructureState.IDLE))
+                        .andThen(() -> m_feeder.handoffComplete())));
 
     // EJECT GAME PIECE
     // m_driverController
@@ -470,6 +471,11 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return m_autoChooser.get();
+  }
+
+  public Feeder getFeeder() {
+    // so robot.java can trigger handoff in simulation
+    return m_feeder;
   }
 
   public void resetSimulationField() {

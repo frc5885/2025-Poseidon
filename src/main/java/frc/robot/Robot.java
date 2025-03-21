@@ -176,5 +176,8 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {
     m_robotContainer.updateSimulation();
+    if (GamePieceVisualizer.isNearLoadingStation()) {
+      m_robotContainer.getFeeder().setHandoffReady();
+    }
   }
 }

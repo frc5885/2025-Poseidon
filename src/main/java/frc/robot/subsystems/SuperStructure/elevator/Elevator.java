@@ -47,8 +47,11 @@ public class Elevator {
 
   private boolean m_isSetpointAchievedInvalid = false;
 
+  // private TrapezoidProfile.State m_goalState =
+  //     new TrapezoidProfile.State(kElevatorStartingPositionMeters, 0.0);
+  // experimental, set the goal state to IDLE, which is up a bit from starting position
   private TrapezoidProfile.State m_goalState =
-      new TrapezoidProfile.State(kElevatorStartingPositionMeters, 0.0);
+      new TrapezoidProfile.State(ElevatorLevel.IDLE.setpointMeters.getAsDouble(), 0.0);
   private TrapezoidProfile.State m_prevSetpoint = m_goalState;
   private boolean m_runClosedLoop = true;
 

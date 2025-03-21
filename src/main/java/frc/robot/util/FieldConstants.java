@@ -236,6 +236,13 @@ public class FieldConstants {
   public static final int aprilTagCount = 22;
   public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
 
+  public static Pose2d[] HumanPlayerStations = {
+    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(1).get().toPose2d(),
+    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(2).get().toPose2d(),
+    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().toPose2d(),
+    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(13).get().toPose2d()
+  };
+
   @Getter
   public enum AprilTagLayoutType {
     OFFICIAL("2025-official"),

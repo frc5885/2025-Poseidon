@@ -288,6 +288,6 @@ public class SuperStructure extends SubsystemBase {
         m_armRootTranslation.getY()
             + m_elevator.getPositionMeters()
             + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
-        new Rotation3d());
+        new Rotation3d(0, -m_arm.getPositionRads(), 0));
   }
 }
