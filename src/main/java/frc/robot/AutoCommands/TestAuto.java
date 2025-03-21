@@ -8,10 +8,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants.Reef;
 import frc.robot.util.FieldConstants.ReefLevel;
 
@@ -24,6 +27,12 @@ public class TestAuto extends SequentialCommandGroup {
   public TestAuto(Drive drive, Feeder feeder) {
 
     addCommands(
+        new InstantCommand(
+            () -> {
+              if (Constants.kCurrentMode == Mode.SIM) {
+                drive.setPose(AllianceFlipUtil.apply(drive.getPose()));
+              }
+            }),
         DriveCommands.pathfindThenPreciseAlign(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),

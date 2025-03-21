@@ -17,10 +17,7 @@ import static frc.robot.subsystems.drive.DriveConstants.kMaxAccelerationMetersPe
 import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
 import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
 import static frc.robot.subsystems.drive.DriveConstants.kMaxSpeedMetersPerSec;
-import static frc.robot.subsystems.drive.DriveConstants.kPathConstraintsFast;
 
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -35,6 +32,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -45,6 +43,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -288,18 +287,7 @@ public class DriveCommands {
    * @param targetPose Target pose
    */
   public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
-    double kTransitionDistance = 0.6; // Meters
-    return drive.getPathFindFollowCommand(
-        () ->
-            new PathPlannerPath(
-                PathPlannerPath.waypointsFromPoses(
-                    targetPose
-                        .get()
-                        .transformBy(new Transform2d(-kTransitionDistance, 0.0, Rotation2d.kZero)),
-                    targetPose.get()),
-                kPathConstraintsFast,
-                null,
-                new GoalEndState(0.0, Rotation2d.kZero)));
+    return new DeferredCommand(() -> drive.getPathFollowCommand(targetPose), Set.of(drive));
   }
 
   /**
