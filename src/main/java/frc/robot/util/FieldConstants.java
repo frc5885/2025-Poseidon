@@ -210,10 +210,11 @@ public class FieldConstants {
 
   @RequiredArgsConstructor
   public enum ReefLevel {
+    // height, pitch, offset
     L1(Units.inchesToMeters(25.0), 0, -0.6),
     L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
-    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
-    L4(Units.inchesToMeters(72), -90, -0.6);
+    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.75),
+    L4(Units.inchesToMeters(72), -90, -0.75);
 
     public static ReefLevel fromLevel(int level) {
       return Arrays.stream(values())

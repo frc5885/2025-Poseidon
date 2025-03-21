@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.DriveCommands;
@@ -173,11 +174,6 @@ public class RobotContainer {
                     VisionConstants.kRobotToCamera1,
                     CameraType.APRILTAG));
         m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIO() {});
-        // m_collector =
-        //     new Collector(
-        //         new IntakeIOSpark(),
-        //         new FeederIOSpark(),
-        //         new BeamBreakIOReal(IntakeConstants.kBeamBreakId));
         m_feeder =
             new Feeder(new FeederIOSpark(), new BeamBreakIOReal(FeederConstants.kBeamBreakId));
         m_endEffector = new EndEffector(new EndEffectorIOSpark());
@@ -218,9 +214,6 @@ public class RobotContainer {
         // the sim lags really badly if you use auto switch
         m_poseController.setMode(HeimdallOdometrySource.AUTO_SWITCH);
         m_superStructure = new SuperStructure(new ElevatorIOSim(), new ArmIOSim());
-        // m_collector =
-        //     new Collector(
-        //         new IntakeIOSim(m_driveSimulation), new FeederIOSim(), new BeamBreakIOSim());
         m_feeder = new Feeder(new FeederIOSim(), new BeamBreakIOSim());
         m_endEffector = new EndEffector(new EndEffectorIOSim());
         break;
@@ -238,7 +231,6 @@ public class RobotContainer {
                 (pose) -> {});
         m_vision = new Vision(m_drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         m_superStructure = new SuperStructure(new ElevatorIO() {}, new ArmIO() {});
-        // m_collector = new Collector(new IntakeIO() {}, new FeederIO() {}, new BeamBreakIO() {});
         m_feeder = new Feeder(new FeederIO() {}, new BeamBreakIO() {});
         m_endEffector = new EndEffector(new EndEffectorIO() {});
         break;
@@ -413,12 +405,11 @@ public class RobotContainer {
     // m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
 
     // // SCORE CORAL
-    // m_automaticCoralScoreTrigger
-    //     .whileTrue(
-    //         new AutoScoreCoralAtBranchCommand(
-    //                 m_drive, m_superStructure, m_endEffector, m_operatorPanel::getTargetPose)
-    //             .unless(() -> !m_endEffector.isCoralHeld()))
-    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+    m_automaticCoralScoreTrigger
+        .whileTrue(
+            new AutoScoreCoralAtBranchCommand(
+                m_drive, m_superStructure, m_feeder, m_endEffector, m_operatorPanel::getTargetPose))
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF
     m_algaeReefTrigger

@@ -10,7 +10,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.EndEffector.EndEffectorIO.EndEffectorIOInputs;
 import java.util.function.DoubleSupplier;
 
 public class EndEffectorIOSpark implements EndEffectorIO {
