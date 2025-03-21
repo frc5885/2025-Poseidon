@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -328,6 +329,16 @@ public class Drive extends SubsystemBase {
     return doNotFlip
         ? AutoBuilder.pathfindToPose(pose.get(), kPathConstraintsFast)
         : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
+  }
+
+  /**
+   * Build a command to pathfind to a given path, then follow that path.
+   *
+   * @param goalPath The path to pathfind to, then follow
+   * @return A command to pathfind to a given path, then follow the path
+   */
+  public Command getPathFindFollowCommand(Supplier<PathPlannerPath> goalPath) {
+    return AutoBuilder.pathfindThenFollowPath(goalPath.get(), kPathConstraintsFast);
   }
 
   /** Returns the position of each module in radians. */

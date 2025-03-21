@@ -17,7 +17,10 @@ import static frc.robot.subsystems.drive.DriveConstants.kMaxAccelerationMetersPe
 import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
 import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
 import static frc.robot.subsystems.drive.DriveConstants.kMaxSpeedMetersPerSec;
+import static frc.robot.subsystems.drive.DriveConstants.kPathConstraintsFast;
 
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -32,7 +35,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -285,18 +287,19 @@ public class DriveCommands {
    * @param drive Drive subsystem
    * @param targetPose Target pose
    */
-  public static SequentialCommandGroup pathfindThenPreciseAlign(
-      Drive drive, Supplier<Pose2d> targetPose) {
-    double kTransitionDistance = 2.0; // Meters
-    Pose2d transitionPose = targetPose.get().transformBy(new Transform2d(0, 0.0, new Rotation2d()));
-    return new SequentialCommandGroup(
-        drive
-            .getDriveToPoseCommand(() -> transitionPose, false)
-            .until(
-                () ->
-                    drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                        < kTransitionDistance),
-        preciseChassisAlign(drive, targetPose));
+  public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
+    double kTransitionDistance = 0.6; // Meters
+    return drive.getPathFindFollowCommand(
+        () ->
+            new PathPlannerPath(
+                PathPlannerPath.waypointsFromPoses(
+                    targetPose
+                        .get()
+                        .transformBy(new Transform2d(-kTransitionDistance, 0.0, Rotation2d.kZero)),
+                    targetPose.get()),
+                kPathConstraintsFast,
+                null,
+                new GoalEndState(0.0, Rotation2d.kZero)));
   }
 
   /**
