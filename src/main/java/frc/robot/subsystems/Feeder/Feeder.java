@@ -52,13 +52,13 @@ public class Feeder extends SubsystemBase {
         stop();
         break;
       case FEEDING:
-        runFeeder(6.0);
+        runFeeder(8.0);
         if (isBeamBreakTriggered()) {
           forceSetFeederState(FeederState.FEEDING_SLOW);
         }
         break;
       case FEEDING_SLOW:
-        runFeeder(2.0);
+        runFeeder(6.0);
         if (!isBeamBreakTriggered()) {
           forceSetFeederState(FeederState.IDLE);
           m_isHandOffReady = true;

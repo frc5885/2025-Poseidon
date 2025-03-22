@@ -52,7 +52,8 @@ public class Elevator {
   // experimental, set the goal state to IDLE, which is up a bit from starting position
   private TrapezoidProfile.State m_goalState =
       new TrapezoidProfile.State(ElevatorLevel.IDLE.setpointMeters.getAsDouble(), 0.0);
-  private TrapezoidProfile.State m_prevSetpoint = m_goalState;
+  private TrapezoidProfile.State m_prevSetpoint =
+      new TrapezoidProfile.State(kElevatorStartingPositionMeters, 0.0);
   private boolean m_runClosedLoop = true;
 
   public Elevator(ElevatorIO io) {
@@ -62,7 +63,7 @@ public class Elevator {
     m_plant = LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
+            m_plant, VecBuilder.fill(0.01, 0.1), VecBuilder.fill(12.0), 0.02);
     if (Constants.kCurrentMode == Mode.REAL) {
       m_regulator.latencyCompensate(m_plant, 0.02, kElevatorLatencyCompensationMs);
     }

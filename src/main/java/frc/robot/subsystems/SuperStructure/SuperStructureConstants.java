@@ -8,9 +8,9 @@ import lombok.AllArgsConstructor;
 
 public class SuperStructureConstants {
   public static class ElevatorConstants {
-    public static final int kElevatorSparkId1 = 30;
-    public static final int kElevatorSparkId2 = 31;
-    public static final boolean kElevatorM1Inverted = false;
+    public static final int kElevatorSparkId1 = 31;
+    public static final int kElevatorSparkId2 = 30;
+    public static final boolean kElevatorM1Inverted = true;
     public static final boolean kElevatorM2Opposite = true;
     public static final int kElevatorMotorCurrentLimit = 30;
 
@@ -32,10 +32,10 @@ public class SuperStructureConstants {
     public static final double kElevatorEncoderVelocityFactor =
         kElevatorEncoderPositionFactor / 60.0;
 
-    public static final double kElevatorKs = 0.29236;
-    public static final double kElevatorKv = 10.292;
-    public static final double kElevatorKa = 0.68893;
-    public static final double kElevatorKg = 0.065582;
+    public static final double kElevatorKs = 0.38922;
+    public static final double kElevatorKv = 10.618;
+    public static final double kElevatorKa = 0.53166;
+    public static final double kElevatorKg = 0.5;
     public static final double kElevatorKp = 5.0;
     public static final double kElevatorKd = 0.0;
     public static final double kElevatorLatencyCompensationMs = 0.025;
@@ -74,10 +74,10 @@ public class SuperStructureConstants {
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = kArmEncoderPositionFactor / 60;
 
-    public static final double kArmKs = 0.2878; // sim
-    public static final double kArmKv = 1.424; // sim
-    public static final double kArmKa = 0.065781; // sim
-    public static final double kArmKg = 0.1708; // sim
+    public static final double kArmKs = 0.36788;
+    public static final double kArmKv = 1.2919;
+    public static final double kArmKa = 0.062877;
+    public static final double kArmKg = 0.25653;
     public static final double kArmKp = 5.0;
     public static final double kArmKd = 0.0;
     public static final double kArmLatencyCompensationMs = 0.025;

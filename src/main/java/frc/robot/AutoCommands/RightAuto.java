@@ -18,6 +18,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilCloseToCommand;
+import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
@@ -40,7 +41,8 @@ public class RightAuto extends SequentialCommandGroup {
   // Branches to score coral at
   private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 10, 11, 0));
 
-  public RightAuto(Drive drive, SuperStructure superStructure, Feeder feeder) {
+  public RightAuto(
+      Drive drive, SuperStructure superStructure, Feeder feeder, EndEffector endEffector) {
 
     // Setup command for simulation and alliance flipping
     addCommands(
@@ -84,7 +86,7 @@ public class RightAuto extends SequentialCommandGroup {
                   new ResetSuperStructureCommand(drive, superStructure, false)
                       .andThen(
                           new WaitUntilCommand(() -> feeder.getIsHandoffReady())
-                              .andThen(new CoralHandoffCommand(superStructure, feeder))
+                              .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
                               .andThen(
                                   new SuperStructureCommand(
                                       superStructure,
@@ -113,6 +115,8 @@ public class RightAuto extends SequentialCommandGroup {
               Command scoreCmd =
                   new SuperStructureCommand(
                           superStructure, () -> getScoredSuperStructureState(ReefLevel.L4))
+                      .alongWith(
+                          new InstantCommand(() -> endEffector.stopEndEffector(), endEffector))
                       .andThen(() -> GamePieceVisualizer.setHasCoral(false));
 
               // combination of ss and chassis in parallel, then score

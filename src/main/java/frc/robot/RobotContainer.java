@@ -240,7 +240,7 @@ public class RobotContainer {
     m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
     m_autoChooser.addDefaultOption(
-        "4_coral_auto", new RightAuto(m_drive, m_superStructure, m_feeder));
+        "4_coral_auto", new RightAuto(m_drive, m_superStructure, m_feeder, m_endEffector));
 
     // Set up SysId routines
     m_autoChooser.addOption(
@@ -382,7 +382,9 @@ public class RobotContainer {
         .rightBumper()
         .debounce(0.1)
         .onTrue(new InstantCommand(() -> m_feeder.setFeederState(FeederState.FEEDING), m_feeder));
-    m_feeder.getHandoffTrigger().onTrue(new CoralHandoffCommand(m_superStructure, m_feeder));
+    m_feeder
+        .getHandoffTrigger()
+        .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
 
     // EJECT GAME PIECE
     // m_driverController
