@@ -27,7 +27,7 @@ public class SuperStructureConstants {
     // In Meters/SecSq
     public static final double kElevatorMaxAcceleration = 5.0;
     // Motor Rotations -> Elevator Meters
-    public static final double kElevatorEncoderPositionFactor = 1.0 / 37.14;
+    public static final double kElevatorEncoderPositionFactor = 1.0 / 86.0;
     // Motor RPM -> Elevator Meters/Sec
     public static final double kElevatorEncoderVelocityFactor =
         kElevatorEncoderPositionFactor / 60.0;

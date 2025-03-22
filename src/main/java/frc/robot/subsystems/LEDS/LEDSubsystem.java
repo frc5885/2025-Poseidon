@@ -75,6 +75,10 @@ public class LEDSubsystem {
     }
   }
 
+  public LEDStates getStates() {
+    return states;
+  }
+
   public void setSquareStates(LEDStates newState) {
     squareStates = newState;
   }

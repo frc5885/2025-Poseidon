@@ -326,10 +326,6 @@ public class RobotContainer {
             () -> -m_driverController.getLeftX(),
             () -> -m_driverController.getRightX()));
 
-    // feeder default command runs it constantly
-    m_feeder.setDefaultCommand(
-        new InstantCommand(() -> m_feeder.setFeederState(FeederState.FEEDING), m_feeder));
-
     // Disable PIDs on switch flip
     m_disableBrakeModeTrigger
         .onTrue(
@@ -381,7 +377,11 @@ public class RobotContainer {
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
     // ============================================================================
 
-    // INTAKE/HANDOFF CORAL AUTOMATICALLY
+    // RUN FEEDER, THEN HANDOFF CORAL AUTOMATICALLY
+    m_driverController
+        .rightBumper()
+        .debounce(0.1)
+        .onTrue(new InstantCommand(() -> m_feeder.setFeederState(FeederState.FEEDING), m_feeder));
     m_feeder.getHandoffTrigger().onTrue(new CoralHandoffCommand(m_superStructure, m_feeder));
 
     // EJECT GAME PIECE

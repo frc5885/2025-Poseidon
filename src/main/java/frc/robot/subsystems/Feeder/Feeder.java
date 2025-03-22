@@ -10,6 +10,8 @@ import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
 import frc.robot.subsystems.Feeder.FeederConstants.*;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -52,13 +54,13 @@ public class Feeder extends SubsystemBase {
       case FEEDING:
         runFeeder(6.0);
         if (isBeamBreakTriggered()) {
-          m_state = FeederState.FEEDING_SLOW;
+          forceSetFeederState(FeederState.FEEDING_SLOW);
         }
         break;
       case FEEDING_SLOW:
         runFeeder(2.0);
         if (!isBeamBreakTriggered()) {
-          m_state = FeederState.IDLE;
+          forceSetFeederState(FeederState.IDLE);
           m_isHandOffReady = true;
         }
         break;
@@ -104,6 +106,7 @@ public class Feeder extends SubsystemBase {
   public void setHandoffReady() {
     if (!GamePieceVisualizer.hasCoral()) {
       m_isHandOffReady = true;
+      forceSetFeederState(FeederState.IDLE);
     }
   }
 
@@ -111,7 +114,22 @@ public class Feeder extends SubsystemBase {
   public void setFeederState(FeederState state) {
     if (m_state == FeederState.FEEDING_SLOW || m_isHandOffReady) return;
 
+    forceSetFeederState(state);
+  }
+
+  /** Set the feeder state without any conditions */
+  private void forceSetFeederState(FeederState state) {
     m_state = state;
+    switch (state) {
+      case IDLE:
+        LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
+        break;
+      case FEEDING:
+        LEDSubsystem.getInstance().setStates(LEDStates.INTAKE_RUNNING);
+        break;
+      default:
+        break;
+    }
   }
 
   @AutoLogOutput
