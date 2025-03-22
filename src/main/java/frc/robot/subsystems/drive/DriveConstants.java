@@ -96,14 +96,14 @@ public class DriveConstants {
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
   public static final double kDriveKd = 0.0;
-  public static final double kDriveKs = 0.039644;
-  public static final double kDriveKv = 0.13951;
-  public static final double kDriveKa = 0.0052922;
+  public static final double kDriveKs = 0.097343;
+  public static final double kDriveKv = 0.12619;
+  public static final double kDriveKa = 0.021454;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
-  public static final double kDriveSimKs = 0.047123;
-  public static final double kDriveSimKv = 0.15668;
-  public static final double kDriveSimKa = 0.013224;
+  public static final double kDriveSimKs = 0.01548;
+  public static final double kDriveSimKv = 0.16439;
+  public static final double kDriveSimKa = 0.020314;
 
   // Turn PID configuration
   public static final double kTurnKp = 5.5;
@@ -138,8 +138,8 @@ public class DriveConstants {
   public static final double kMaxModuleRotationAccelerationRadiansPerSecSq = 160.0;
 
   // PathPlanner configuration
-  public static final double kRobotMassKg = 36; // TODO: measure
-  public static final double kRobotMOI = 3.0; // can be calculated from sysID, check PP docs
+  public static final double kRobotMassKg = Units.lbsToKilograms(130.0);
+  public static final double kRobotMOI = 4.2; // can be calculated from sysID, check PP docs
   public static final double kWheelCOF = 0.899; // maple sim constant for colsons
   public static final double kDistanceTolerance = 0.02; // meters
   public static final double kRotationTolerance = 4.0; // degrees

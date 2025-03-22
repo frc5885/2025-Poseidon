@@ -28,8 +28,12 @@ public class EndEffector extends SubsystemBase {
     m_motorDisconnectedAlert.set(!m_inputs.endEffectorConnected);
   }
 
-  public void runEndEffector(double volts) {
-    m_endEffector.setVoltage(volts);
+  public void runEndEffectorIntake() {
+    m_endEffector.setVoltage(12.0);
+  }
+
+  public void runEndEffectorOuttake() {
+    m_endEffector.setVoltage(-12.0);
   }
 
   public void stopEndEffector() {

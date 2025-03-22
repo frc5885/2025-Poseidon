@@ -68,16 +68,15 @@ public class SuperStructureConstants {
     public static final double kArmMaxVelocity = 7.0;
     // In Rad/SecSq
     public static final double kArmMaxAcceleration = 35.0;
-    public static final double kArmMotorReduction = 190.55 * 1.4; // real
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 1.0 / 13.35;
+    public static final double kArmMotorReduction = 2 * Math.PI / kArmEncoderPositionFactor; // real
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = kArmEncoderPositionFactor / 60;
-
-    public static final double kArmKs = 0.36788;
-    public static final double kArmKv = 1.2919;
-    public static final double kArmKa = 0.062877;
-    public static final double kArmKg = 0.25653;
+    public static final double kArmKs = 0.4004;
+    public static final double kArmKv = 1.276;
+    public static final double kArmKa = 0.069168;
+    public static final double kArmKg = 0.2563;
     public static final double kArmKp = 5.0;
     public static final double kArmKd = 0.0;
     public static final double kArmLatencyCompensationMs = 0.025;

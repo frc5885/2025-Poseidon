@@ -340,10 +340,11 @@ public class RobotContainer {
     //             () ->
     //                 DriveCommands.pathfindThenPreciseAlign(
     //                     m_drive,
-    //                     FieldConstants.Reef.branchPositions
+    //                     () ->
+    //                         FieldConstants.Reef.branchPositions
     //                             .get(m_operatorPanel.getReefTarget())
     //                             .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
-    //                         ::toPose2d),
+    //                             .toPose2d()),
     //             Set.of(m_drive)));
 
     // m_driverController.b().onTrue(new SuperStructureCommand(m_superStructure,

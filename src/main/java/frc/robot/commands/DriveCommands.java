@@ -13,11 +13,6 @@
 
 package frc.robot.commands;
 
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAccelerationMetersPerSecSq;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxSpeedMetersPerSec;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -25,27 +20,25 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.ChassisTrapezoidalController;
 import frc.robot.util.TunablePIDController;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
@@ -64,7 +57,6 @@ public class DriveCommands {
   private static TunablePIDController angleController;
   private static TunablePIDController xController;
   private static TunablePIDController yController;
-  private static ChassisTrapezoidalController chassisController;
   // Static initialization block
   static {
     angleController =
@@ -77,14 +69,6 @@ public class DriveCommands {
     yController =
         new TunablePIDController(
             kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
-    chassisController =
-        new ChassisTrapezoidalController(
-            new TrapezoidProfile.Constraints(kMaxSpeedMetersPerSec, kMaxAccelerationMetersPerSecSq),
-            new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSec, kMaxAngularAccelerationRadiansPerSecSq),
-            xController,
-            yController,
-            angleController);
   }
 
   private DriveCommands() {}
@@ -266,17 +250,31 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
+              Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
+              double vxMetersPerSecond =
+                  xController.calculate(drive.getPose().getX(), targetPoseValue.getX());
+              double vyMetersPerSecond =
+                  yController.calculate(drive.getPose().getY(), targetPoseValue.getY());
+
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), targetPoseValue.getRotation().getRadians());
+
+              Logger.recordOutput(
+                  "Odometry/AngleSetpoint", targetPoseValue.getRotation().getRadians());
+              Logger.recordOutput("Odometry/XSetpoint", targetPoseValue.getX());
+              Logger.recordOutput("Odometry/YSetpoint", targetPoseValue.getY());
+
               // Convert to field relative speeds & send command
-              ChassisSpeeds speeds = chassisController.calculate(drive.getPose());
+              ChassisSpeeds speeds = new ChassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omega);
               drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
             },
             drive)
-        .until(chassisController::isGoalAchieved)
-        .beforeStarting(
-            () -> {
-              chassisController.setGoalPose(AllianceFlipUtil.apply(targetPose.get()));
-              chassisController.setCurrentState(drive.getPose(), drive.getChassisSpeeds());
-            })
+        .until(
+            () ->
+                xController.atSetpoint()
+                    && yController.atSetpoint()
+                    && angleController.atSetpoint())
         .finallyDo(drive::stop);
   }
 
@@ -286,10 +284,19 @@ public class DriveCommands {
    * @param drive Drive subsystem
    * @param targetPose Target pose
    */
-  public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
-    return new DeferredCommand(
-        () -> drive.getPathFollowCommand(() -> AllianceFlipUtil.apply(targetPose.get())),
-        Set.of(drive));
+  public static SequentialCommandGroup pathfindThenPreciseAlign(
+      Drive drive, Supplier<Pose2d> targetPose) {
+    double kTransitionDistance = 0.3; // Meters
+    Pose2d transitionPose =
+        targetPose.get().transformBy(new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
+    return new SequentialCommandGroup(
+        drive
+            .getDriveToPoseCommand(() -> transitionPose, false)
+            .until(
+                () ->
+                    drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+                        < kTransitionDistance)
+            .andThen(preciseChassisAlign(drive, targetPose)));
   }
 
   /**

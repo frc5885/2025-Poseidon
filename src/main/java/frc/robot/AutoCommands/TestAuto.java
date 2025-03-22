@@ -11,8 +11,10 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.WaitUntilCloseToCommand;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants.Reef;
@@ -23,6 +25,7 @@ import frc.robot.util.FieldConstants.ReefLevel;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class TestAuto extends SequentialCommandGroup {
   private Pose2d intakePose = new Pose2d(1.22, 0.88, Rotation2d.fromDegrees(54.27));
+  private double ledDistance = 1.0;
   /** Creates a new RightAuto. */
   public TestAuto(Drive drive, Feeder feeder) {
 
@@ -32,20 +35,34 @@ public class TestAuto extends SequentialCommandGroup {
               if (Constants.kCurrentMode == Mode.SIM) {
                 drive.setPose(AllianceFlipUtil.apply(drive.getPose()));
               }
+              feeder.runFeeder(8.0);
             }),
         DriveCommands.pathfindThenPreciseAlign(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
-        drive.getDriveToPoseCommand(() -> intakePose, false),
+        drive
+            .getDriveToPoseCommand(() -> intakePose, false)
+            .alongWith(
+                new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
+                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
         DriveCommands.pathfindThenPreciseAlign(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
-        drive.getDriveToPoseCommand(() -> intakePose, false),
+        drive
+            .getDriveToPoseCommand(() -> intakePose, false)
+            .alongWith(
+                new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
+                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
         DriveCommands.pathfindThenPreciseAlign(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
-        drive.getDriveToPoseCommand(() -> intakePose, false),
+        drive
+            .getDriveToPoseCommand(() -> intakePose, false)
+            .alongWith(
+                new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
+                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
         DriveCommands.pathfindThenPreciseAlign(
-            drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()));
+            drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
+        new InstantCommand(() -> feeder.stop()));
   }
 }

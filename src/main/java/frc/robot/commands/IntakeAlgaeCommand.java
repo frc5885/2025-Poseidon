@@ -25,7 +25,7 @@ public class IntakeAlgaeCommand extends Command {
 
   @Override
   public void execute() {
-    m_endEffector.runEndEffector(12.0);
+    m_endEffector.runEndEffectorIntake();
   }
 
   @Override

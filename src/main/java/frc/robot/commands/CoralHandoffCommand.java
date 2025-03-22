@@ -22,7 +22,7 @@ public class CoralHandoffCommand extends SequentialCommandGroup {
     addCommands(
         new WaitUntilCommand(
             () -> superStructure.getSuperStructureGoal() == SuperStructureState.IDLE),
-        new InstantCommand(() -> endEffector.runEndEffector(12.0), endEffector),
+        new InstantCommand(() -> endEffector.runEndEffectorIntake(), endEffector),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.INTAKE_CORAL),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE),
         new InstantCommand(() -> feeder.handoffComplete()));
