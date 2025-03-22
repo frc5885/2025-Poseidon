@@ -49,7 +49,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
-import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.TunableDouble;
 import java.util.concurrent.locks.Lock;
@@ -367,15 +366,17 @@ public class Drive extends SubsystemBase {
   }
 
   public Command getPathFollowCommand(Supplier<Pose2d> target) {
-    return AutoBuilder.followPath(
+    PathPlannerPath path =
         new PathPlannerPath(
             PathPlannerPath.waypointsFromPoses(
-                AllianceFlipUtil.apply(getPose()),
+                getPose(),
                 target.get().transformBy(new Transform2d(-0.5, 0.0, Rotation2d.kZero)),
                 target.get()),
             kPathConstraintsFast,
             null,
-            new GoalEndState(0.0, Rotation2d.kZero)));
+            new GoalEndState(0.0, target.get().getRotation()));
+    path.preventFlipping = true;
+    return AutoBuilder.followPath(path);
   }
 
   /**

@@ -34,6 +34,8 @@ public class LEDSubsystem {
   private static final int kLength = 33 + 46; // 33 for poseidon and 46 for square
   private static final int kLEDPort = 0;
   private static double autoStartTime = 0;
+  private static double greenFlashStartTime = 0;
+  private static double greenFlashDuration = 0.5;
 
   @Setter @Getter private boolean coralHeld = false;
   @Setter @Getter private boolean algaeHeld = false;
@@ -84,18 +86,23 @@ public class LEDSubsystem {
     }
     squareStates.getPattern().applyTo(m_square);
 
-    if (isPhotonDied) {
-      states = LEDStates.PHOTON_DIED;
-    } else {
-      if (states == LEDStates.INTAKE_RUNNING && seesGamePiece) {
-        setStates(LEDStates.INTAKE_RUNNING_SEES_PIECE);
-      } else if (states == LEDStates.INTAKE_RUNNING_SEES_PIECE && !seesGamePiece) {
-        setStates(LEDStates.INTAKE_RUNNING);
-      }
+    // if (isPhotonDied) {
+    //   states = LEDStates.PHOTON_DIED;
+    // } else {
+    if (states == LEDStates.INTAKE_RUNNING && seesGamePiece) {
+      setStates(LEDStates.INTAKE_RUNNING_SEES_PIECE);
+    } else if (states == LEDStates.INTAKE_RUNNING_SEES_PIECE && !seesGamePiece) {
+      setStates(LEDStates.INTAKE_RUNNING);
+    }
 
-      if (states == LEDStates.SCORED && (!coralHeld || !algaeHeld)) {
-        states = LEDStates.RESETTING_SUPERSTRUCTURE;
-      }
+    if (states == LEDStates.SCORED && (!coralHeld || !algaeHeld)) {
+      states = LEDStates.RESETTING_SUPERSTRUCTURE;
+    }
+    // }
+
+    if (squareStates == LEDStates.GREEN
+        && Timer.getFPGATimestamp() - greenFlashStartTime > greenFlashDuration) {
+      squareStates = LEDStates.RED;
     }
 
     // log poseidon
@@ -117,6 +124,11 @@ public class LEDSubsystem {
 
   public static void setAutoStartTime() {
     autoStartTime = Timer.getFPGATimestamp();
+  }
+
+  public void flashGreen() {
+    squareStates = LEDStates.GREEN;
+    greenFlashStartTime = Timer.getFPGATimestamp();
   }
 
   @RequiredArgsConstructor

@@ -207,6 +207,7 @@ public class SuperStructure extends SubsystemBase {
 
   public void setBrakeMode(boolean brakeModeEnabled) {
     m_elevator.setBrakeMode(brakeModeEnabled);
+    m_arm.setBrakeMode(brakeModeEnabled);
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */

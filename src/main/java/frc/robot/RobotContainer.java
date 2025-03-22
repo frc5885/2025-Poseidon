@@ -20,9 +20,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -53,6 +53,7 @@ import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIOSim;
+import frc.robot.subsystems.SuperStructure.Arm.ArmIOSpark;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIO;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSim;
 import frc.robot.subsystems.SuperStructure.Elevator.ElevatorIOSpark;
@@ -74,10 +75,7 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
-import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -172,7 +170,7 @@ public class RobotContainer {
                     VisionConstants.kCamera1Name,
                     VisionConstants.kRobotToCamera1,
                     CameraType.APRILTAG));
-        m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIO() {});
+        m_superStructure = new SuperStructure(new ElevatorIOSpark(), new ArmIOSpark() {});
         m_feeder =
             new Feeder(new FeederIOSpark(), new BeamBreakIOReal(FeederConstants.kBeamBreakId));
         m_endEffector = new EndEffector(new EndEffectorIOSpark());
@@ -339,35 +337,36 @@ public class RobotContainer {
         .onFalse(
             new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
 
+    // m_driverController
+    //     .a()
+    //     .whileTrue(
+    //         new DeferredCommand(
+    //             () ->
+    //                 DriveCommands.pathfindThenPreciseAlign(
+    //                     m_drive,
+    //                     FieldConstants.Reef.branchPositions
+    //                             .get(m_operatorPanel.getReefTarget())
+    //                             .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
+    //                         ::toPose2d),
+    //             Set.of(m_drive)));
+
+    // m_driverController.b().onTrue(new SuperStructureCommand(m_superStructure,
+    // m_stateChooser::get));
+
     m_driverController
         .a()
         .whileTrue(
-            new DeferredCommand(
-                () ->
-                    DriveCommands.pathfindThenPreciseAlign(
-                        m_drive,
-                        FieldConstants.Reef.branchPositions
-                                .get(m_operatorPanel.getReefTarget())
-                                .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
-                            ::toPose2d),
-                Set.of(m_drive)));
-
-    m_driverController.b().onTrue(new SuperStructureCommand(m_superStructure, m_stateChooser::get));
-
-    // m_driverController
-    //     .x()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(-12.0),
-    //             () -> m_superStructure.runArmOpenLoop(0.0),
-    //             m_superStructure));
-    // m_driverController
-    //     .y()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runArmOpenLoop(12.0),
-    //             () -> m_superStructure.runArmOpenLoop(0.0),
-    //             m_superStructure));
+            new StartEndCommand(
+                () -> m_superStructure.runArmOpenLoop(-12.0),
+                () -> m_superStructure.runArmOpenLoop(0.0),
+                m_superStructure));
+    m_driverController
+        .b()
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_superStructure.runArmOpenLoop(12.0),
+                () -> m_superStructure.runArmOpenLoop(0.0),
+                m_superStructure));
 
     m_driverController
         .x()

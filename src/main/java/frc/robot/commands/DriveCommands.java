@@ -287,7 +287,9 @@ public class DriveCommands {
    * @param targetPose Target pose
    */
   public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
-    return new DeferredCommand(() -> drive.getPathFollowCommand(targetPose), Set.of(drive));
+    return new DeferredCommand(
+        () -> drive.getPathFollowCommand(() -> AllianceFlipUtil.apply(targetPose.get())),
+        Set.of(drive));
   }
 
   /**

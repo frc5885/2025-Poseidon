@@ -27,7 +27,7 @@ public class SuperStructureConstants {
     // In Meters/SecSq
     public static final double kElevatorMaxAcceleration = 5.0;
     // Motor Rotations -> Elevator Meters
-    public static final double kElevatorEncoderPositionFactor = 1.0 / 86.0;
+    public static final double kElevatorEncoderPositionFactor = 1.0 / 37.14;
     // Motor RPM -> Elevator Meters/Sec
     public static final double kElevatorEncoderVelocityFactor =
         kElevatorEncoderPositionFactor / 60.0;
@@ -56,8 +56,8 @@ public class SuperStructureConstants {
 
   public static class ArmConstants {
     public static final int kArmSparkId = 43;
-    public static final boolean kArmInverted = true;
-    public static final int kArmMotorCurrentLimit = 20;
+    public static final boolean kArmInverted = false;
+    public static final int kArmMotorCurrentLimit = 30;
 
     public static final double kArmLengthMeters = 0.58;
     public static final double kArmStartingPositionRads = Units.degreesToRadians(-90);
@@ -65,19 +65,19 @@ public class SuperStructureConstants {
     public static final double kArmMaxAngleRads = Units.degreesToRadians(120);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = 5.0; // from sim, TBD
+    public static final double kArmMaxVelocity = 7.0;
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = 30.0; // from sim, TBD
+    public static final double kArmMaxAcceleration = 35.0;
     public static final double kArmMotorReduction = 190.55 * 1.4; // real
     // Motor Rotations -> Arm Radians
-    public static final double kArmEncoderPositionFactor = 2 * Math.PI / kArmMotorReduction;
+    public static final double kArmEncoderPositionFactor = 1.0 / 13.35;
     // Motor RPM -> Arm Rad/Sec
     public static final double kArmEncoderVelocityFactor = kArmEncoderPositionFactor / 60;
 
-    public static final double kArmKs = 0.38376; // sim
-    public static final double kArmKv = 4.7198; // sim
-    public static final double kArmKa = 0.11375; // sim
-    public static final double kArmKg = 0.55678; // sim
+    public static final double kArmKs = 0.2878; // sim
+    public static final double kArmKv = 1.424; // sim
+    public static final double kArmKa = 0.065781; // sim
+    public static final double kArmKg = 0.1708; // sim
     public static final double kArmKp = 5.0;
     public static final double kArmKd = 0.0;
     public static final double kArmLatencyCompensationMs = 0.025;

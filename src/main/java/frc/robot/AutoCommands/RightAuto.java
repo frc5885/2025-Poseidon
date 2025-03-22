@@ -17,6 +17,7 @@ import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilCloseToCommand;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
@@ -92,6 +93,11 @@ public class RightAuto extends SequentialCommandGroup {
               Command chassisCmd =
                   drive
                       .getDriveToPoseCommand(() -> intakePose, false)
+                      .alongWith(new WaitUntilCloseToCommand(drive::getPose, intakePose, 5.0))
+                      // .alongWith(new WaitUntilCloseToCommand(drive::getPose, intakePose, 5.0))
+                      // .andThen(
+                      //     new InstantCommand(
+                      //         () -> LEDSubsystem.getInstance().flashGreen())))
                       .andThen(
                           DriveCommands.pathfindThenPreciseAlign(
                               drive,
