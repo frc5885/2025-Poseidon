@@ -365,9 +365,15 @@ public class RobotContainer {
         .b()
         .whileTrue(
             new StartEndCommand(
-                () -> m_superStructure.runElevatorOpenLoop(12.0),
-                () -> m_superStructure.runElevatorOpenLoop(0.0),
-                m_superStructure));
+                () -> m_feeder.runFeeder(8.0), () -> m_feeder.runFeeder(0.0), m_feeder));
+
+    m_driverController
+        .start()
+        .whileTrue(
+            new StartEndCommand(
+                () -> m_endEffector.runEndEffectorIntake(),
+                () -> m_endEffector.stopEndEffector(),
+                m_endEffector));
 
     m_driverController
         .x()
@@ -391,6 +397,14 @@ public class RobotContainer {
         .getHandoffTrigger()
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
 
+    m_driverController
+        .back()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                m_drive,
+                () -> -m_driverController.getLeftY(),
+                () -> -m_driverController.getLeftX(),
+                () -> new Rotation2d()));
     // EJECT GAME PIECE
     // m_driverController
     //     .b()

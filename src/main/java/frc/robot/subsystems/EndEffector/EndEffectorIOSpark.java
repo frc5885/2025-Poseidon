@@ -53,6 +53,10 @@ public class EndEffectorIOSpark implements EndEffectorIO {
     sparkStickyFault = false;
     ifOk(
         m_EndEffectorMotor,
+        m_EndEffectorEncoder::getPosition,
+        (value) -> inputs.positionRotations = value);
+    ifOk(
+        m_EndEffectorMotor,
         m_EndEffectorEncoder::getVelocity,
         (value) -> inputs.velocityRPM = value);
     ifOk(

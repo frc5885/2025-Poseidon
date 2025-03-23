@@ -70,10 +70,11 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
             new SuperStructureCommand(superStructure, () -> superStructureState),
             DriveCommands.pathfindThenPreciseAlign(drive, () -> targetPose.get().toPose2d())
                 .unless(() -> DriverStation.isTest())),
-        new InstantCommand(() -> endEffector.stopEndEffector()),
+        new InstantCommand(() -> endEffector.runEndEffectorOuttake()),
         new SuperStructureCommand(superStructure, () -> scoredState),
         new InstantCommand(
             () -> {
+              endEffector.stopEndEffector();
               GamePieceVisualizer.setHasCoral(false);
             }));
   }

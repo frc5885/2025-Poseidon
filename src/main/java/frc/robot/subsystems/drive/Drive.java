@@ -456,4 +456,8 @@ public class Drive extends SubsystemBase {
   public void resetGyro() {
     m_gyroIO.resetGyro();
   }
+
+  public HeimdallPoseController getHeimdall() {
+    return m_poseController;
+  }
 }

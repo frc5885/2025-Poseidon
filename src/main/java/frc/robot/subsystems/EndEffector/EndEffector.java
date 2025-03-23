@@ -41,7 +41,7 @@ public class EndEffector extends SubsystemBase {
   }
 
   public void holdAlgae() {
-    m_endEffector.setVoltage(6.0);
+    m_endEffector.setVoltage(12.0);
   }
 
   @AutoLogOutput

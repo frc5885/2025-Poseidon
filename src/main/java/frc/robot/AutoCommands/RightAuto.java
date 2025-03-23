@@ -20,6 +20,7 @@ import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilCloseToCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.Feeder.Feeder;
+import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
@@ -39,7 +40,7 @@ public class RightAuto extends SequentialCommandGroup {
   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
 
   // Branches to score coral at
-  private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 10, 11, 0));
+  private ArrayList<Integer> branches = new ArrayList<>(List.of(0, 0, 0, 0));
 
   public RightAuto(
       Drive drive, SuperStructure superStructure, Feeder feeder, EndEffector endEffector) {
@@ -84,6 +85,7 @@ public class RightAuto extends SequentialCommandGroup {
               // superstructure scoring position
               Command ssCmd =
                   new ResetSuperStructureCommand(drive, superStructure, false)
+                      .andThen(new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)))
                       .andThen(
                           new WaitUntilCommand(() -> feeder.getIsHandoffReady())
                               .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
@@ -98,7 +100,7 @@ public class RightAuto extends SequentialCommandGroup {
                       .getDriveToPoseCommand(() -> intakePose, false)
                       // TODO fix red side
                       .alongWith(
-                          new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, 1.0)
+                          new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, 1.75)
                               .andThen(
                                   new InstantCommand(
                                       () -> LEDSubsystem.getInstance().flashGreen())))
@@ -116,8 +118,13 @@ public class RightAuto extends SequentialCommandGroup {
                   new SuperStructureCommand(
                           superStructure, () -> getScoredSuperStructureState(ReefLevel.L4))
                       .alongWith(
-                          new InstantCommand(() -> endEffector.stopEndEffector(), endEffector))
-                      .andThen(() -> GamePieceVisualizer.setHasCoral(false));
+                          new InstantCommand(
+                              () -> endEffector.runEndEffectorOuttake(), endEffector))
+                      .andThen(
+                          () -> {
+                            endEffector.stopEndEffector();
+                            GamePieceVisualizer.setHasCoral(false);
+                          });
 
               // combination of ss and chassis in parallel, then score
               addCommands(ssCmd.alongWith(chassisCmd), scoreCmd);

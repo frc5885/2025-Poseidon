@@ -154,7 +154,7 @@ public class FieldConstants {
         for (var level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)));
           double adjustX = Units.inchesToMeters(30.738);
-          double adjustY = Units.inchesToMeters(6.469);
+          double adjustY = Units.inchesToMeters(5.0);
 
           fillRight.put(
               level,
@@ -214,7 +214,7 @@ public class FieldConstants {
     L1(Units.inchesToMeters(25.0), 0, -0.6),
     L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
     L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.75),
-    L4(Units.inchesToMeters(72), -90, -0.75);
+    L4(Units.inchesToMeters(72), -90, -0.78);
 
     public static ReefLevel fromLevel(int level) {
       return Arrays.stream(values())

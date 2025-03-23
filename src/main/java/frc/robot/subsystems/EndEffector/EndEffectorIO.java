@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface EndEffectorIO {
   @AutoLog
   public static class EndEffectorIOInputs {
+    public double positionRotations = 0.0;
     public double velocityRPM = 0.0;
     public double appliedVolts = 0.0;
     public double currentAmps = 0.0;

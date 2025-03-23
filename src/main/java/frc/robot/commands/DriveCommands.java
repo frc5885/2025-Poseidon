@@ -13,6 +13,7 @@
 
 package frc.robot.commands;
 
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -26,10 +27,12 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.vision.heimdall.HeimdallPoseController.HeimdallOdometrySource;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.TunablePIDController;
 import java.text.DecimalFormat;
@@ -42,15 +45,15 @@ import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 2.5;
-  private static final double kAngleKd = 0.0;
+  private static final double kAngleKp = 5.0;
+  private static final double kAngleKd = 0.1;
   private static final double kTranslateKp = 2.0;
   private static final double kTranslateKd = 0.0;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
-  private static final double kAngleTolerance = 0.02;
+  private static final double kAngleTolerance = 0.06;
   private static final double kTranslationTolerance = 0.02;
 
   // Create PID controllers
@@ -61,14 +64,14 @@ public class DriveCommands {
   static {
     angleController =
         new TunablePIDController(
-            kAngleKp, 0.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
+            kAngleKp, 2.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
     angleController.enableContinuousInput(-Math.PI, Math.PI);
     xController =
         new TunablePIDController(
-            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
+            kTranslateKp, 2.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
     yController =
         new TunablePIDController(
-            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
+            kTranslateKp, 2.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
   }
 
   private DriveCommands() {}
@@ -270,6 +273,12 @@ public class DriveCommands {
               drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
             },
             drive)
+        .beforeStarting(
+            () -> {
+              xController.reset();
+              yController.reset();
+              angleController.reset();
+            })
         .until(
             () ->
                 xController.atSetpoint()
@@ -296,7 +305,14 @@ public class DriveCommands {
                 () ->
                     drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
                         < kTransitionDistance)
-            .andThen(preciseChassisAlign(drive, targetPose)));
+            .andThen(
+                new InstantCommand(
+                    () ->
+                        drive.getHeimdall().setMode(HeimdallOdometrySource.ONLY_APRILTAG_ODOMETRY)))
+            .andThen(preciseChassisAlign(drive, targetPose))
+            .andThen(
+                new InstantCommand(
+                    () -> drive.getHeimdall().setMode(HeimdallOdometrySource.AUTO_SWITCH))));
   }
 
   /**

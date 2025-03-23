@@ -12,7 +12,7 @@ public enum SuperStructureState {
   IDLE_ALGAE(ElevatorLevel.STOW, ArmGoals.IDLE_ALGAE),
   INTAKE_CORAL(ElevatorLevel.STOW, ArmGoals.IDLE),
   INTAKE_ALGAE_L2(ElevatorLevel.STOW, ArmGoals.ALGAE_L2),
-  INTAKE_ALGAE_L3(ElevatorLevel.STOW, ArmGoals.ALGAE_L3),
+  INTAKE_ALGAE_L3(ElevatorLevel.ALGAE_L3, ArmGoals.ALGAE_L3),
   SCORE_CORAL_L1(ElevatorLevel.IDLE, ArmGoals.IDLE),
   SCORE_CORAL_L2(ElevatorLevel.L2, ArmGoals.CORAL_L2),
   SCORE_CORAL_L3(ElevatorLevel.STOW, ArmGoals.CORAL_REEF_HIGH),
@@ -20,7 +20,8 @@ public enum SuperStructureState {
   SCORED_CORAL_L2(ElevatorLevel.L2, ArmGoals.SCORED_CORAL_L2),
   SCORED_CORAL_L3(ElevatorLevel.STOW, ArmGoals.SCORED_REEF_HIGH),
   SCORED_CORAL_L4(ElevatorLevel.L4, ArmGoals.SCORED_REEF_HIGH),
-  SCORE_ALGAE_NET(ElevatorLevel.NET, ArmGoals.NET);
+  SCORE_ALGAE_NET(ElevatorLevel.NET, ArmGoals.NET),
+  INTAKE_LOLLIPOP(ElevatorLevel.STOW, ArmGoals.ALGAE_LOLLIPOP);
 
   public ElevatorLevel elevatorGoal;
   public ArmGoals armGoal;

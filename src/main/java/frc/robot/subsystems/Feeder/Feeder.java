@@ -1,5 +1,6 @@
 package frc.robot.subsystems.Feeder;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -23,6 +24,7 @@ public class Feeder extends SubsystemBase {
   private final FeederIOInputsAutoLogged m_inputs = new FeederIOInputsAutoLogged();
   private final BeamBreakIO m_beamBreakIO;
   private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
+  private final Debouncer m_beambreakDebouncer = new Debouncer(0.1);
 
   private FeederState m_state = FeederState.IDLE;
 
@@ -74,7 +76,7 @@ public class Feeder extends SubsystemBase {
   }
 
   public boolean isBeamBreakTriggered() {
-    return m_beamBreakInputs.state;
+    return m_beambreakDebouncer.calculate(m_beamBreakInputs.state);
   }
 
   public BeamBreakIO getBeamBreakIO() {
@@ -96,6 +98,7 @@ public class Feeder extends SubsystemBase {
 
   public void handoffComplete() {
     m_isHandOffReady = false;
+    m_state = FeederState.IDLE;
 
     if (Constants.kCurrentMode == Mode.SIM) {
       GamePieceVisualizer.setHasCoral(true);

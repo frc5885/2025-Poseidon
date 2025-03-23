@@ -21,6 +21,7 @@ public class EndEffectorIOSim implements EndEffectorIO {
 
     inputs.appliedVolts = m_appliedVolts;
     inputs.currentAmps = m_EndEffectorFlywheelSim.getCurrentDrawAmps();
+    inputs.positionRotations = 0.0;
     inputs.velocityRPM = m_EndEffectorFlywheelSim.getAngularVelocityRPM();
     inputs.endEffectorConnected = true;
   }
