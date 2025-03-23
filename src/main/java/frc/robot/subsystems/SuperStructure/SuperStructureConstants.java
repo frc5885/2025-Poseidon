@@ -23,9 +23,9 @@ public class SuperStructureConstants {
         new Translation2d(Units.inchesToMeters(9.5), 0.0);
 
     // In Meters/Sec
-    public static final double kElevatorMaxVelocity = 1.0;
+    public static final double kElevatorMaxVelocity = 0.95;
     // In Meters/SecSq
-    public static final double kElevatorMaxAcceleration = 5.0;
+    public static final double kElevatorMaxAcceleration = 3.0;
     // Motor Rotations -> Elevator Meters
     public static final double kElevatorEncoderPositionFactor = 1.0 / 86.0;
     // Motor RPM -> Elevator Meters/Sec

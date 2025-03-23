@@ -96,9 +96,9 @@ public class DriveConstants {
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
   public static final double kDriveKd = 0.0;
-  public static final double kDriveKs = 0.097343;
-  public static final double kDriveKv = 0.12619;
-  public static final double kDriveKa = 0.021454;
+  public static final double kDriveKs = 0.0056448;
+  public static final double kDriveKv = 0.13594;
+  public static final double kDriveKa = 0.014454;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
   public static final double kDriveSimKs = 0.01548;
@@ -157,7 +157,7 @@ public class DriveConstants {
           kModuleTranslations);
 
   public static final PPHolonomicDriveController kPPController =
-      new PPHolonomicDriveController(new PIDConstants(3.0, 0.0), new PIDConstants(3.0, 0.0));
+      new PPHolonomicDriveController(new PIDConstants(2.0, 0.0), new PIDConstants(2.0, 0.0));
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(

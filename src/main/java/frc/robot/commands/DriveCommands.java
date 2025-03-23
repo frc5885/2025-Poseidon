@@ -44,7 +44,7 @@ public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 2.5;
   private static final double kAngleKd = 0.0;
-  private static final double kTranslateKp = 2.5;
+  private static final double kTranslateKp = 2.0;
   private static final double kTranslateKd = 0.0;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
