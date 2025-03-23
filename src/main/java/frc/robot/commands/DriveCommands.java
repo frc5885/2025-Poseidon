@@ -13,6 +13,7 @@
 
 package frc.robot.commands;
 
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -26,7 +27,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -36,6 +37,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -264,6 +266,8 @@ public class DriveCommands {
                   "Odometry/AngleSetpoint", targetPoseValue.getRotation().getRadians());
               Logger.recordOutput("Odometry/XSetpoint", targetPoseValue.getX());
               Logger.recordOutput("Odometry/YSetpoint", targetPoseValue.getY());
+              PathPlannerLogging.logCurrentPose(drive.getPose());
+              PathPlannerLogging.logTargetPose(targetPose.get());
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds = new ChassisSpeeds(vxMetersPerSecond, vyMetersPerSecond, omega);
@@ -284,19 +288,16 @@ public class DriveCommands {
    * @param drive Drive subsystem
    * @param targetPose Target pose
    */
-  public static SequentialCommandGroup pathfindThenPreciseAlign(
-      Drive drive, Supplier<Pose2d> targetPose) {
+  public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
     double kTransitionDistance = 0.3; // Meters
     Pose2d transitionPose =
         targetPose.get().transformBy(new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
-    return new SequentialCommandGroup(
-        drive
-            .getDriveToPoseCommand(() -> transitionPose, false)
-            .until(
-                () ->
-                    drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                        < kTransitionDistance)
-            .andThen(preciseChassisAlign(drive, targetPose)));
+    return new DeferredCommand(() -> drive.getPathFollowCommand(targetPose), Set.of(drive))
+        .until(
+            () ->
+                drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+                    < kTransitionDistance)
+        .andThen(preciseChassisAlign(drive, targetPose));
   }
 
   /**
