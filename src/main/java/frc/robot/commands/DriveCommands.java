@@ -361,8 +361,7 @@ public class DriveCommands {
         .beforeStarting(
             () -> {
               m_chassisController.setGoalPose(targetPoseValue);
-              m_chassisController.setCurrentState(
-                  drive.getPose(), new ChassisSpeeds()); // drive.getChassisSpeeds());
+              m_chassisController.setCurrentState(drive.getPose(), drive.getChassisSpeeds());
             })
         .until(() -> m_chassisController.isGoalAchieved())
         .finallyDo(drive::stop);

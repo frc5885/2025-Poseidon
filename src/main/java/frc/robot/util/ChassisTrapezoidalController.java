@@ -77,7 +77,7 @@ public class ChassisTrapezoidalController {
     double distanceToGoal = robotPose.getTranslation().getDistance(m_goalPose.getTranslation());
 
     // Calculate current speed in direction of goal
-    Translation2d directionToGoal = m_goalPose.getTranslation().minus(robotPose.getTranslation());
+    Translation2d directionToGoal = robotPose.getTranslation().minus(m_goalPose.getTranslation());
     double currentTranslateSpeed = 0.0;
     if (directionToGoal.getNorm() > 1e-6) {
       directionToGoal = directionToGoal.div(directionToGoal.getNorm());
