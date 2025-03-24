@@ -19,7 +19,7 @@ public class ElevatorIOSim implements ElevatorIO {
             DCMotor.getNEO(2),
             kElevatorMinHeightMeters,
             kElevatorMaxHeightMeters,
-            true,
+            false,
             kElevatorStartingPositionMeters);
   }
 

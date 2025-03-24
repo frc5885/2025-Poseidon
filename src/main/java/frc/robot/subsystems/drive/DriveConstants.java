@@ -133,7 +133,8 @@ public class DriveConstants {
   public static final double kMaxAccelerationMetersPerSecSq = 5.4; // measured in sim
   public static final double kMaxAngularSpeedRadiansPerSec =
       kMaxSpeedMetersPerSec / kDriveBaseRadius;
-  public static final double kMaxAngularAccelerationRadiansPerSecSq = 16; // measured in sim
+  public static final double kMaxAngularAccelerationRadiansPerSecSq =
+      8.0; // 6328 uses 4/8 in auto/tele
   public static final double kMaxModuleRotationVelocityRadiansPerSec = 24.0;
   public static final double kMaxModuleRotationAccelerationRadiansPerSecSq = 160.0;
 
@@ -157,14 +158,14 @@ public class DriveConstants {
           kModuleTranslations);
 
   public static final PPHolonomicDriveController kPPController =
-      new PPHolonomicDriveController(new PIDConstants(2.0, 0.0), new PIDConstants(2.0, 0.0));
+      new PPHolonomicDriveController(new PIDConstants(6.0, 0.6), new PIDConstants(6.0, 0.6));
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(
           kMaxSpeedMetersPerSec,
-          kMaxAccelerationMetersPerSecSq,
+          kMaxAccelerationMetersPerSecSq * 0.5,
           kMaxAngularSpeedRadiansPerSec,
-          kMaxAngularAccelerationRadiansPerSecSq,
+          kMaxAngularAccelerationRadiansPerSecSq * 0.5,
           12.0);
 
   public static final PathConstraints kPathConstraintsSlow =

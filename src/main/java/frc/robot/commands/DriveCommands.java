@@ -13,7 +13,8 @@
 
 package frc.robot.commands;
 
-import com.pathplanner.lib.util.PathPlannerLogging;
+import static frc.robot.subsystems.drive.DriveConstants.kPathConstraintsFast;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,12 +22,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
@@ -34,11 +37,13 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController.HeimdallOdometrySource;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.ChassisTrapezoidalController;
 import frc.robot.util.TunablePIDController;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -46,9 +51,9 @@ import org.littletonrobotics.junction.Logger;
 public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 5.0;
-  private static final double kAngleKd = 0.1;
-  private static final double kTranslateKp = 2.0;
-  private static final double kTranslateKd = 0.0;
+  private static final double kAngleKd = 0.5;
+  private static final double kTranslateKp = 5.0;
+  private static final double kTranslateKd = 0.5;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
@@ -60,18 +65,32 @@ public class DriveCommands {
   private static TunablePIDController angleController;
   private static TunablePIDController xController;
   private static TunablePIDController yController;
+
+  private static ChassisTrapezoidalController m_chassisController;
+
   // Static initialization block
   static {
     angleController =
         new TunablePIDController(
-            kAngleKp, 2.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
+            kAngleKp, 0.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
     angleController.enableContinuousInput(-Math.PI, Math.PI);
     xController =
         new TunablePIDController(
-            kTranslateKp, 2.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
+            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
     yController =
         new TunablePIDController(
-            kTranslateKp, 2.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
+            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
+
+    m_chassisController =
+        new ChassisTrapezoidalController(
+            new TrapezoidProfile.Constraints(
+                kPathConstraintsFast.maxVelocityMPS(), kPathConstraintsFast.maxAccelerationMPSSq()),
+            new TrapezoidProfile.Constraints(
+                kPathConstraintsFast.maxAngularVelocityRadPerSec(),
+                kPathConstraintsFast.maxAngularAccelerationRadPerSecSq()),
+            xController,
+            yController,
+            angleController);
   }
 
   private DriveCommands() {}
@@ -287,13 +306,7 @@ public class DriveCommands {
         .finallyDo(drive::stop);
   }
 
-  /**
-   * Pathfinding to pose, followed by a smooth transition to precise chassis align
-   *
-   * @param drive Drive subsystem
-   * @param targetPose Target pose
-   */
-  public static SequentialCommandGroup pathfindThenPreciseAlign(
+  public static SequentialCommandGroup pathfindThenPreciseAlign_original(
       Drive drive, Supplier<Pose2d> targetPose) {
     double kTransitionDistance = 0.3; // Meters
     Pose2d transitionPose =
@@ -313,6 +326,47 @@ public class DriveCommands {
             .andThen(
                 new InstantCommand(
                     () -> drive.getHeimdall().setMode(HeimdallOdometrySource.AUTO_SWITCH))));
+  }
+
+  public static Command pathfindThenPreciseAlign_optimalTrajectory(
+      Drive drive, Supplier<Pose2d> targetPose) {
+    double kTransitionDistance = 0.3; // Meters
+    Pose2d transitionPose =
+        targetPose.get().transformBy(new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
+    return new DeferredCommand(() -> drive.getPathFollowCommand(targetPose), Set.of(drive))
+        .until(
+            () ->
+                drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+                    < kTransitionDistance)
+        .andThen(preciseChassisAlign(drive, targetPose));
+  }
+
+  public static Command pathfindThenPreciseAlign_onlyTrapezoidal(
+      Drive drive, Supplier<Pose2d> targetPose) {
+    Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
+    return Commands.run(
+            () -> {
+              ChassisSpeeds frSpeeds = m_chassisController.calculate(drive.getPose());
+              // Convert to field relative speeds & send command
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(frSpeeds, drive.getRotation()));
+            },
+            drive)
+        .beforeStarting(
+            () -> {
+              m_chassisController.setGoalPose(targetPoseValue);
+              m_chassisController.setCurrentState(
+                  drive.getPose(), new ChassisSpeeds()); // drive.getChassisSpeeds());
+            })
+        .until(() -> m_chassisController.isGoalAchieved())
+        .finallyDo(drive::stop);
+  }
+
+  // use this for testing and just switch which command it returns
+  public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
+    // return pathfindThenPreciseAlign_original(drive, targetPose);
+    // return pathfindThenPreciseAlign_optimalTrajectory(drive, targetPose);
+    return pathfindThenPreciseAlign_onlyTrapezoidal(drive, targetPose);
   }
 
   /**
