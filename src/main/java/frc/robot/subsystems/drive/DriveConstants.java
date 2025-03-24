@@ -163,17 +163,9 @@ public class DriveConstants {
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(
           kMaxSpeedMetersPerSec,
-          kMaxAccelerationMetersPerSecSq * 0.5,
+          kMaxAccelerationMetersPerSecSq,
           kMaxAngularSpeedRadiansPerSec,
-          kMaxAngularAccelerationRadiansPerSecSq * 0.5,
-          12.0);
-
-  public static final PathConstraints kPathConstraintsSlow =
-      new PathConstraints(
-          kMaxSpeedMetersPerSec * 0.5,
-          kMaxAccelerationMetersPerSecSq * 0.5,
-          kMaxAngularSpeedRadiansPerSec * 0.5,
-          kMaxAngularAccelerationRadiansPerSecSq * 0.5,
+          kMaxAngularAccelerationRadiansPerSecSq,
           12.0);
 
   public static final DriveTrainSimulationConfig kMapleSimConfig =

@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -18,6 +19,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
@@ -68,7 +70,11 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
             }),
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> superStructureState),
-            DriveCommands.pathfindThenPreciseAlign(drive, () -> targetPose.get().toPose2d())
+            new DeferredCommand(
+                    () ->
+                        DriveCommands.pathfindThenPreciseAlign(
+                            drive, () -> targetPose.get().toPose2d()),
+                    Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
         new InstantCommand(() -> endEffector.runEndEffectorOuttake()),
         new SuperStructureCommand(superStructure, () -> scoredState),
