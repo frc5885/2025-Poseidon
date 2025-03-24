@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision.questnav;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.FloatArraySubscriber;
 import edu.wpi.first.networktables.IntegerPublisher;
@@ -27,6 +28,15 @@ public class QuestNavIOReal implements QuestNavIO {
   private final DoubleSubscriber m_questBatteryPercent =
       m_nt4Table.getDoubleTopic("batteryPercent").subscribe(0.0f);
 
+  /** Subscriber for heartbeat requests */
+  private final DoubleSubscriber heartbeatRequestSub =
+      m_nt4Table.getDoubleTopic("heartbeat/quest_to_robot").subscribe(0.0);
+  /** Publisher for heartbeat responses */
+  private final DoublePublisher heartbeatResponsePub =
+      m_nt4Table.getDoubleTopic("heartbeat/robot_to_quest").publish();
+  /** Last processed heartbeat request ID */
+  private double lastProcessedHeartbeatId = 0;
+
   private double m_prevTimestamp = 0.0;
   private Debouncer m_connectedDebouncer = new Debouncer(0.5);
 
@@ -45,6 +55,17 @@ public class QuestNavIOReal implements QuestNavIO {
   public void cleanUpQuestNavMessages() {
     if (m_questMiso.get() == 99) {
       m_questMosi.set(0);
+    }
+  }
+
+  @Override
+  /** Process heartbeat requests from Quest and respond with the same ID */
+  public void processHeartbeat() {
+    double requestId = heartbeatRequestSub.get();
+    // Only respond to new requests to avoid flooding
+    if (requestId > 0 && requestId != lastProcessedHeartbeatId) {
+      heartbeatResponsePub.set(requestId);
+      lastProcessedHeartbeatId = requestId;
     }
   }
 }

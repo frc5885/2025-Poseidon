@@ -17,4 +17,7 @@ public interface QuestNavIO {
 
   /** Clean up questnav subroutine messages after they've been processed on the headset. */
   public default void cleanUpQuestNavMessages() {}
+
+  /** Process heartbeat requests from Quest and respond with the same ID */
+  public default void processHeartbeat() {}
 }

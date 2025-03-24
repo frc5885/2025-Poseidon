@@ -47,8 +47,11 @@ public class QuestNav extends SubsystemBase {
   public void periodic() {
     m_questNavIO.updateInputs(m_questNavIOInputs);
     Logger.processInputs("QuestNav", m_questNavIOInputs);
-    m_disconnectedAlert.set(!m_questNavIOInputs.connected);
+
+    m_questNavIO.processHeartbeat();
     m_questNavIO.cleanUpQuestNavMessages();
+
+    m_disconnectedAlert.set(!m_questNavIOInputs.connected);
   }
 
   /**
