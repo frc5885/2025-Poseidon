@@ -4,6 +4,7 @@
 
 package frc.robot.util;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -125,6 +126,18 @@ public class ChassisTrapezoidalController {
     double vyMetersPerSecond = directionVector.getY() * translateVelocity;
 
     // Generate profile for rotation
+    // Get error which is the smallest distance between goal and measurement
+    double goalMinDistance =
+        MathUtil.angleModulus(m_thetaGoalState.position - robotPose.getRotation().getRadians());
+    double setpointMinDistance =
+        MathUtil.angleModulus(m_thetaPrevSetpoint.position - robotPose.getRotation().getRadians());
+
+    // Recompute the profile goal with the smallest error, thus giving the shortest path. The goal
+    // may be outside the input range after this operation, but that's OK because the controller
+    // will still go there and report an error of zero. In other words, the setpoint only needs to
+    // be offset from the measurement by the input range modulus; they don't need to be equal.
+    m_thetaGoalState.position = goalMinDistance + robotPose.getRotation().getRadians();
+    m_thetaPrevSetpoint.position = setpointMinDistance + robotPose.getRotation().getRadians();
     TrapezoidProfile.State thetaSetpoint =
         m_thetaProfile.calculate(dt, m_thetaPrevSetpoint, m_thetaGoalState);
 
@@ -161,7 +174,9 @@ public class ChassisTrapezoidalController {
     return m_currentPose.getTranslation().getDistance(m_goalPose.getTranslation())
             < distanceThreshold
         && Math.abs(
-                m_currentPose.getRotation().getRadians() - m_goalPose.getRotation().getRadians())
+                MathUtil.angleModulus(
+                    m_currentPose.getRotation().getRadians()
+                        - m_goalPose.getRotation().getRadians()))
             < angleThreshold;
   }
 }
