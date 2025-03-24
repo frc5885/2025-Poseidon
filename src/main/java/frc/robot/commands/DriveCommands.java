@@ -65,6 +65,7 @@ public class DriveCommands {
   private static TunablePIDController angleController;
   private static TunablePIDController xController;
   private static TunablePIDController yController;
+  private static TunablePIDController translateController; // used for chassisController (testing)
 
   private static ChassisTrapezoidalController m_chassisController;
 
@@ -81,6 +82,15 @@ public class DriveCommands {
         new TunablePIDController(
             kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
 
+    translateController =
+        new TunablePIDController(
+            kTranslateKp,
+            0.0,
+            kTranslateKd,
+            kTranslationTolerance,
+            "DriveTranslateController",
+            true);
+
     m_chassisController =
         new ChassisTrapezoidalController(
             new TrapezoidProfile.Constraints(
@@ -88,8 +98,7 @@ public class DriveCommands {
             new TrapezoidProfile.Constraints(
                 kPathConstraintsFast.maxAngularVelocityRadPerSec(),
                 kPathConstraintsFast.maxAngularAccelerationRadPerSecSq()),
-            xController,
-            yController,
+            translateController,
             angleController);
   }
 
@@ -346,10 +355,7 @@ public class DriveCommands {
     Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
     return Commands.run(
             () -> {
-              ChassisSpeeds frSpeeds = m_chassisController.calculate(drive.getPose());
-              // Convert to field relative speeds & send command
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(frSpeeds, drive.getRotation()));
+              drive.runVelocity(m_chassisController.calculate(drive.getPose()));
             },
             drive)
         .beforeStarting(
