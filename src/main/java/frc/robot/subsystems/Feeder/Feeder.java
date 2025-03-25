@@ -103,6 +103,7 @@ public class Feeder extends SubsystemBase {
             LEDSubsystem.getInstance().setStates(LEDStates.INTAKE_RUNNING);
             m_wasBeamBreakTriggered = false;
             m_isFinished = false;
+            m_isHandOffReady = false;
           }
 
           @Override
@@ -135,6 +136,7 @@ public class Feeder extends SubsystemBase {
           @Override
           public void initialize() {
             runFeeder(FeederConstants.kFeedSpeed);
+            m_isHandOffReady = false;
           }
 
           @Override

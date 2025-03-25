@@ -349,15 +349,6 @@ public class RobotContainer {
                                 .toPose2d()),
                 Set.of(m_drive)));
 
-    m_driverController
-        .x()
-        .onTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L2));
-    m_driverController
-        .y()
-        .onTrue(
-            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_L3));
-
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
     // ============================================================================
@@ -367,27 +358,20 @@ public class RobotContainer {
     m_feeder
         .getHandoffTrigger()
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
-    // FORCE FEED
+    // OVERRIDE FORCE FEED
     m_driverController.start().whileTrue(m_feeder.forceFeedCmd());
 
+    // OVERRIDE ARM TO IDLE
     m_driverController
-        .back()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                m_drive,
-                () -> -m_driverController.getLeftY(),
-                () -> -m_driverController.getLeftX(),
-                () -> new Rotation2d()));
-    // EJECT GAME PIECE
-    // m_driverController
-    //     .b()
-    //     .whileTrue(
-    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_CORAL)
-    //             .andThen(new EjectIntakeCommand(m_collector)))
-    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
-    // m_driverController.x().whileTrue(new ScoreAlgaeCommand(m_endEffector));
+        .x()
+        .onTrue(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
-    // // SCORE CORAL
+    // OVERRIDE FORCE HANDOFF
+    m_driverController
+        .y()
+        .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
+
+    // SCORE CORAL
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
