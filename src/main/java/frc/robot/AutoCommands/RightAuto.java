@@ -67,10 +67,12 @@ public class RightAuto extends SequentialCommandGroup {
                             .get(firstBranchNum)
                             .get(ReefLevel.L4)
                             .toPose2d(),
-                    feeder::getIsHandoffReady),
-                new WaitUntilCommand(() -> feeder.getIsHandoffReady())
-                    .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
+                    () ->
+                        superStructure.getSuperStructureGoal()
+                            == SuperStructureState.SCORE_CORAL_L4),
+                new WaitUntilCommand(() -> getHandoffReady(feeder))
                     .andThen(
+                        new CoralHandoffCommand(superStructure, feeder, endEffector),
                         new SuperStructureCommand(
                             superStructure, () -> getScoringSuperStructureState(ReefLevel.L4))))
             .andThen(
@@ -91,7 +93,7 @@ public class RightAuto extends SequentialCommandGroup {
                   new ResetSuperStructureCommand(drive, superStructure, false)
                       .andThen(feeder.startFeederCmd())
                       .andThen(
-                          new WaitUntilCommand(() -> feeder.getIsHandoffReady())
+                          new WaitUntilCommand(() -> getHandoffReady(feeder))
                               .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
                               .andThen(
                                   new SuperStructureCommand(
@@ -163,5 +165,9 @@ public class RightAuto extends SequentialCommandGroup {
       default:
         return SuperStructureState.SCORED_CORAL_L4;
     }
+  }
+
+  private boolean getHandoffReady(Feeder feeder) {
+    return Constants.kCurrentMode == Mode.SIM ? true : feeder.getIsHandoffReady();
   }
 }
