@@ -71,9 +71,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> superStructureState),
             new DeferredCommand(
-                    () ->
-                        DriveCommands.pathfindThenPreciseAlign(
-                            drive, () -> targetPose.get().toPose2d()),
+                    () -> DriveCommands.pidToPose(drive, () -> targetPose.get().toPose2d()),
                     Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
         new InstantCommand(() -> endEffector.runEndEffectorOuttake()),

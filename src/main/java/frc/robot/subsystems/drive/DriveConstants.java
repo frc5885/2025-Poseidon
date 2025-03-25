@@ -162,7 +162,7 @@ public class DriveConstants {
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(
-          kMaxSpeedMetersPerSec * 0.4,
+          kMaxSpeedMetersPerSec,
           kMaxAccelerationMetersPerSecSq,
           kMaxAngularSpeedRadiansPerSec,
           kMaxAngularAccelerationRadiansPerSecSq,

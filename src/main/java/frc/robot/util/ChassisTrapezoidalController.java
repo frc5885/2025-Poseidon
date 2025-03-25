@@ -18,6 +18,7 @@ public class ChassisTrapezoidalController {
   private TrapezoidProfile m_thetaProfile;
 
   private Pose2d m_goalPose;
+  private Pose2d m_finalGoalPose;
   private Pose2d m_currentPose;
 
   private TrapezoidProfile.State m_translateGoalState;
@@ -38,6 +39,7 @@ public class ChassisTrapezoidalController {
     m_thetaProfile = new TrapezoidProfile(thetaConstraints);
 
     m_goalPose = new Pose2d();
+    m_finalGoalPose = new Pose2d();
     m_currentPose = new Pose2d();
 
     m_translateGoalState = new TrapezoidProfile.State(0, 0);
@@ -66,6 +68,10 @@ public class ChassisTrapezoidalController {
     setGoal(
         new TrapezoidProfile.State(0, 0), // Target is 0 distance remaining
         new TrapezoidProfile.State(goal.getRotation().getRadians(), 0));
+  }
+
+  public void setFinalGoalPose(Pose2d goal) {
+    m_finalGoalPose = goal;
   }
 
   public void setCurrentState(Pose2d robotPose, ChassisSpeeds chassisSpeeds) {
@@ -102,6 +108,7 @@ public class ChassisTrapezoidalController {
 
     // Calculate distance error to goal
     double distanceToGoal = robotPose.getTranslation().getDistance(m_goalPose.getTranslation());
+    Logger.recordOutput("Odometry/ChassisController/DistanceError", distanceToGoal);
 
     // Generate profile for translation (goal is to reach 0 distance)
     TrapezoidProfile.State translateSetpoint =
@@ -131,6 +138,7 @@ public class ChassisTrapezoidalController {
         MathUtil.angleModulus(m_thetaGoalState.position - robotPose.getRotation().getRadians());
     double setpointMinDistance =
         MathUtil.angleModulus(m_thetaPrevSetpoint.position - robotPose.getRotation().getRadians());
+    Logger.recordOutput("Odometry/ChassisController/ThetaError", goalMinDistance);
 
     // Recompute the profile goal with the smallest error, thus giving the shortest path. The goal
     // may be outside the input range after this operation, but that's OK because the controller
@@ -171,12 +179,52 @@ public class ChassisTrapezoidalController {
     double distanceThreshold = m_translateController.getErrorTolerance();
     double angleThreshold = m_thetaController.getErrorTolerance();
 
-    return m_currentPose.getTranslation().getDistance(m_goalPose.getTranslation())
+    return m_currentPose.getTranslation().getDistance(m_finalGoalPose.getTranslation())
             < distanceThreshold
         && Math.abs(
                 MathUtil.angleModulus(
                     m_currentPose.getRotation().getRadians()
                         - m_goalPose.getRotation().getRadians()))
             < angleThreshold;
+  }
+
+  // Add this method to ChassisTrapezoidalController.java
+  public void reset(Pose2d robotPose, ChassisSpeeds chassisSpeeds, Pose2d goalPose) {
+    // Reset goal poses first
+    m_goalPose = goalPose;
+    m_finalGoalPose = goalPose;
+
+    // Reset states
+    m_translateGoalState = new TrapezoidProfile.State(0, 0);
+    m_thetaGoalState = new TrapezoidProfile.State(goalPose.getRotation().getRadians(), 0);
+
+    // Set current state after goals are properly initialized
+    m_currentPose = robotPose;
+
+    // Calculate distance and direction with the NEW goal
+    double distanceToGoal = robotPose.getTranslation().getDistance(goalPose.getTranslation());
+
+    // Initialize previous setpoints with current state
+    ChassisSpeeds fieldRelativeSpeeds =
+        ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, robotPose.getRotation());
+
+    // Calculate direction and speed toward the NEW goal
+    Translation2d directionToGoal = robotPose.getTranslation().minus(goalPose.getTranslation());
+    double currentTranslateSpeed = 0.0;
+    if (directionToGoal.getNorm() > 1e-6) {
+      directionToGoal = directionToGoal.div(directionToGoal.getNorm());
+      currentTranslateSpeed =
+          fieldRelativeSpeeds.vxMetersPerSecond * directionToGoal.getX()
+              + fieldRelativeSpeeds.vyMetersPerSecond * directionToGoal.getY();
+    }
+
+    m_translatePrevSetpoint = new TrapezoidProfile.State(distanceToGoal, currentTranslateSpeed);
+    m_thetaPrevSetpoint =
+        new TrapezoidProfile.State(
+            robotPose.getRotation().getRadians(), fieldRelativeSpeeds.omegaRadiansPerSecond);
+
+    // Reset controllers
+    m_translateController.reset();
+    m_thetaController.reset();
   }
 }

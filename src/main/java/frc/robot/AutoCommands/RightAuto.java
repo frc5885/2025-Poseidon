@@ -40,7 +40,7 @@ public class RightAuto extends SequentialCommandGroup {
   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
 
   // Branches to score coral at
-  private ArrayList<Integer> branches = new ArrayList<>(List.of(0, 0, 0, 0));
+  private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 10, 11));
 
   public RightAuto(
       Drive drive, SuperStructure superStructure, Feeder feeder, EndEffector endEffector) {
@@ -60,7 +60,7 @@ public class RightAuto extends SequentialCommandGroup {
     // drive to pose and move superstructure to scoring, and then score the coral
     addCommands(
         new ParallelCommandGroup(
-                DriveCommands.pathfindThenPreciseAlign(
+                DriveCommands.auto_optimalTrajectoryReefAlign(
                     drive,
                     () ->
                         FieldConstants.Reef.branchPositions
@@ -96,16 +96,14 @@ public class RightAuto extends SequentialCommandGroup {
 
               // along with drive to intake and then drive to reef
               Command chassisCmd =
-                  drive
-                      .getDriveToPoseCommand(() -> intakePose, false)
-                      // TODO fix red side
+                  DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
                       .alongWith(
                           new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, 1.75)
                               .andThen(
                                   new InstantCommand(
                                       () -> LEDSubsystem.getInstance().flashGreen())))
                       .andThen(
-                          DriveCommands.pathfindThenPreciseAlign(
+                          DriveCommands.auto_optimalTrajectoryReefAlign(
                               drive,
                               () ->
                                   FieldConstants.Reef.branchPositions

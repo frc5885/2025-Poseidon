@@ -89,6 +89,9 @@ public class Drive extends SubsystemBase {
       TunableDouble.register("Drive/AdjustmentBaseFactor", 0.3);
   @Setter private DoubleSupplier adjustmentFactor = () -> 0.0;
 
+  private Pose2d m_pathPlannerSetpoint = new Pose2d();
+  private boolean m_usePPRunVelocity = false;
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -116,11 +119,10 @@ public class Drive extends SubsystemBase {
         this::getPose,
         this::setPose,
         this::getChassisSpeeds,
-        this::runVelocity,
+        this::ppRunVelocity,
         kPPController,
         kPPConfig,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        this);
+        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) -> {
@@ -129,6 +131,7 @@ public class Drive extends SubsystemBase {
         });
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> {
+          m_pathPlannerSetpoint = targetPose;
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
     m_setpointGenerator =
@@ -260,6 +263,20 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
+  /**
+   * Runs the drive at the desired velocity using the path planner, if the usePPRunVelocity flag is
+   * true.
+   */
+  public void ppRunVelocity(ChassisSpeeds speeds) {
+    if (m_usePPRunVelocity) {
+      runVelocity(speeds);
+    }
+  }
+
+  public void setUsePPRunVelocity(boolean usePPRunVelocity) {
+    m_usePPRunVelocity = usePPRunVelocity;
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
@@ -387,6 +404,14 @@ public class Drive extends SubsystemBase {
    */
   public Command getPathFindFollowCommand(Supplier<PathPlannerPath> goalPath) {
     return AutoBuilder.pathfindThenFollowPath(goalPath.get(), kPathConstraintsFast);
+  }
+
+  public Pose2d getPathPlannerSetpoint() {
+    return m_pathPlannerSetpoint;
+  }
+
+  public void setPathPlannerSetpoint(Pose2d setpoint) {
+    m_pathPlannerSetpoint = setpoint;
   }
 
   /** Returns the position of each module in radians. */

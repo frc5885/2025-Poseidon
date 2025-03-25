@@ -37,31 +37,28 @@ public class TestAuto extends SequentialCommandGroup {
               }
               feeder.runFeeder(8.0);
             }),
-        DriveCommands.pathfindThenPreciseAlign(
+        DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
-        drive
-            .getDriveToPoseCommand(() -> intakePose, false)
+        DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
             .alongWith(
                 new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
-        DriveCommands.pathfindThenPreciseAlign(
+        DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
-        drive
-            .getDriveToPoseCommand(() -> intakePose, false)
+        DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
             .alongWith(
                 new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
-        DriveCommands.pathfindThenPreciseAlign(
+        DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
-        drive
-            .getDriveToPoseCommand(() -> intakePose, false)
+        DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
             .alongWith(
                 new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
-        DriveCommands.pathfindThenPreciseAlign(
+        DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
         new InstantCommand(() -> feeder.stop()));
   }

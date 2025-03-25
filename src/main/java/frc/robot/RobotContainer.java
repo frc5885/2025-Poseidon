@@ -342,7 +342,7 @@ public class RobotContainer {
         .whileTrue(
             new DeferredCommand(
                 () ->
-                    DriveCommands.pathfindThenPreciseAlign(
+                    DriveCommands.pidToPose(
                         m_drive,
                         () ->
                             FieldConstants.Reef.branchPositions

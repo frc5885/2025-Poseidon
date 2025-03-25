@@ -36,7 +36,7 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                 false)
             .unless(() -> DriverStation.isTest()),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
-        DriveCommands.preciseChassisAlign(
+        DriveCommands.pidToPose(
                 drive,
                 () ->
                     new Pose2d(

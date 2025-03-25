@@ -69,7 +69,7 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
                     true)
                 .unless(() -> DriverStation.isTest())),
         new ParallelDeadlineGroup(
-            DriveCommands.preciseChassisAlign(drive, () -> AllianceFlipUtil.apply(targetPose))
+            DriveCommands.pidToPose(drive, () -> AllianceFlipUtil.apply(targetPose))
                 .unless(() -> DriverStation.isTest()),
             new IntakeAlgaeCommand(endEffector)),
         new InstantCommand(
