@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.SuperStructure.Arm.Arm;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
@@ -167,13 +168,13 @@ public class SuperStructure extends SubsystemBase {
   }
 
   private Command setSingleState(SuperStructureState goal) {
-    return Commands.run(
+    return Commands.runOnce(
             () -> {
               setElevatorGoal(goal.elevatorGoal);
               setArmGoal(goal.armGoal);
             },
             this)
-        .until(this::isGoalAchieved)
+        .andThen(new WaitUntilCommand(this::isGoalAchieved))
         .finallyDo(() -> m_goalState = goal);
   }
 
