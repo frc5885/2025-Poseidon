@@ -58,16 +58,21 @@ public class RightAuto extends SequentialCommandGroup {
     int firstBranchNum = branches.get(0);
     // drive to pose and move superstructure to scoring, and then score the coral
     addCommands(
+        feeder.startFeederCmd(),
         new ParallelCommandGroup(
-                DriveCommands.auto_optimalTrajectoryReefAlign(
+                DriveCommands.getAutoSmartOptimalTrajectoryAlign(
                     drive,
                     () ->
                         FieldConstants.Reef.branchPositions
                             .get(firstBranchNum)
                             .get(ReefLevel.L4)
-                            .toPose2d()),
-                new SuperStructureCommand(
-                    superStructure, () -> getScoringSuperStructureState(ReefLevel.L4)))
+                            .toPose2d(),
+                    feeder::getIsHandoffReady),
+                new WaitUntilCommand(() -> feeder.getIsHandoffReady())
+                    .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
+                    .andThen(
+                        new SuperStructureCommand(
+                            superStructure, () -> getScoringSuperStructureState(ReefLevel.L4))))
             .andThen(
                 new SuperStructureCommand(
                     superStructure, () -> getScoredSuperStructureState(ReefLevel.L4)))
@@ -102,13 +107,14 @@ public class RightAuto extends SequentialCommandGroup {
                                   new InstantCommand(
                                       () -> LEDSubsystem.getInstance().flashGreen())))
                       .andThen(
-                          DriveCommands.auto_optimalTrajectoryReefAlign(
+                          DriveCommands.getAutoSmartOptimalTrajectoryAlign(
                               drive,
                               () ->
                                   FieldConstants.Reef.branchPositions
                                       .get(branchNum)
                                       .get(ReefLevel.L4)
-                                      .toPose2d()));
+                                      .toPose2d(),
+                              feeder::getIsHandoffReady));
 
               // Score coral
               Command scoreCmd =
