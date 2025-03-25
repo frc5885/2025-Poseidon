@@ -4,13 +4,14 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
-import frc.robot.subsystems.Feeder.FeederConstants.*;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
@@ -25,8 +26,6 @@ public class Feeder extends SubsystemBase {
   private final BeamBreakIO m_beamBreakIO;
   private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
   private final Debouncer m_beambreakDebouncer = new Debouncer(0.1);
-
-  private FeederState m_state = FeederState.IDLE;
 
   private boolean m_isHandOffReady = false;
 
@@ -48,27 +47,6 @@ public class Feeder extends SubsystemBase {
     // Update alert
     m_motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
     m_motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
-
-    switch (m_state) {
-      case IDLE:
-        stop();
-        break;
-      case FEEDING:
-        runFeeder(8.0);
-        if (isBeamBreakTriggered()) {
-          forceSetFeederState(FeederState.FEEDING_SLOW);
-        }
-        break;
-      case FEEDING_SLOW:
-        runFeeder(6.0);
-        if (!isBeamBreakTriggered()) {
-          forceSetFeederState(FeederState.IDLE);
-          m_isHandOffReady = true;
-        }
-        break;
-    }
-
-    Logger.recordOutput("Feeder/handoffReady", m_isHandOffReady);
   }
 
   public void runFeeder(double volts) {
@@ -87,7 +65,7 @@ public class Feeder extends SubsystemBase {
     m_feederIO.setVoltage(0.0);
   }
 
-  // @AutoLogOutput
+  @AutoLogOutput
   public boolean getIsHandoffReady() {
     return m_isHandOffReady;
   }
@@ -98,7 +76,7 @@ public class Feeder extends SubsystemBase {
 
   public void handoffComplete() {
     m_isHandOffReady = false;
-    m_state = FeederState.IDLE;
+    stop();
 
     if (Constants.kCurrentMode == Mode.SIM) {
       GamePieceVisualizer.setHasCoral(true);
@@ -109,34 +87,63 @@ public class Feeder extends SubsystemBase {
   public void setHandoffReady() {
     if (!GamePieceVisualizer.hasCoral()) {
       m_isHandOffReady = true;
-      forceSetFeederState(FeederState.IDLE);
+      stop();
     }
   }
 
-  /** Set the state of the feeder, only when it is idle or feeding */
-  public void setFeederState(FeederState state) {
-    if (m_state == FeederState.FEEDING_SLOW || m_isHandOffReady) return;
+  public Command startFeederCmd() {
+    Command cmd =
+        new Command() {
+          private boolean m_wasBeamBreakTriggered = false;
+          private boolean m_isFinished = false;
 
-    forceSetFeederState(state);
+          @Override
+          public void initialize() {
+            runFeeder(FeederConstants.kFeedSpeed);
+            LEDSubsystem.getInstance().setStates(LEDStates.INTAKE_RUNNING);
+            m_wasBeamBreakTriggered = false;
+            m_isFinished = false;
+          }
+
+          @Override
+          public void execute() {
+
+            if (!m_wasBeamBreakTriggered && isBeamBreakTriggered()) {
+              // feed slow
+              runFeeder(FeederConstants.kFeedSlowSpeed);
+              m_wasBeamBreakTriggered = true;
+            } else if (m_wasBeamBreakTriggered && !isBeamBreakTriggered()) {
+              stop();
+              m_isHandOffReady = true;
+              m_isFinished = true;
+              LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
+            }
+          }
+
+          @Override
+          public boolean isFinished() {
+            return m_isFinished || (Constants.kCurrentMode == Mode.SIM && m_isHandOffReady);
+          }
+        };
+    cmd.addRequirements(this);
+    return new InstantCommand(() -> cmd.schedule());
   }
 
-  /** Set the feeder state without any conditions */
-  private void forceSetFeederState(FeederState state) {
-    m_state = state;
-    switch (state) {
-      case IDLE:
-        LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
-        break;
-      case FEEDING:
-        LEDSubsystem.getInstance().setStates(LEDStates.INTAKE_RUNNING);
-        break;
-      default:
-        break;
-    }
-  }
+  public Command forceFeedCmd() {
+    Command cmd =
+        new Command() {
+          @Override
+          public void initialize() {
+            runFeeder(FeederConstants.kFeedSpeed);
+          }
 
-  @AutoLogOutput
-  public FeederState getFeederState() {
-    return m_state;
+          @Override
+          public void end(boolean interrupted) {
+            stop();
+            LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
+          }
+        };
+    cmd.addRequirements(this);
+    return cmd;
   }
 }

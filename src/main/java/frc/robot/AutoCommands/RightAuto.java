@@ -20,7 +20,6 @@ import frc.robot.commands.SuperStructureCommand;
 import frc.robot.commands.WaitUntilCloseToCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.Feeder.Feeder;
-import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
@@ -85,7 +84,7 @@ public class RightAuto extends SequentialCommandGroup {
               // superstructure scoring position
               Command ssCmd =
                   new ResetSuperStructureCommand(drive, superStructure, false)
-                      .andThen(new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)))
+                      .andThen(feeder.startFeederCmd())
                       .andThen(
                           new WaitUntilCommand(() -> feeder.getIsHandoffReady())
                               .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))

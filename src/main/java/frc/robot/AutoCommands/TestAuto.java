@@ -13,7 +13,6 @@ import frc.robot.Constants.Mode;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.WaitUntilCloseToCommand;
 import frc.robot.subsystems.Feeder.Feeder;
-import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlipUtil;
@@ -39,21 +38,21 @@ public class TestAuto extends SequentialCommandGroup {
             }),
         DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
-        new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
+        feeder.startFeederCmd(),
         DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
             .alongWith(
                 new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
         DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
-        new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
+        feeder.startFeederCmd(),
         DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
             .alongWith(
                 new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
         DriveCommands.pidToPose(
             drive, () -> Reef.branchPositions.get(0).get(ReefLevel.L4).toPose2d()),
-        new InstantCommand(() -> feeder.setFeederState(FeederState.FEEDING)),
+        feeder.startFeederCmd(),
         DriveCommands.auto_basicPathplannerToPose(drive, () -> intakePose, false)
             .alongWith(
                 new WaitUntilCloseToCommand(() -> drive.getPose(), () -> intakePose, ledDistance)

@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -46,7 +45,6 @@ import frc.robot.subsystems.EndEffector.EndEffectorIOSim;
 import frc.robot.subsystems.EndEffector.EndEffectorIOSpark;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.Feeder.FeederConstants;
-import frc.robot.subsystems.Feeder.FeederConstants.FeederState;
 import frc.robot.subsystems.Feeder.FeederIO;
 import frc.robot.subsystems.Feeder.FeederIOSim;
 import frc.robot.subsystems.Feeder.FeederIOSpark;
@@ -351,22 +349,6 @@ public class RobotContainer {
                                 .toPose2d()),
                 Set.of(m_drive)));
 
-    // m_driverController.b().onTrue(new SuperStructureCommand(m_superStructure,
-    // m_stateChooser::get));
-
-    // m_driverController
-    //     .a()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_superStructure.runElevatorOpenLoop(-12.0),
-    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
-    //             m_superStructure));
-    // m_driverController
-    //     .b()
-    //     .whileTrue(
-    //         new StartEndCommand(
-    //             () -> m_feeder.runFeeder(8.0), () -> m_feeder.runFeeder(0.0), m_feeder));
-
     m_driverController
         .x()
         .onTrue(
@@ -381,18 +363,12 @@ public class RobotContainer {
     // ============================================================================
 
     // RUN FEEDER, THEN HANDOFF CORAL AUTOMATICALLY
-    m_driverController
-        .rightBumper()
-        .debounce(0.1)
-        .onTrue(new InstantCommand(() -> m_feeder.setFeederState(FeederState.FEEDING), m_feeder));
+    m_driverController.rightBumper().debounce(0.1).onTrue(m_feeder.startFeederCmd());
     m_feeder
         .getHandoffTrigger()
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
     // FORCE FEED
-    m_driverController
-        .start()
-        .whileTrue(Commands.runOnce(() -> m_feeder.runFeeder(12)))
-        .onFalse(Commands.runOnce(() -> m_feeder.setFeederState(FeederState.IDLE)));
+    m_driverController.start().whileTrue(m_feeder.forceFeedCmd());
 
     m_driverController
         .back()
