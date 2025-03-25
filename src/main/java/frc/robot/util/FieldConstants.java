@@ -163,34 +163,56 @@ public class FieldConstants {
                   new Translation3d(
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  adjustY - level.yOffset,
+                                  new Rotation2d()))
                           .getX(),
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  adjustY - level.yOffset,
+                                  new Rotation2d()))
                           .getY(),
                       level.height),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
-                      poseDirection.getRotation().rotateBy(new Rotation2d(Math.PI)).getRadians())));
+                      poseDirection
+                          .getRotation()
+                          .rotateBy(
+                              new Rotation2d(
+                                  Math.PI + Units.degreesToRadians(level.rotationOffset)))
+                          .getRadians())));
           fillLeft.put(
               level,
               new Pose3d(
                   new Translation3d(
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, -adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  -adjustY + level.yOffset,
+                                  new Rotation2d()))
                           .getX(),
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, -adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  -adjustY + level.yOffset,
+                                  new Rotation2d()))
                           .getY(),
                       level.height),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
-                      poseDirection.getRotation().rotateBy(new Rotation2d(Math.PI)).getRadians())));
+                      poseDirection
+                          .getRotation()
+                          .rotateBy(
+                              new Rotation2d(
+                                  Math.PI - Units.degreesToRadians(level.rotationOffset)))
+                          .getRadians())));
         }
         branchPositions.add(fillRight);
         branchPositions.add(fillLeft);
@@ -212,10 +234,10 @@ public class FieldConstants {
   @RequiredArgsConstructor
   public enum ReefLevel {
     // height, pitch, offset
-    L1(Units.inchesToMeters(25.0), 0, -0.6),
-    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.57),
-    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.7),
-    L4(Units.inchesToMeters(72), -90, -0.75);
+    L1(Units.inchesToMeters(25.0), 0, -0.15, -1.0, 75),
+    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.57, 0.0, 0.0),
+    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.7, 0.0, 0.0),
+    L4(Units.inchesToMeters(72), -90, -0.75, 0.0, 0.0);
 
     public static ReefLevel fromLevel(int level) {
       return Arrays.stream(values())
@@ -230,7 +252,9 @@ public class FieldConstants {
 
     public final double height;
     public final double pitch;
-    public final double offset;
+    public final double xOffset;
+    public final double yOffset;
+    public final double rotationOffset; // in degrees
   }
 
   public static final double aprilTagWidth = Units.inchesToMeters(6.50);
