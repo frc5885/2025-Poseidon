@@ -96,7 +96,7 @@ public class SuperStructureConstants {
       CORAL_L1(TunableDouble.register("Arm/CORAL_L1", -45.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -70.0)),
       // TODO
-      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -20.0)),
+      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -40.0)),
       CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 50.0)),
       // TODO
       SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", -20.0)),
