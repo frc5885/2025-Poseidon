@@ -51,15 +51,15 @@ import org.littletonrobotics.junction.Logger;
 public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 5.0;
-  private static final double kAngleKd = 0.5;
-  private static final double kTranslateKp = 5.0;
+  private static final double kAngleKd = 0.0;
+  private static final double kTranslateKp = 4.0;
   private static final double kTranslateKd = 0.5;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
-  private static final double kAngleTolerance = 0.06;
-  private static final double kTranslationTolerance = 0.02;
+  private static final double kAngleTolerance = Units.degreesToRadians(0.5);
+  private static final double kTranslationTolerance = 0.015;
 
   // Create PID controllers
   private static TunablePIDController angleController;

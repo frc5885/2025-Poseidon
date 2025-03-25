@@ -20,10 +20,10 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -361,19 +361,11 @@ public class RobotContainer {
     //             () -> m_superStructure.runElevatorOpenLoop(-12.0),
     //             () -> m_superStructure.runElevatorOpenLoop(0.0),
     //             m_superStructure));
-    m_driverController
-        .b()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_feeder.runFeeder(8.0), () -> m_feeder.runFeeder(0.0), m_feeder));
-
-    m_driverController
-        .start()
-        .whileTrue(
-            new StartEndCommand(
-                () -> m_endEffector.runEndEffectorIntake(),
-                () -> m_endEffector.stopEndEffector(),
-                m_endEffector));
+    // m_driverController
+    //     .b()
+    //     .whileTrue(
+    //         new StartEndCommand(
+    //             () -> m_feeder.runFeeder(8.0), () -> m_feeder.runFeeder(0.0), m_feeder));
 
     m_driverController
         .x()
@@ -396,6 +388,11 @@ public class RobotContainer {
     m_feeder
         .getHandoffTrigger()
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
+    // FORCE FEED
+    m_driverController
+        .start()
+        .whileTrue(Commands.runOnce(() -> m_feeder.runFeeder(12)))
+        .onFalse(Commands.runOnce(() -> m_feeder.setFeederState(FeederState.IDLE)));
 
     m_driverController
         .back()

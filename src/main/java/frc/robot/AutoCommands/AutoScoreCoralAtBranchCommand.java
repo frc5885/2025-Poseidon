@@ -55,7 +55,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                   };
               scoredState =
                   switch (reefLevel) {
-                    case L1 -> SuperStructureState.IDLE;
+                    case L1 -> SuperStructureState.SCORE_CORAL_L1;
                     case L2 -> SuperStructureState.SCORED_CORAL_L2;
                     case L3 -> SuperStructureState.SCORED_CORAL_L3;
                     case L4 -> SuperStructureState.SCORED_CORAL_L4;
@@ -77,11 +77,12 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                     Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
         new InstantCommand(() -> endEffector.runEndEffectorOuttake()),
-        new SuperStructureCommand(superStructure, () -> scoredState),
         new InstantCommand(
             () -> {
-              endEffector.stopEndEffector();
-              GamePieceVisualizer.setHasCoral(false);
+              new SuperStructureCommand(superStructure, () -> scoredState)
+                  .andThen(new InstantCommand(() -> endEffector.stopEndEffector()))
+                  .andThen(new InstantCommand(() -> GamePieceVisualizer.setHasCoral(false)))
+                  .schedule();
             }));
   }
 }

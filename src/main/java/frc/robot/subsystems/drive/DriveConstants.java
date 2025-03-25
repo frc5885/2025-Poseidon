@@ -96,8 +96,8 @@ public class DriveConstants {
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
   public static final double kDriveKd = 0.0;
-  public static final double kDriveKs = 0.0056448;
-  public static final double kDriveKv = 0.13594;
+  public static final double kDriveKs = 0.16493;
+  public static final double kDriveKv = 0.13374;
   public static final double kDriveKa = 0.014454;
   public static final double kDriveSimP = 0.05;
   public static final double kDriveSimD = 0.0;
@@ -162,7 +162,7 @@ public class DriveConstants {
 
   public static final PathConstraints kPathConstraintsFast =
       new PathConstraints(
-          kMaxSpeedMetersPerSec,
+          kMaxSpeedMetersPerSec * 0.4,
           kMaxAccelerationMetersPerSecSq,
           kMaxAngularSpeedRadiansPerSec,
           kMaxAngularAccelerationRadiansPerSecSq,
