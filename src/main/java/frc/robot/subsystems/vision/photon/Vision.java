@@ -32,6 +32,7 @@ import frc.robot.subsystems.vision.photon.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.IntStream;
+import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
@@ -42,6 +43,8 @@ public class Vision extends SubsystemBase {
   // private final SparkMax m_power = new SparkMax(VisionConstants.kCameraPowerId,
   // MotorType.kBrushed);
   // private final PWM m_source = new PWM(kCameraPowerChannel);
+
+  @Setter private static boolean applyTargetDeviation = false;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     m_consumer = consumer;
@@ -145,8 +148,14 @@ public class Vision extends SubsystemBase {
           // Scale the factor exponentially with the difference
           double targetAngleFactor = Math.pow(1 + targetAngleDifference, 2);
 
-          double linearStdDev = kLinearStdDevBaseline * stdDevFactor * targetAngleFactor;
-          double angularStdDev = kAngularStdDevBaseline * stdDevFactor * targetAngleFactor;
+          double linearStdDev =
+              kLinearStdDevBaseline
+                  * stdDevFactor
+                  * (applyTargetDeviation ? targetAngleFactor : 1.0);
+          double angularStdDev =
+              kAngularStdDevBaseline
+                  * stdDevFactor
+                  * (applyTargetDeviation ? targetAngleFactor : 1.0);
           if (observation.type() == PoseObservationType.MEGATAG_2) {
             linearStdDev *= kLinearStdDevMegatag2Factor;
             angularStdDev *= kAngularStdDevMegatag2Factor;

@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ChassisTrapezoidalController;
 import frc.robot.util.TunablePIDController;
@@ -296,9 +297,14 @@ public class DriveCommands {
         .beforeStarting(
             () -> {
               m_chassisController.reset(drive.getPose(), drive.getChassisSpeeds(), targetPoseValue);
+              Vision.setApplyTargetDeviation(true);
             })
         .until(() -> m_chassisController.isGoalAchieved())
-        .finallyDo(drive::stop);
+        .finallyDo(
+            () -> {
+              drive.stop();
+              Vision.setApplyTargetDeviation(false);
+            });
   }
 
   /**
