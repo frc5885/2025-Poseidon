@@ -1,6 +1,9 @@
 package frc.robot.io.beambreak;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 /**
  * Simulated beam break sensor for testing purposes. The sensor will report a change in state after
@@ -67,5 +70,22 @@ public class BeamBreakIOSim implements BeamBreakIO {
   public void cancelSimulatedGamePieceChange() {
     m_targetState = m_sensorState;
     m_stateChangeStartTime = -1;
+  }
+
+  /**
+   * Simulate a coral being fed through the hopper. This will break the beambreak, then un-break it,
+   * the way a coral would.
+   *
+   * @param breakDelay
+   * @param unBreakDelay
+   */
+  public void simulateCoralHopperFeed(double breakDelay, double unBreakDelay) {
+    Command cmd =
+        new InstantCommand(() -> simulateGamePieceIntake(breakDelay))
+            .andThen(new WaitCommand(breakDelay + unBreakDelay))
+            .andThen(new InstantCommand(() -> simulateGamePieceOuttake(0.0)));
+
+    // schedule command and return immediately
+    cmd.schedule();
   }
 }

@@ -12,6 +12,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
+import frc.robot.io.beambreak.BeamBreakIOSim;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
@@ -28,6 +29,8 @@ public class Feeder extends SubsystemBase {
   private final Debouncer m_beambreakDebouncer = new Debouncer(0.12);
 
   private boolean m_isHandOffReady = false;
+
+  private boolean m_simulatedCoralIntakeCoolDownRunning = false;
 
   public Feeder(FeederIO io, BeamBreakIO beamBreakIO) {
     m_feederIO = io;
@@ -76,6 +79,7 @@ public class Feeder extends SubsystemBase {
 
   public void handoffComplete() {
     m_isHandOffReady = false;
+    m_simulatedCoralIntakeCoolDownRunning = false;
     stop();
 
     if (Constants.kCurrentMode == Mode.SIM) {
@@ -83,11 +87,17 @@ public class Feeder extends SubsystemBase {
     }
   }
 
+  public boolean isRunning() {
+    return m_inputs.appliedVolts > 0.1;
+  }
+
   /** Only use this in simulation */
-  public void setHandoffReady() {
-    if (!GamePieceVisualizer.hasCoral()) {
-      m_isHandOffReady = true;
-      stop();
+  public void simulateCoralFeed() {
+    if (!GamePieceVisualizer.hasCoral() && !m_simulatedCoralIntakeCoolDownRunning) {
+      if (m_beamBreakIO instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_beamBreakIO).simulateCoralHopperFeed(1.0, 0.25);
+        m_simulatedCoralIntakeCoolDownRunning = true;
+      }
     }
   }
 
