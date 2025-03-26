@@ -371,22 +371,21 @@ public class RobotContainer {
         .y()
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
 
-    // CORAL FORCE EJECT
+    // OVERRIDE CORAL FORCE EJECT
     m_driverController
         .b()
         .whileTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1)
                 .alongWith(new InstantCommand(m_endEffector::runEndEffectorOuttake, m_endEffector)))
         .onFalse(
-            new ResetSuperStructureCommand(
-                    m_drive, m_superStructure, m_endEffector.isHoldingAlgae())
-                .alongWith(new InstantCommand(m_endEffector::runEndEffectorIntake, m_endEffector)));
+            new ResetSuperStructureCommand(m_drive, m_superStructure, false)
+                .alongWith(new InstantCommand(m_endEffector::stopEndEffector, m_endEffector)));
 
     // SCORE CORAL
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
-                m_drive, m_superStructure, m_endEffector, m_operatorPanel::getTargetPose))
+                m_drive, m_superStructure, m_endEffector, () -> m_operatorPanel.getTargetPose()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF

@@ -6,6 +6,7 @@ package frc.robot.util;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -29,6 +30,8 @@ public class ChassisTrapezoidalController {
 
   private PIDController m_translateController;
   private PIDController m_thetaController;
+
+  private Debouncer m_atGoalDwellDebouncer = new Debouncer(0.5); // hehehehehe
 
   public ChassisTrapezoidalController(
       TrapezoidProfile.Constraints translateConstraints,
@@ -179,13 +182,16 @@ public class ChassisTrapezoidalController {
     double distanceThreshold = m_translateController.getErrorTolerance();
     double angleThreshold = m_thetaController.getErrorTolerance();
 
-    return m_currentPose.getTranslation().getDistance(m_finalGoalPose.getTranslation())
-            < distanceThreshold
-        && Math.abs(
-                MathUtil.angleModulus(
-                    m_currentPose.getRotation().getRadians()
-                        - m_goalPose.getRotation().getRadians()))
-            < angleThreshold;
+    boolean isAchieved =
+        m_currentPose.getTranslation().getDistance(m_finalGoalPose.getTranslation())
+                < distanceThreshold
+            && Math.abs(
+                    MathUtil.angleModulus(
+                        m_currentPose.getRotation().getRadians()
+                            - m_goalPose.getRotation().getRadians()))
+                < angleThreshold;
+    // wait for goal to be achieved for a certain amount of time before ending
+    return m_atGoalDwellDebouncer.calculate(isAchieved);
   }
 
   // Add this method to ChassisTrapezoidalController.java
