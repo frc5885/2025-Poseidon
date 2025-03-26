@@ -5,7 +5,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import java.util.function.Supplier;
@@ -31,9 +30,9 @@ public class SuperStructureCommand extends Command {
   @Override
   public void initialize() {
     SuperStructureState newState = m_stateSupplier.get();
-    if (LEDSubsystem.getInstance().isAlgaeHeld() && newState == SuperStructureState.IDLE) {
-      newState = SuperStructureState.IDLE_ALGAE;
-    }
+    // if (LEDSubsystem.getInstance().isAlgaeHeld() && newState == SuperStructureState.IDLE) {
+    //   newState = SuperStructureState.IDLE_ALGAE;
+    // }
     m_command = m_superStructure.setSuperStructureGoal(newState);
     m_command.initialize();
   }
