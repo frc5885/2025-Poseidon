@@ -137,8 +137,16 @@ public class Vision extends SubsystemBase {
           // Calculate standard deviations
           double stdDevFactor =
               Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-          double linearStdDev = kLinearStdDevBaseline * stdDevFactor;
-          double angularStdDev = kAngularStdDevBaseline * stdDevFactor;
+
+          // Trust tags less the further their angle is from PI radians (facing straight at target)
+          // Calculate angle difference from optimal viewing angle (180 degrees)
+          double targetAngle = observation.pose().getRotation().getZ();
+          double targetAngleDifference = Math.abs(Math.PI - Math.abs(targetAngle));
+          // Scale the factor exponentially with the difference
+          double targetAngleFactor = Math.pow(1 + targetAngleDifference, 2);
+
+          double linearStdDev = kLinearStdDevBaseline * stdDevFactor * targetAngleFactor;
+          double angularStdDev = kAngularStdDevBaseline * stdDevFactor * targetAngleFactor;
           if (observation.type() == PoseObservationType.MEGATAG_2) {
             linearStdDev *= kLinearStdDevMegatag2Factor;
             angularStdDev *= kAngularStdDevMegatag2Factor;

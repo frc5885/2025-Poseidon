@@ -251,6 +251,10 @@ public class RobotContainer {
         "Right Side",
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+    m_autoChooser.addDefaultOption(
+        "LCC Testing",
+        new MultiCoralAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 0, 1)));
 
     // Set up SysId routines
     m_autoChooser.addOption(
