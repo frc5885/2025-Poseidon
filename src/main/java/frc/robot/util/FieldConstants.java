@@ -306,6 +306,11 @@ public class FieldConstants {
     private final String layoutString;
   }
 
+  public static enum Side {
+    LEFT,
+    RIGHT
+  }
+
   public record CoralObjective(int branchId, ReefLevel reefLevel) {}
 
   public record AlgaeObjective(int id) {}

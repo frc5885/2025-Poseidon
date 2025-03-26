@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
-import frc.robot.AutoCommands.RightAuto;
+import frc.robot.AutoCommands.MultiCoralAuto;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
@@ -76,7 +76,9 @@ import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
+import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
+import java.util.List;
 import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -242,7 +244,13 @@ public class RobotContainer {
     m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
     m_autoChooser.addDefaultOption(
-        "4_coral_auto", new RightAuto(m_drive, m_superStructure, m_feeder, m_endEffector));
+        "Left Side",
+        new MultiCoralAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
+    m_autoChooser.addDefaultOption(
+        "Right Side",
+        new MultiCoralAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
 
     // Set up SysId routines
     m_autoChooser.addOption(
