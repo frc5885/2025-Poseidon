@@ -46,7 +46,7 @@ public class SuperStructureConstants {
     public static enum ElevatorLevel {
       STOW(() -> kElevatorStartingPositionMeters),
       IDLE(TunableDouble.register("Elevator/IDLE", 0.1)),
-      L2(TunableDouble.register("Elevator/L2", 0.25)),
+      L2(TunableDouble.register("Elevator/L2", 0.28)),
       ALGAE_L3(TunableDouble.register("Elevator/ALGAE_L3", 0.35)),
       L4(TunableDouble.register("Elevator/L4", 0.65)),
       NET(TunableDouble.register("Elevator/NET", 0.7));
@@ -66,9 +66,9 @@ public class SuperStructureConstants {
     public static final double kArmMaxAngleRads = Units.degreesToRadians(120);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = 7.0;
+    public static final double kArmMaxVelocity = 5.0;
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = 35.0;
+    public static final double kArmMaxAcceleration = 13.0;
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 1.0 / 13.35;
     public static final double kArmMotorReduction = 2 * Math.PI / kArmEncoderPositionFactor; // real
@@ -96,7 +96,7 @@ public class SuperStructureConstants {
       CORAL_L1(TunableDouble.register("Arm/CORAL_L1", -45.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -70.0)),
       // TODO
-      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -40.0)),
+      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -25.0)),
       CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 50.0)),
       // TODO
       SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", -20.0)),

@@ -25,7 +25,7 @@ public class Feeder extends SubsystemBase {
   private final FeederIOInputsAutoLogged m_inputs = new FeederIOInputsAutoLogged();
   private final BeamBreakIO m_beamBreakIO;
   private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
-  private final Debouncer m_beambreakDebouncer = new Debouncer(0.1);
+  private final Debouncer m_beambreakDebouncer = new Debouncer(0.12);
 
   private boolean m_isHandOffReady = false;
 

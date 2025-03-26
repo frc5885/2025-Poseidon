@@ -33,7 +33,7 @@ public class EndEffector extends SubsystemBase {
   }
 
   public void runEndEffectorOuttake() {
-    m_endEffector.setVoltage(-12.0);
+    m_endEffector.setVoltage(-10.0);
   }
 
   public void stopEndEffector() {

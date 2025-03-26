@@ -371,6 +371,17 @@ public class RobotContainer {
         .y()
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
 
+    // CORAL FORCE EJECT
+    m_driverController
+        .b()
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1)
+                .alongWith(new InstantCommand(m_endEffector::runEndEffectorOuttake, m_endEffector)))
+        .onFalse(
+            new ResetSuperStructureCommand(
+                    m_drive, m_superStructure, m_endEffector.isHoldingAlgae())
+                .alongWith(new InstantCommand(m_endEffector::runEndEffectorIntake, m_endEffector)));
+
     // SCORE CORAL
     m_automaticCoralScoreTrigger
         .whileTrue(

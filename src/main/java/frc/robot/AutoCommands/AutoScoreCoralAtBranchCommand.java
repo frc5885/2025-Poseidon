@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -43,10 +44,10 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
       EndEffector endEffector,
       Supplier<Pose3d> targetPose) {
 
-    reefLevel = ReefLevel.fromHeight(targetPose.get().getZ());
     addCommands(
         new InstantCommand(
             () -> {
+              reefLevel = ReefLevel.fromHeight(targetPose.get().getZ());
               superStructureState =
                   switch (reefLevel) {
                     case L1 -> SuperStructureState.SCORE_CORAL_L1;
@@ -77,8 +78,11 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                     Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
         new InstantCommand(() -> endEffector.runEndEffectorOuttake()),
-        // keep wheels spinning for 1s if level 1
-        new ConditionalCommand(new WaitCommand(1.0), null, () -> reefLevel == ReefLevel.L1),
+        // keep wheels spinning for 0.2s if level 1
+        new ConditionalCommand(
+            new WaitCommand(0.2),
+            Commands.none(),
+            () -> ReefLevel.fromHeight(targetPose.get().getZ()) == ReefLevel.L1),
         new InstantCommand(
             () -> {
               new SuperStructureCommand(superStructure, () -> scoredState)

@@ -39,7 +39,7 @@ public class RightAuto extends SequentialCommandGroup {
   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
 
   // Branches to score coral at
-  private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 10, 11));
+  private ArrayList<Integer> branches = new ArrayList<>(List.of(9, 0, 1));
 
   public RightAuto(
       Drive drive, SuperStructure superStructure, Feeder feeder, EndEffector endEffector) {
@@ -120,11 +120,10 @@ public class RightAuto extends SequentialCommandGroup {
 
               // Score coral
               Command scoreCmd =
-                  new SuperStructureCommand(
-                          superStructure, () -> getScoredSuperStructureState(ReefLevel.L4))
-                      .alongWith(
-                          new InstantCommand(
-                              () -> endEffector.runEndEffectorOuttake(), endEffector))
+                  new InstantCommand(() -> endEffector.runEndEffectorOuttake())
+                      .andThen(
+                          new SuperStructureCommand(
+                              superStructure, () -> getScoredSuperStructureState(ReefLevel.L4)))
                       .andThen(
                           () -> {
                             endEffector.stopEndEffector();

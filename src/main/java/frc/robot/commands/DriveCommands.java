@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 public class DriveCommands {
   private static final double kDeadband = 0.1;
   private static final double kAngleKp = 5.0;
-  private static final double kAngleKd = 0.0;
+  private static final double kAngleKd = 0.5;
   private static final double kTranslateKp = 4.0;
   private static final double kTranslateKd = 0.5;
   private static final double kFfStartDelay = 2.0; // Secs
@@ -251,16 +251,15 @@ public class DriveCommands {
         .onlyWhile(
             () ->
                 drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                        > 0.5
+                        > 1.0
                     || isHandOffReady.get())
         .andThen(
             new ConditionalCommand(
-                Commands.none(),
                 pidToPose(drive, targetPose),
+                Commands.none(),
                 () ->
                     drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                            > 0.5
-                        || isHandOffReady.get()));
+                        > 0.5));
   }
 
   /**
