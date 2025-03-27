@@ -122,7 +122,9 @@ public class MultiCoralAuto extends SequentialCommandGroup {
                 new ResetSuperStructureCommand(drive, superStructure, false),
                 DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier, false),
                 new WaitUntilCloseToCommand(
-                        () -> drive.getPose(), intakePoseSupplier, kLEDFlashDistance)
+                        () -> drive.getPose(),
+                        () -> AllianceFlipUtil.apply(intakePoseSupplier.get()),
+                        kLEDFlashDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))));
   }
 

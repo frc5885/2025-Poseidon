@@ -3,7 +3,6 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 
 public class WaitUntilCloseToCommand extends Command {
   private final Supplier<Pose2d> m_drivePoseSupplier;
@@ -25,7 +24,7 @@ public class WaitUntilCloseToCommand extends Command {
             .get()
             .getTranslation()
             .getDistance(m_targetPoseSupplier.get().getTranslation());
-    Logger.recordOutput("DistanceForLED", currentDistance);
+    // Logger.recordOutput("DistanceForLED", currentDistance);
     return currentDistance <= m_minDistance;
   }
 }
