@@ -71,7 +71,7 @@ public class StateGraph {
               SuperStructureState.INTAKE_ALGAE_L3,
               SuperStructureState.SCORE_CORAL_L1,
               SuperStructureState.SCORE_CORAL_L2,
-              SuperStructureState.SCORE_CORAL_L3,
+              SuperStructureState.BEFORE_L3, // Added transition to BEFORE_L3
               SuperStructureState.SCORE_CORAL_L4,
               // SuperStructureState.SCORED_CORAL_L2,
               // SuperStructureState.SCORED_CORAL_L3,
@@ -80,22 +80,11 @@ public class StateGraph {
               SuperStructureState.INTAKE_LOLLIPOP
             },
 
-            // IDLE_ALGAE transitions
+            // BEFORE_L3 transitions
             new SuperStructureState[] {
-              SuperStructureState.IDLE_ALGAE,
+              SuperStructureState.BEFORE_L3,
               SuperStructureState.IDLE,
-              // SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.INTAKE_ALGAE_L2,
-              SuperStructureState.INTAKE_ALGAE_L3,
-              // SuperStructureState.SCORE_CORAL_L1,
-              // SuperStructureState.SCORE_CORAL_L2,
-              // SuperStructureState.SCORE_CORAL_L3,
-              // SuperStructureState.SCORE_CORAL_L4,
-              // SuperStructureState.SCORED_CORAL_L2,
-              // SuperStructureState.SCORED_CORAL_L3,
-              // SuperStructureState.SCORED_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_NET,
-              SuperStructureState.INTAKE_LOLLIPOP
+              SuperStructureState.SCORE_CORAL_L3,
             },
 
             // INTAKE_CORAL transitions
@@ -186,6 +175,7 @@ public class StateGraph {
             new SuperStructureState[] {
               SuperStructureState.SCORE_CORAL_L3,
               SuperStructureState.IDLE,
+              SuperStructureState.BEFORE_L3, // Added transition back to BEFORE_L3
               // SuperStructureState.IDLE_ALGAE,
               // SuperStructureState.INTAKE_CORAL,
               // SuperStructureState.INTAKE_ALGAE_L2,

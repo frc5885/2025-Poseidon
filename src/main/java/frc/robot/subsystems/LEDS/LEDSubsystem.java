@@ -16,11 +16,9 @@ import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import java.util.Map;
-import java.util.stream.IntStream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.littletonrobotics.junction.Logger;
 
 public class LEDSubsystem {
   private static LEDSubsystem instance;
@@ -109,19 +107,19 @@ public class LEDSubsystem {
       squareStates = LEDStates.RED;
     }
 
-    // log poseidon
-    Logger.recordOutput(
-        "PoseidonLED",
-        IntStream.range(0, 32 - 1)
-            .mapToObj(i -> m_poseidon.getLED(i).toHexString())
-            .toArray(String[]::new));
+    // // log poseidon
+    // Logger.recordOutput(
+    //     "PoseidonLED",
+    //     IntStream.range(0, 32 - 1)
+    //         .mapToObj(i -> m_poseidon.getLED(i).toHexString())
+    //         .toArray(String[]::new));
 
-    // log square
-    Logger.recordOutput(
-        "SquareLED",
-        IntStream.range(0, 46 - 1)
-            .mapToObj(i -> m_square.getLED(i).toHexString())
-            .toArray(String[]::new));
+    // // log square
+    // Logger.recordOutput(
+    //     "SquareLED",
+    //     IntStream.range(0, 46 - 1)
+    //         .mapToObj(i -> m_square.getLED(i).toHexString())
+    //         .toArray(String[]::new));
 
     m_leds.setData(m_buffer);
   }

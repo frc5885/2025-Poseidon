@@ -16,6 +16,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants.ReefLevel;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
@@ -58,6 +59,6 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                     .andThen(
                         // place coral
                         new PlaceCoralCommand(reefLevel, superStructure, endEffector)),
-            getRequirements()));
+            Set.of(superStructure)));
   }
 }
