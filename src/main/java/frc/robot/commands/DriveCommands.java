@@ -264,7 +264,7 @@ public class DriveCommands {
   }
 
   /**
-   * Command to follow a basic autobuilder trajectory using Pathplanner. Not precise at all, but
+   * Command to follow a basic AutoBuilder trajectory using Pathplanner. Not precise at all, but
    * gets to the loading station fast
    *
    * @param drive The drive subsystem
@@ -280,14 +280,16 @@ public class DriveCommands {
         .finallyDo(() -> drive.setUsePPRunVelocity(false));
   }
 
-  /*
+  /**
    * Drive directly to a pose (no trajectory) using double trapezoidal PID profiles
    *
    * @param drive The drive subsystem
    * @param targetPose The target pose
+   * @param reefPostID The reef post ID for vision filtering
    * @return The command
    */
-  public static Command pidToPose(Drive drive, Supplier<Pose2d> targetPose) {
+  public static Command pidToPose(
+      Drive drive, Supplier<Pose2d> targetPose, Supplier<Integer> reefPostID) {
     Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
     return Commands.run(
             () -> {
@@ -297,14 +299,18 @@ public class DriveCommands {
         .beforeStarting(
             () -> {
               m_chassisController.reset(drive.getPose(), drive.getChassisSpeeds(), targetPoseValue);
-              Vision.setApplyTargetDeviation(true);
+              Vision.setSingleTargetPostID(reefPostID.get());
             })
         .until(() -> m_chassisController.isGoalAchieved())
         .finallyDo(
             () -> {
               drive.stop();
-              Vision.setApplyTargetDeviation(false);
+              Vision.setSingleTargetPostID(-1); // all tags
             });
+  }
+
+  public static Command pidToPose(Drive drive, Supplier<Pose2d> targetPose) {
+    return pidToPose(drive, targetPose, () -> -1);
   }
 
   /**

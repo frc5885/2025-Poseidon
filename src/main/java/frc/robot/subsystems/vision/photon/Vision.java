@@ -29,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservation;
 import frc.robot.subsystems.vision.photon.VisionIO.PoseObservationType;
+import frc.robot.util.AllianceFlipUtil;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -44,7 +46,9 @@ public class Vision extends SubsystemBase {
   // MotorType.kBrushed);
   // private final PWM m_source = new PWM(kCameraPowerChannel);
 
-  @Setter private static boolean applyTargetDeviation = false;
+  // if -1, use  measurements from all tags
+  // if >= 0, use measurements from only the optimal tag and camera for the specified post ID
+  @Setter private static int singleTargetPostID = -1;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     m_consumer = consumer;
@@ -124,6 +128,26 @@ public class Vision extends SubsystemBase {
                   || observation.pose().getY() < 0.0
                   || observation.pose().getY() > kAprilTagLayout.getFieldWidth();
 
+          // If singleTargetPostID is set, only use measurements from the optimal tag and camera
+          if (singleTargetPostID >= 0) {
+            boolean isFlipped = AllianceFlipUtil.shouldFlip();
+            int trustedTag = getTrustedTag(singleTargetPostID, isFlipped);
+            int trustedCamera = getTrustedCamera(singleTargetPostID);
+            Logger.recordOutput("Vision/SingleTargetMode/TrustedTag", trustedTag);
+            Logger.recordOutput(
+                "Vision/SingleTargetMode/TrustedCamera",
+                trustedCamera == 0 ? kCamera0Name : kCamera1Name);
+            // reject if wrong camera
+            if (cameraIndex != trustedCamera) {
+              rejectPose = true;
+              // reject if wrong tag
+            } else if (Arrays.stream(m_inputs[cameraIndex].tagIds)
+                .noneMatch(id -> id == trustedTag)) {
+              rejectPose = true;
+            }
+          }
+          Logger.recordOutput("Vision/SingleTargetMode/Enabled", singleTargetPostID >= 0);
+
           // Add pose to log
           robotPoses.add(observation.pose());
           if (rejectPose) {
@@ -141,21 +165,8 @@ public class Vision extends SubsystemBase {
           double stdDevFactor =
               Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
 
-          // Trust tags less the further their angle is from PI radians (facing straight at target)
-          // Calculate angle difference from optimal viewing angle (180 degrees)
-          double targetAngle = observation.pose().getRotation().getZ();
-          double targetAngleDifference = Math.abs(Math.PI - Math.abs(targetAngle));
-          // Scale the factor exponentially with the difference
-          double targetAngleFactor = Math.pow(1 + targetAngleDifference, 2);
-
-          double linearStdDev =
-              kLinearStdDevBaseline
-                  * stdDevFactor
-                  * (applyTargetDeviation ? targetAngleFactor : 1.0);
-          double angularStdDev =
-              kAngularStdDevBaseline
-                  * stdDevFactor
-                  * (applyTargetDeviation ? targetAngleFactor : 1.0);
+          double linearStdDev = kLinearStdDevBaseline * stdDevFactor;
+          double angularStdDev = kAngularStdDevBaseline * stdDevFactor;
           if (observation.type() == PoseObservationType.MEGATAG_2) {
             linearStdDev *= kLinearStdDevMegatag2Factor;
             angularStdDev *= kAngularStdDevMegatag2Factor;

@@ -77,7 +77,7 @@ public class MultiCoralAuto extends SequentialCommandGroup {
                   driveToReefAndHandoffCommand(
                       drive, superStructure, feeder, endEffector, () -> branchPose3d.toPose2d()),
                   new AutoScoreCoralAtBranchCommand(
-                      drive, superStructure, endEffector, () -> branchPose3d),
+                      drive, superStructure, endEffector, () -> branchPose3d, () -> branchNum),
                   startFeederAndDriveToLoadingStationCommand(
                       drive, superStructure, feeder, () -> flippedIntakePose));
             });

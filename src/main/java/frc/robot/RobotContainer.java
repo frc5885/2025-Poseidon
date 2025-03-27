@@ -381,7 +381,11 @@ public class RobotContainer {
     m_automaticCoralScoreTrigger
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
-                m_drive, m_superStructure, m_endEffector, () -> m_operatorPanel.getTargetPose()))
+                m_drive,
+                m_superStructure,
+                m_endEffector,
+                () -> m_operatorPanel.getTargetPose(),
+                () -> m_operatorPanel.getReefTarget()))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF

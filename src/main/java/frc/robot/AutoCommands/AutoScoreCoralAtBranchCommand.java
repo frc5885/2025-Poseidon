@@ -31,7 +31,8 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
       Drive drive,
       SuperStructure superStructure,
       EndEffector endEffector,
-      Supplier<Pose3d> targetPose) {
+      Supplier<Pose3d> targetPose,
+      Supplier<Integer> branchID) {
 
     addCommands(
         new InstantCommand(
@@ -54,7 +55,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
             () ->
                 new ParallelCommandGroup(
                         new SuperStructureCommand(superStructure, () -> superStructureState),
-                        DriveCommands.pidToPose(drive, () -> targetPose.get().toPose2d())
+                        DriveCommands.pidToPose(drive, () -> targetPose.get().toPose2d(), branchID)
                             .unless(() -> DriverStation.isTest()))
                     .andThen(
                         // place coral

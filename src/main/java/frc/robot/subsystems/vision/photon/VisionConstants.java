@@ -18,6 +18,8 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VisionConstants {
   // AprilTag layout
@@ -64,4 +66,33 @@ public class VisionConstants {
   public static final double kLinearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
   public static final double kAngularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
+
+  // Map of which AprilTags are trusted for each post
+  // to use, call TrustedAprilTags.get(post).get(isFlipped)
+  public static final Map<Integer, Map<Boolean, Integer>> TrustedAprilTags = new HashMap<>();
+
+  static {
+    // Initialize the nested maps (postID, blueTag, redTag)
+    TrustedAprilTags.put(0, Map.of(false, 18, true, 7));
+    TrustedAprilTags.put(1, Map.of(false, 18, true, 7));
+    TrustedAprilTags.put(2, Map.of(false, 19, true, 6));
+    TrustedAprilTags.put(3, Map.of(false, 19, true, 6));
+    TrustedAprilTags.put(4, Map.of(false, 20, true, 11));
+    TrustedAprilTags.put(5, Map.of(false, 20, true, 11));
+    TrustedAprilTags.put(6, Map.of(false, 21, true, 10));
+    TrustedAprilTags.put(7, Map.of(false, 21, true, 10));
+    TrustedAprilTags.put(8, Map.of(false, 22, true, 9));
+    TrustedAprilTags.put(9, Map.of(false, 22, true, 9));
+    TrustedAprilTags.put(10, Map.of(false, 17, true, 8));
+    TrustedAprilTags.put(11, Map.of(false, 17, true, 8));
+  }
+
+  public static int getTrustedTag(int post, boolean isFlipped) {
+    return TrustedAprilTags.get(post).get(isFlipped);
+  }
+
+  public static int getTrustedCamera(int post) {
+    // even numbered posts are on the right, use left camera (camera 1)
+    return 1 - (post % 2);
+  }
 }
