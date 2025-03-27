@@ -20,8 +20,10 @@ import frc.robot.Constants.Mode;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ResetSuperStructureCommand;
+import frc.robot.commands.WaitUntilCloseToCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.Feeder.Feeder;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlipUtil;
@@ -39,6 +41,8 @@ public class MultiCoralAuto extends SequentialCommandGroup {
 
   private double kDistanceFromReefToWaitForHandoff = 0.5;
   private double kRadiansToReefToWaitForHandoff = Units.degreesToRadians(0);
+
+  private double kLEDFlashDistance = 1.75;
 
   public MultiCoralAuto(
       Drive drive,
@@ -116,7 +120,10 @@ public class MultiCoralAuto extends SequentialCommandGroup {
         .andThen(
             new ParallelCommandGroup(
                 new ResetSuperStructureCommand(drive, superStructure, false),
-                DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier, false)));
+                DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier, false),
+                new WaitUntilCloseToCommand(
+                        () -> drive.getPose(), intakePoseSupplier, kLEDFlashDistance)
+                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))));
   }
 
   private Pose2d flipAndMirrorPose(Pose2d poseBlueRight, Side side) {

@@ -80,6 +80,7 @@ public class Feeder extends SubsystemBase {
   public void handoffComplete() {
     m_isHandOffReady = false;
     m_simulatedCoralIntakeCoolDownRunning = false;
+    LEDSubsystem.getInstance().setStates(LEDStates.HOLDING_PIECE);
     stop();
 
     if (Constants.kCurrentMode == Mode.SIM) {

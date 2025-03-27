@@ -20,12 +20,10 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.MultiCoralAuto;
 import frc.robot.AutoCommands.TestAuto;
@@ -74,12 +72,9 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.List;
-import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -251,65 +246,68 @@ public class RobotContainer {
         "Right Side",
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
-    m_autoChooser.addDefaultOption(
-        "LCC Testing",
-        new MultiCoralAuto(
-            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 0, 1)));
+    // m_autoChooser.addDefaultOption(
+    //     "LCC Testing",
+    //     new MultiCoralAuto(
+    //         m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 0, 1)));
 
     // Set up SysId routines
-    m_autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(m_drive));
-    m_autoChooser.addOption(
-        "Module Turn Speed Characterization",
-        DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
-    m_autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
-    m_autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Drive Wheel Radius Characterization",
+    // DriveCommands.wheelRadiusCharacterization(m_drive));
+    // m_autoChooser.addOption(
+    //     "Module Turn Speed Characterization",
+    //     DriveCommands.maxModuleRotationVelocityCharacterization(m_drive));
+    // m_autoChooser.addOption(
+    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(m_drive));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Forward)",
+    //     m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Reverse)",
+    //     m_drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Dynamic Forward)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Drive SysId (Dynamic Reverse)", m_drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    m_autoChooser.addOption(
-        "Turn SysId (Quasistatic Forward)",
-        m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Turn SysId (Quasistatic Reverse)",
-        m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Turn SysId (Dynamic Forward)", m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Turn SysId (Dynamic Reverse)", m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Turn SysId (Quasistatic Forward)",
+    //     m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Turn SysId (Quasistatic Reverse)",
+    //     m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Turn SysId (Dynamic Forward)",
+    // m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Turn SysId (Dynamic Reverse)",
+    // m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    m_autoChooser.addOption(
-        "Elevator SysId (Quasistatic Forward)",
-        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Elevator SysId (Quasistatic Reverse)",
-        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Elevator SysId (Dynamic Forward)",
-        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Elevator SysId (Dynamic Reverse)",
-        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Arm SysId (Quasistatic Forward)",
-        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Arm SysId (Quasistatic Reverse)",
-        m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Arm SysId (Dynamic Forward)",
-        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Arm SysId (Dynamic Reverse)",
-        m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Forward)",
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Reverse)",
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Forward)",
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Reverse)",
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Forward)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Quasistatic Reverse)",
+    //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Dynamic Forward)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Arm SysId (Dynamic Reverse)",
+    //     m_superStructure.armSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     m_stateChooser = new LoggedDashboardChooser<>("StateChooser", new SendableChooser<>());
 
@@ -346,20 +344,6 @@ public class RobotContainer {
             new InstantCommand(() -> m_superStructure.setBrakeMode(false)).ignoringDisable(true))
         .onFalse(
             new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
-
-    m_driverController
-        .a()
-        .whileTrue(
-            new DeferredCommand(
-                () ->
-                    DriveCommands.pidToPose(
-                        m_drive,
-                        () ->
-                            FieldConstants.Reef.branchPositions
-                                .get(m_operatorPanel.getReefTarget())
-                                .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
-                                .toPose2d()),
-                Set.of(m_drive)));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
