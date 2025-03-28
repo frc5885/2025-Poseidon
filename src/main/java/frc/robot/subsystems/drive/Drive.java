@@ -396,6 +396,23 @@ public class Drive extends SubsystemBase {
     return AutoBuilder.followPath(path);
   }
 
+  public Command getPathFollowBackOutCommand(Supplier<Pose2d> target) {
+
+    PathPlannerPath path =
+        new PathPlannerPath(
+            PathPlannerPath.waypointsFromPoses(
+                getPose(),
+                getPose().transformBy(new Transform2d(-0.5, 0.0, target.get().getRotation())),
+                target.get()),
+            kPathConstraintsFast,
+            null,
+            new GoalEndState(0.0, target.get().getRotation()));
+    path.preventFlipping = true;
+    return AutoBuilder.followPath(path)
+        .onlyWhile(
+            () -> getPose().getTranslation().getDistance(target.get().getTranslation()) > 0.2);
+  }
+
   /**
    * Build a command to pathfind to a given path, then follow that path.
    *

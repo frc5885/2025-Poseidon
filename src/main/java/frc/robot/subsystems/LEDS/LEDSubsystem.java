@@ -148,7 +148,7 @@ public class LEDSubsystem {
     ALGAE_INTAKE_LINE_UP(LEDPattern.solid(Color.kCyan)),
     SCORING_LINE_UP(LEDPattern.solid(Color.kBlue)),
     SCORED(LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.05))),
-    HOLDING_PIECE(LEDPattern.solid(Color.kGreen).breathe(Seconds.of(2.0))),
+    HOLDING_PIECE(LEDPattern.solid(Color.kGreen)), // .breathe(Seconds.of(2.0))),
     RESETTING_SUPERSTRUCTURE(LEDPattern.solid(Color.kRed).breathe(Seconds.of(2.0))),
     AUTO(
         LEDPattern.gradient(

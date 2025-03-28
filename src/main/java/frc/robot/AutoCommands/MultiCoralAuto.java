@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
@@ -31,6 +32,7 @@ import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class MultiCoralAuto extends SequentialCommandGroup {
@@ -120,7 +122,9 @@ public class MultiCoralAuto extends SequentialCommandGroup {
         .andThen(
             new ParallelCommandGroup(
                 new ResetSuperStructureCommand(drive, superStructure, false),
-                DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier, false),
+                new DeferredCommand(
+                    () -> DriveCommands.auto_reefBackOutToStation(drive, intakePoseSupplier),
+                    Set.of(drive)),
                 new WaitUntilCloseToCommand(
                         () -> drive.getPose(),
                         () -> AllianceFlipUtil.apply(intakePoseSupplier.get()),

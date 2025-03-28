@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.util.FieldConstants.ReefLevel;
@@ -27,15 +29,17 @@ public class PlaceCoralCommand extends SequentialCommandGroup {
     addCommands(
         // set up ending state
         new InstantCommand(
-            () ->
-                scoredState =
-                    switch (reefLevel) {
-                      case L1 -> SuperStructureState.SCORE_CORAL_L1;
-                      case L2 -> SuperStructureState.SCORED_CORAL_L2;
-                      case L3 -> SuperStructureState.SCORED_CORAL_L3;
-                      case L4 -> SuperStructureState.SCORED_CORAL_L4;
-                      default -> SuperStructureState.IDLE;
-                    }),
+            () -> {
+              scoredState =
+                  switch (reefLevel) {
+                    case L1 -> SuperStructureState.SCORE_CORAL_L1;
+                    case L2 -> SuperStructureState.SCORED_CORAL_L2;
+                    case L3 -> SuperStructureState.SCORED_CORAL_L3;
+                    case L4 -> SuperStructureState.SCORED_CORAL_L4;
+                    default -> SuperStructureState.IDLE;
+                  };
+              LEDSubsystem.getInstance().setStates(LEDStates.SCORED);
+            }),
         new ConditionalCommand(
                 // L1
                 new InstantCommand(() -> endEffector.runEndEffectorOuttake())

@@ -21,18 +21,20 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.MiddleAuto;
 import frc.robot.AutoCommands.MultiCoralAuto;
 import frc.robot.AutoCommands.TestAuto;
-import frc.robot.commands.AutoIntakeAlgaeReefCommand;
+import frc.robot.commands.AfterAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ManualIntakeAlgaeReefCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -263,6 +265,9 @@ public class RobotContainer {
                         new RunCommand(
                             () -> m_drive.runVelocity(new ChassisSpeeds(-1.2, 0.0, 0.0)),
                             m_drive))));
+
+    m_autoChooser.addOption(
+        "mid Auto", new MiddleAuto(m_drive, m_superStructure, m_feeder, m_endEffector));
     m_autoChooser.addOption(
         "Tush Push Right Side",
         new MultiCoralAuto(
@@ -398,7 +403,9 @@ public class RobotContainer {
     m_driverController.rightBumper().debounce(0.1).onTrue(m_feeder.startFeederCmd());
     m_feeder
         .getHandoffTrigger()
-        .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
+        .onTrue(
+            new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
     // OVERRIDE FORCE FEED
     m_driverController.start().whileTrue(m_feeder.forceFeedCmd());
 
@@ -436,18 +443,13 @@ public class RobotContainer {
     // INTAKE ALGAE REEF
     m_algaeReefTrigger
         .whileTrue(
-            new AutoIntakeAlgaeReefCommand(
+            new ManualIntakeAlgaeReefCommand(
                 m_drive,
                 m_driverController,
                 m_superStructure,
                 m_endEffector,
                 () -> m_drive.getPose()))
-        .onFalse(
-            new SequentialCommandGroup(
-                new InstantCommand(
-                    () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
-                new ResetSuperStructureCommand(m_drive, m_superStructure, true),
-                new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE))));
+        .onFalse(new AfterAlgaeReefCommand(m_drive, m_superStructure, m_endEffector));
 
     // INTAKE ALGAE FLOOR
     // m_algaeFloorTrigger

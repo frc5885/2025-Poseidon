@@ -237,8 +237,8 @@ public class FieldConstants {
     // L1(Units.inchesToMeters(25.0), 0, -0.15, -1.0, 75),
     L1(Units.inchesToMeters(25.0), 0, -0.57, Units.inchesToMeters(5.0), 0.0),
     L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.57, 0.0, 0.0),
-    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.7, 0.0, 0.0),
-    L4(Units.inchesToMeters(72), -90, -0.75, 0.0, 0.0);
+    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.75, 0.0, 0.0),
+    L4(Units.inchesToMeters(72), -90, -0.78, 0.0, 0.0);
 
     public static ReefLevel fromLevel(int level) {
       return Arrays.stream(values())

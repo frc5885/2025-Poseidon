@@ -48,8 +48,10 @@ public class SuperStructureConstants {
       IDLE(TunableDouble.register("Elevator/IDLE", 0.1)),
       L2(TunableDouble.register("Elevator/L2", 0.28)),
       ALGAE_L3(TunableDouble.register("Elevator/ALGAE_L3", 0.35)),
+      AFTER_ALGAE_L2(TunableDouble.register("Elevator/AFTER_ALGAE_L2", 0.1)),
+      AFTER_ALGAE_L3(TunableDouble.register("Elevator/AFTER_ALGAE_L3", 0.45)),
       L4(TunableDouble.register("Elevator/L4", 0.65)),
-      NET(TunableDouble.register("Elevator/NET", 0.7));
+      NET(TunableDouble.register("Elevator/NET", 0.75));
 
       public DoubleSupplier setpointMeters;
     }
@@ -91,14 +93,15 @@ public class SuperStructureConstants {
       // IDLE_CORAL(TunableDouble.register("Arm/IDLE_CORAL", -80.0)),
       IDLE(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
       IDLE_ALGAE(TunableDouble.register("Arm/IDLE_ALGAE", -60.0)),
-      ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -10.0)),
+      ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -5.0)),
       ALGAE_L3(TunableDouble.register("Arm/ALGAE_L3", 0.0)),
       CORAL_L1(TunableDouble.register("Arm/CORAL_L1", -45.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -70.0)),
       SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -30.0)),
       CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 50.0)),
       SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", -10.0)),
-      NET(TunableDouble.register("Arm/NET", 65.0)),
+      BEFORE_NET(TunableDouble.register("Arm/BEFORE_NET", 70.0)),
+      NET(TunableDouble.register("Arm/NET", 120.0)),
       ALGAE_LOLLIPOP(TunableDouble.register("Arm/LOLLIPOP", -35.0));
 
       public DoubleSupplier setpointDegrees;

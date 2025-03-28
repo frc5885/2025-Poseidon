@@ -94,7 +94,8 @@ public class StateGraph {
               // SuperStructureState.SCORED_CORAL_L2,
               // SuperStructureState.SCORED_CORAL_L3,
               // SuperStructureState.SCORED_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_NET,
+              // SuperStructureState.SCORE_ALGAE_NET,
+              SuperStructureState.BEFORE_NET,
               SuperStructureState.INTAKE_LOLLIPOP
             },
 
@@ -121,38 +122,34 @@ public class StateGraph {
               // SuperStructureState.SCORE_ALGAE_NET,
             },
 
-            // INTAKE_ALGAE_L2 transitions
+            // INTAKE_ALGAE_L2 transitions - Modified to only go to AFTER_ALGAE_L2
             new SuperStructureState[] {
-              SuperStructureState.INTAKE_ALGAE_L2,
-              // SuperStructureState.IDLE,
-              SuperStructureState.IDLE_ALGAE,
-              // SuperStructureState.INTAKE_CORAL,
-              SuperStructureState.INTAKE_ALGAE_L3,
-              // SuperStructureState.SCORE_CORAL_L1,
-              // SuperStructureState.SCORE_CORAL_L2,
-              // SuperStructureState.SCORE_CORAL_L3,
-              // SuperStructureState.SCORE_CORAL_L4,
-              // SuperStructureState.SCORED_CORAL_L2,
-              // SuperStructureState.SCORED_CORAL_L3,
-              // SuperStructureState.SCORED_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_NET,
+              SuperStructureState.INTAKE_ALGAE_L2, SuperStructureState.AFTER_ALGAE_L2,
             },
 
-            // INTAKE_ALGAE_L3 transitions
+            // AFTER_ALGAE_L2 transitions - New state with previous INTAKE_ALGAE_L2 destinations
             new SuperStructureState[] {
-              SuperStructureState.INTAKE_ALGAE_L3,
-              // SuperStructureState.IDLE,
+              SuperStructureState.AFTER_ALGAE_L2,
               SuperStructureState.IDLE_ALGAE,
-              // SuperStructureState.INTAKE_CORAL,
               SuperStructureState.INTAKE_ALGAE_L2,
-              // SuperStructureState.SCORE_CORAL_L1,
-              // SuperStructureState.SCORE_CORAL_L2,
-              // SuperStructureState.SCORE_CORAL_L3,
-              // SuperStructureState.SCORE_CORAL_L4,
-              // SuperStructureState.SCORED_CORAL_L2,
-              // SuperStructureState.SCORED_CORAL_L3,
-              // SuperStructureState.SCORED_CORAL_L4,
-              SuperStructureState.SCORE_ALGAE_NET,
+              SuperStructureState.INTAKE_ALGAE_L3,
+              // SuperStructureState.SCORE_ALGAE_NET,
+              SuperStructureState.BEFORE_NET,
+            },
+
+            // INTAKE_ALGAE_L3 transitions - Modified to only go to AFTER_ALGAE_L3
+            new SuperStructureState[] {
+              SuperStructureState.INTAKE_ALGAE_L3, SuperStructureState.AFTER_ALGAE_L3,
+            },
+
+            // AFTER_ALGAE_L3 transitions - New state with previous INTAKE_ALGAE_L3 destinations
+            new SuperStructureState[] {
+              SuperStructureState.AFTER_ALGAE_L3,
+              SuperStructureState.IDLE_ALGAE,
+              SuperStructureState.INTAKE_ALGAE_L2,
+              SuperStructureState.INTAKE_ALGAE_L3,
+              // SuperStructureState.SCORE_ALGAE_NET,
+              SuperStructureState.BEFORE_NET,
             },
 
             // SCORE_CORAL_L1 transitions
@@ -291,6 +288,21 @@ public class StateGraph {
             // INTAKE_LOLLIPOP transitions
             new SuperStructureState[] {
               SuperStructureState.INTAKE_LOLLIPOP, SuperStructureState.IDLE_ALGAE,
+              // SuperStructureState.INTAKE_CORAL,
+              // SuperStructureState.INTAKE_ALGAE_L2,
+              // SuperStructureState.INTAKE_ALGAE_L3,
+              // SuperStructureState.SCORE_CORAL_L1,
+              // SuperStructureState.SCORE_CORAL_L2,
+              // SuperStructureState.SCORE_CORAL_L3,
+              // SuperStructureState.SCORE_CORAL_L4,
+              // SuperStructureState.SCORED_CORAL_L2,
+              // SuperStructureState.SCORED_CORAL_L3,
+              // SuperStructureState.SCORED_CORAL_L4,
+            },
+
+            // INTAKE_LOLLIPOP transitions
+            new SuperStructureState[] {
+              SuperStructureState.BEFORE_NET, SuperStructureState.SCORE_ALGAE_NET,
               // SuperStructureState.INTAKE_CORAL,
               // SuperStructureState.INTAKE_ALGAE_L2,
               // SuperStructureState.INTAKE_ALGAE_L3,

@@ -50,7 +50,7 @@ public class DriveCommands {
   private static final double kAngleKp = 3.0;
   private static final double kAngleKd = 0.2;
   private static final double kTranslateKp = 4.5;
-  private static final double kTranslateKd = 0.5;
+  private static final double kTranslateKd = 0.7;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
@@ -276,6 +276,13 @@ public class DriveCommands {
       Drive drive, Supplier<Pose2d> targetPose, boolean doNotFlip) {
     return drive
         .getDriveToPoseCommand(targetPose, doNotFlip)
+        .beforeStarting(() -> drive.setUsePPRunVelocity(true))
+        .finallyDo(() -> drive.setUsePPRunVelocity(false));
+  }
+
+  public static Command auto_reefBackOutToStation(Drive drive, Supplier<Pose2d> targetPose) {
+    return drive
+        .getPathFollowBackOutCommand(() -> AllianceFlipUtil.apply(targetPose.get()))
         .beforeStarting(() -> drive.setUsePPRunVelocity(true))
         .finallyDo(() -> drive.setUsePPRunVelocity(false));
   }
