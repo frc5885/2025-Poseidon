@@ -16,12 +16,14 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -34,6 +36,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
+import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -250,6 +253,26 @@ public class RobotContainer {
         "Right Side",
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+    m_autoChooser.addOption(
+        "Tush Push Left Side",
+        new MultiCoralAuto(
+                m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2))
+            .beforeStarting(
+                new WaitUntilFarFromCommand(m_drive::getPose, 0.3)
+                    .deadlineFor(
+                        new RunCommand(
+                            () -> m_drive.runVelocity(new ChassisSpeeds(-1.2, 0.0, 0.0)),
+                            m_drive))));
+    m_autoChooser.addOption(
+        "Tush Push Right Side",
+        new MultiCoralAuto(
+                m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11))
+            .beforeStarting(
+                new WaitUntilFarFromCommand(m_drive::getPose, 0.3)
+                    .deadlineFor(
+                        new RunCommand(
+                            () -> m_drive.runVelocity(new ChassisSpeeds(-1.2, 0.0, 0.0)),
+                            m_drive))));
     // m_autoChooser.addDefaultOption(
     //     "LCC Testing",
     //     new MultiCoralAuto(

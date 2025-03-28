@@ -80,6 +80,24 @@ public class StateGraph {
               SuperStructureState.INTAKE_LOLLIPOP
             },
 
+            // IDLE_ALGAE transitions
+            new SuperStructureState[] {
+              SuperStructureState.IDLE_ALGAE,
+              SuperStructureState.IDLE,
+              // SuperStructureState.INTAKE_CORAL,
+              SuperStructureState.INTAKE_ALGAE_L2,
+              SuperStructureState.INTAKE_ALGAE_L3,
+              // SuperStructureState.SCORE_CORAL_L1,
+              // SuperStructureState.SCORE_CORAL_L2,
+              // SuperStructureState.BEFORE_L3,
+              // SuperStructureState.SCORE_CORAL_L4,
+              // SuperStructureState.SCORED_CORAL_L2,
+              // SuperStructureState.SCORED_CORAL_L3,
+              // SuperStructureState.SCORED_CORAL_L4,
+              SuperStructureState.SCORE_ALGAE_NET,
+              SuperStructureState.INTAKE_LOLLIPOP
+            },
+
             // BEFORE_L3 transitions
             new SuperStructureState[] {
               SuperStructureState.BEFORE_L3,
