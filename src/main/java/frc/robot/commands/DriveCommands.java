@@ -309,6 +309,55 @@ public class DriveCommands {
             });
   }
 
+  /**
+   * Drive directly to a pose (no trajectory) using double trapezoidal PID profiles and allow {@code
+   * field relative translational} adjustments from the joystick
+   *
+   * @param drive The drive subsystem
+   * @param targetPose The target pose
+   * @param reefPostID The reef post ID for vision filtering
+   * @param xSupplier The Y axis value of left stick
+   * @param ySupplier The X axis value of left stick
+   * @return The command
+   */
+  public static Command adjustablePidToPose(
+      Drive drive,
+      Supplier<Pose2d> targetPose,
+      Supplier<Integer> reefPostID,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier) {
+    Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
+    boolean isFlipped =
+        DriverStation.getAlliance().isPresent()
+            && DriverStation.getAlliance().get() == Alliance.Red;
+    return Commands.run(
+            () -> {
+              ChassisSpeeds controllerInput = m_chassisController.calculate(drive.getPose());
+              Translation2d joystickInput =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+              drive.runVelocity(
+                  controllerInput.plus(
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          joystickInput.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                          joystickInput.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                          0.0,
+                          isFlipped
+                              ? drive.getRotation().plus(Rotation2d.k180deg)
+                              : drive.getRotation())));
+            },
+            drive)
+        .beforeStarting(
+            () -> {
+              m_chassisController.reset(drive.getPose(), drive.getChassisSpeeds(), targetPoseValue);
+              Vision.setSingleTargetPostID(reefPostID.get());
+            })
+        .finallyDo(
+            () -> {
+              drive.stop();
+              Vision.setSingleTargetPostID(-1); // all tags
+            });
+  }
+
   public static Command pidToPose(Drive drive, Supplier<Pose2d> targetPose) {
     return pidToPose(drive, targetPose, () -> -1);
   }

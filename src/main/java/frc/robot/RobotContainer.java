@@ -437,7 +437,11 @@ public class RobotContainer {
     m_algaeReefTrigger
         .whileTrue(
             new AutoIntakeAlgaeReefCommand(
-                m_drive, m_superStructure, m_endEffector, () -> m_drive.getPose()))
+                m_drive,
+                m_driverController,
+                m_superStructure,
+                m_endEffector,
+                () -> m_drive.getPose()))
         .onFalse(
             new SequentialCommandGroup(
                 new InstantCommand(

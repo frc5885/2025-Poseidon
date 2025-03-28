@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
@@ -39,6 +40,7 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
    */
   public AutoIntakeAlgaeReefCommand(
       Drive drive,
+      CommandXboxController controller,
       SuperStructure superStructure,
       EndEffector endEffector,
       Supplier<Pose2d> drivePose) {
@@ -70,7 +72,13 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
                 .unless(() -> DriverStation.isTest())),
         new ParallelDeadlineGroup(
             new DeferredCommand(
-                    () -> DriveCommands.pidToPose(drive, () -> AllianceFlipUtil.apply(targetPose)),
+                    () ->
+                        DriveCommands.adjustablePidToPose(
+                            drive,
+                            () -> AllianceFlipUtil.apply(targetPose),
+                            () -> -1,
+                            () -> -controller.getLeftY(),
+                            () -> -controller.getLeftX()),
                     Set.of(drive))
                 .unless(() -> DriverStation.isTest()),
             new IntakeAlgaeCommand(endEffector)),

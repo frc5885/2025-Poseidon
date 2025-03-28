@@ -31,11 +31,10 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                     DriveCommands.pidToPose(
                         drive,
                         () ->
-                            AllianceFlipUtil.apply(
-                                new Pose2d(
-                                    7.0,
-                                    AllianceFlipUtil.applyY(drive.getPose().getY()),
-                                    new Rotation2d()))),
+                            new Pose2d(
+                                7.0,
+                                AllianceFlipUtil.applyY(drive.getPose().getY()),
+                                new Rotation2d())),
                 Set.of(drive))
             .unless(() -> DriverStation.isTest()),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
@@ -44,16 +43,17 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                     DriveCommands.pidToPose(
                         drive,
                         () ->
-                            AllianceFlipUtil.apply(
-                                new Pose2d(
-                                    7.5,
-                                    AllianceFlipUtil.applyY(drive.getPose().getY()),
-                                    new Rotation2d()))),
+                            new Pose2d(
+                                7.5,
+                                AllianceFlipUtil.applyY(drive.getPose().getY()),
+                                new Rotation2d())),
                 Set.of(drive))
             .unless(() -> DriverStation.isTest()),
         // exit the score command in simulation so that the visualizer works in sim
         new ScoreAlgaeCommand(endEffector)
             .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30),
         new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)));
+
+    addRequirements(drive, superStructure);
   }
 }

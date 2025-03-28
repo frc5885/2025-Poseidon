@@ -95,10 +95,8 @@ public class SuperStructureConstants {
       ALGAE_L3(TunableDouble.register("Arm/ALGAE_L3", 0.0)),
       CORAL_L1(TunableDouble.register("Arm/CORAL_L1", -45.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -70.0)),
-      // TODO
-      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -25.0)),
+      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -30.0)),
       CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 50.0)),
-      // TODO
       SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", -10.0)),
       NET(TunableDouble.register("Arm/NET", 65.0)),
       ALGAE_LOLLIPOP(TunableDouble.register("Arm/LOLLIPOP", -35.0));
