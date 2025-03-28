@@ -35,7 +35,7 @@ public class SuperStructureConstants {
     public static final double kElevatorKs = 0.38922;
     public static final double kElevatorKv = 10.618;
     public static final double kElevatorKa = 0.53166;
-    public static final double kElevatorKg = 0.5;
+    public static final double kElevatorKg = 0.8; // 0.5;
     public static final double kElevatorKp = 5.0;
     public static final double kElevatorKd = 0.0;
     public static final double kElevatorLatencyCompensationMs = 0.025;
@@ -92,12 +92,12 @@ public class SuperStructureConstants {
       // STOW(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
       // IDLE_CORAL(TunableDouble.register("Arm/IDLE_CORAL", -80.0)),
       IDLE(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
-      IDLE_ALGAE(TunableDouble.register("Arm/IDLE_ALGAE", -60.0)),
+      IDLE_ALGAE(TunableDouble.register("Arm/IDLE_ALGAE", -40.0)),
       ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -5.0)),
       ALGAE_L3(TunableDouble.register("Arm/ALGAE_L3", 0.0)),
       CORAL_L1(TunableDouble.register("Arm/CORAL_L1", -45.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -70.0)),
-      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -30.0)),
+      SCORED_CORAL_L2(TunableDouble.register("Arm/SCORED_CORAL_L2", -35.0)),
       CORAL_REEF_HIGH(TunableDouble.register("Arm/CORAL_REEF_HIGH", 50.0)),
       SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", -10.0)),
       BEFORE_NET(TunableDouble.register("Arm/BEFORE_NET", 70.0)),

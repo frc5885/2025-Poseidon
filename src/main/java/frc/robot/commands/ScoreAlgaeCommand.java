@@ -21,7 +21,7 @@ public class ScoreAlgaeCommand extends Command {
 
   @Override
   public void execute() {
-    m_endEffector.runEndEffectorOuttake();
+    m_endEffector.ejectAlgae();
   }
 
   @Override

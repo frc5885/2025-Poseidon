@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.MiddleAuto;
 import frc.robot.AutoCommands.MultiCoralAuto;
@@ -115,9 +116,9 @@ public class RobotContainer {
   /** leftTrigger and button 1 true */
   private final Trigger m_algaeNetTrigger;
   /** leftBumper and button 2 true */
-  private final Trigger m_algaeReefTrigger;
+  //   private final Trigger m_algaeReefTrigger;
   /** left bumper and button 2 false */
-  private final Trigger m_algaeFloorTrigger;
+  //   private final Trigger m_algaeFloorTrigger;
   /** right trigger and button 2 true */
   private final Trigger m_manualTroughSuperStructureTrigger;
   /** a and button 4 true */
@@ -139,13 +140,13 @@ public class RobotContainer {
         m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(0));
     m_algaeProcessorTrigger =
         m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
-    m_algaeReefTrigger =
-        m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
-    m_algaeFloorTrigger =
-        m_driverController
-            .leftBumper()
-            .debounce(0.1)
-            .and(m_operatorPanel.getNegatedOverrideSwitch(1));
+    // m_algaeReefTrigger =
+    //     m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
+    // m_algaeFloorTrigger =
+    //     m_driverController
+    //         .leftBumper()
+    //         .debounce(0.1)
+    //         .and(m_operatorPanel.getNegatedOverrideSwitch(1));
     m_manualTroughSuperStructureTrigger =
         m_driverController.rightTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(3));
     m_automaticCoralScoreTrigger =
@@ -316,18 +317,18 @@ public class RobotContainer {
     //     "Turn SysId (Dynamic Reverse)",
     // m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Quasistatic Forward)",
-    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Quasistatic Reverse)",
-    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Dynamic Forward)",
-    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Dynamic Reverse)",
-    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Elevator SysId (Quasistatic Forward)",
+        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Elevator SysId (Quasistatic Reverse)",
+        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Elevator SysId (Dynamic Forward)",
+        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Elevator SysId (Dynamic Reverse)",
+        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
     // m_autoChooser.addOption(
     //     "Arm SysId (Quasistatic Forward)",
     //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -441,7 +442,9 @@ public class RobotContainer {
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF
-    m_algaeReefTrigger
+    m_driverController
+        .leftBumper()
+        .debounce(0.1)
         .whileTrue(
             new ManualIntakeAlgaeReefCommand(
                 m_drive,

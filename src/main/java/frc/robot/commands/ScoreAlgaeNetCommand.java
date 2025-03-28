@@ -9,7 +9,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.EndEffector.EndEffector;
@@ -37,7 +39,7 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                                 Rotation2d.k180deg)),
                 Set.of(drive))
             .unless(() -> DriverStation.isTest()),
-        new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
+        new SuperStructureCommand(superStructure, () -> SuperStructureState.BEFORE_NET),
         new DeferredCommand(
                 () ->
                     DriveCommands.pidToPose(
@@ -50,8 +52,12 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                 Set.of(drive))
             .unless(() -> DriverStation.isTest()),
         // exit the score command in simulation so that the visualizer works in sim
-        new ScoreAlgaeCommand(endEffector)
-            .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30),
+        new ParallelCommandGroup(
+            new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
+            new WaitCommand(0.0)
+                .andThen(
+                    new ScoreAlgaeCommand(endEffector)
+                        .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30))),
         new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)));
 
     addRequirements(drive, superStructure);

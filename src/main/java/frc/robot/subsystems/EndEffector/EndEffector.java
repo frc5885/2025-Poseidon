@@ -36,6 +36,10 @@ public class EndEffector extends SubsystemBase {
     m_endEffector.setVoltage(-10.0);
   }
 
+  public void ejectAlgae() {
+    m_endEffector.setVoltage(-12.0);
+  }
+
   public void stopEndEffector() {
     m_endEffector.setVoltage(0.0);
   }
