@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -72,9 +73,12 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.List;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -344,6 +348,24 @@ public class RobotContainer {
             new InstantCommand(() -> m_superStructure.setBrakeMode(false)).ignoringDisable(true))
         .onFalse(
             new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
+
+    // Align test bind
+    m_driverController
+        .a()
+        .whileTrue(
+            new DeferredCommand(
+                () ->
+                    DriveCommands.pidToPose(
+                            m_drive,
+                            () ->
+                                FieldConstants.Reef.branchPositions
+                                    .get(m_operatorPanel.getReefTarget())
+                                    .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
+                                    .toPose2d())
+                        .andThen(
+                            () -> LEDSubsystem.getInstance().setStates(LEDStates.HOLDING_PIECE)),
+                Set.of(m_drive)))
+        .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv

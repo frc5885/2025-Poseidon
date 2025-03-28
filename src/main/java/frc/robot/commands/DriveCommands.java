@@ -47,16 +47,16 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 5.0;
-  private static final double kAngleKd = 0.3;
-  private static final double kTranslateKp = 4.0;
+  private static final double kAngleKp = 3.0;
+  private static final double kAngleKd = 0.2;
+  private static final double kTranslateKp = 4.5;
   private static final double kTranslateKd = 0.5;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
-  private static final double kAngleTolerance = Units.degreesToRadians(1.0);
-  private static final double kTranslationTolerance = 0.015;
+  private static final double kAngleTolerance = Units.degreesToRadians(1.5);
+  private static final double kTranslationTolerance = 0.02;
 
   // Create PID controllers
   private static TunablePIDController angleController;
@@ -83,7 +83,7 @@ public class DriveCommands {
     m_chassisController =
         new ChassisTrapezoidalController(
             new TrapezoidProfile.Constraints(
-                kPathConstraintsFast.maxVelocityMPS() * 0.4,
+                kPathConstraintsFast.maxVelocityMPS() * 0.65,
                 kPathConstraintsFast.maxAccelerationMPSSq() * 1.0),
             new TrapezoidProfile.Constraints(
                 kPathConstraintsFast.maxAngularVelocityRadPerSec() * 1.0,

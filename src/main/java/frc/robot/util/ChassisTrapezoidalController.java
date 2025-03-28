@@ -31,7 +31,7 @@ public class ChassisTrapezoidalController {
   private PIDController m_translateController;
   private PIDController m_thetaController;
 
-  private Debouncer m_atGoalDwellDebouncer = new Debouncer(0.5); // hehehehehe
+  private Debouncer m_atGoalDwellDebouncer = new Debouncer(0.25); // hehehehehe
 
   public ChassisTrapezoidalController(
       TrapezoidProfile.Constraints translateConstraints,
@@ -173,6 +173,13 @@ public class ChassisTrapezoidalController {
             setpointTranslation.getY(),
             Rotation2d.fromRadians(thetaSetpoint.position)));
 
+    Logger.recordOutput(
+        "Odometry/ChassisController/GoalHypotenuse",
+        Math.hypot(m_finalGoalPose.getX(), m_finalGoalPose.getY()));
+    Logger.recordOutput(
+        "Odometry/ChassisController/RobotHypotenuse",
+        Math.hypot(robotPose.getX(), robotPose.getY()));
+
     // Return robot-relative speeds
     return ChassisSpeeds.fromFieldRelativeSpeeds(
         vxMetersPerSecond, vyMetersPerSecond, omegaRadiansPerSecond, robotPose.getRotation());
@@ -181,6 +188,18 @@ public class ChassisTrapezoidalController {
   public boolean isGoalAchieved() {
     double distanceThreshold = m_translateController.getErrorTolerance();
     double angleThreshold = m_thetaController.getErrorTolerance();
+
+    Logger.recordOutput(
+        "Odometry/ChassisController/AngleAtSetpoint",
+        Math.abs(
+                MathUtil.angleModulus(
+                    m_currentPose.getRotation().getRadians()
+                        - m_goalPose.getRotation().getRadians()))
+            < angleThreshold);
+    Logger.recordOutput(
+        "Odometry/ChassisController/TranslateAtSetpoint",
+        m_currentPose.getTranslation().getDistance(m_finalGoalPose.getTranslation())
+            < distanceThreshold);
 
     boolean isAchieved =
         m_currentPose.getTranslation().getDistance(m_finalGoalPose.getTranslation())

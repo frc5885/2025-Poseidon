@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
@@ -18,11 +19,11 @@ import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -61,21 +62,24 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
             }),
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> stateSupplier.get()),
-            new DriveToPoseCommand(
-                    drive,
-                    () -> transitionPose2d,
-                    DriveConstants.kDistanceTolerance,
-                    DriveConstants.kRotationTolerance,
-                    true)
+            new DeferredCommand(
+                    () ->
+                        DriveCommands.pidToPose(
+                            drive, () -> AllianceFlipUtil.apply(transitionPose2d)),
+                    Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
         new ParallelDeadlineGroup(
-            DriveCommands.pidToPose(drive, () -> AllianceFlipUtil.apply(targetPose))
+            new DeferredCommand(
+                    () -> DriveCommands.pidToPose(drive, () -> AllianceFlipUtil.apply(targetPose)),
+                    Set.of(drive))
                 .unless(() -> DriverStation.isTest()),
             new IntakeAlgaeCommand(endEffector)),
         new InstantCommand(
             () -> {
               GamePieceVisualizer.setHasAlgae(true);
             }));
+
+    addRequirements(drive, superStructure);
   }
 
   private SuperStructureState calculateState(Pose2d pose) {
