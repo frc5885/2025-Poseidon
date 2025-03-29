@@ -282,7 +282,7 @@ public class DriveCommands {
 
   public static Command auto_reefBackOutToStation(Drive drive, Supplier<Pose2d> targetPose) {
     return drive
-        .getPathFollowBackOutCommand(() -> AllianceFlipUtil.apply(targetPose.get()))
+        .getPathFollowBackOutCommand(() -> targetPose.get())
         .beforeStarting(() -> drive.setUsePPRunVelocity(true))
         .finallyDo(() -> drive.setUsePPRunVelocity(false));
   }

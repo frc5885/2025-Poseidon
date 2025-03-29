@@ -29,8 +29,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.BlueLeftAuto;
+import frc.robot.AutoCommands.BlueRightAuto;
 import frc.robot.AutoCommands.MiddleAuto;
 import frc.robot.AutoCommands.MultiCoralAuto;
+import frc.robot.AutoCommands.RedLeftAuto;
+import frc.robot.AutoCommands.RedRightAuto;
 import frc.robot.AutoCommands.TestAuto;
 import frc.robot.commands.AfterAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
@@ -249,6 +253,23 @@ public class RobotContainer {
     m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
     m_autoChooser.addDefaultOption(
+        "Red Left Side",
+        new RedLeftAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
+    m_autoChooser.addDefaultOption(
+        "Red Right Side",
+        new RedRightAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+    m_autoChooser.addDefaultOption(
+        "Blue Left Side",
+        new BlueLeftAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
+    m_autoChooser.addDefaultOption(
+        "Blue Right Side",
+        new BlueRightAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+
+    m_autoChooser.addDefaultOption(
         "Left Side",
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
@@ -256,6 +277,7 @@ public class RobotContainer {
         "Right Side",
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+
     m_autoChooser.addOption(
         "Tush Push Left Side",
         new MultiCoralAuto(
