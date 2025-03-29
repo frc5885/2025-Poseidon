@@ -128,6 +128,13 @@ public class Vision extends SubsystemBase {
                   || observation.pose().getY() < 0.0
                   || observation.pose().getY() > kAprilTagLayout.getFieldWidth();
 
+          // any pose with tags not in lowTags is BANNED
+          // this line is crazy elegant and straight from claude
+          // if (Arrays.stream(m_inputs[cameraIndex].tagIds).anyMatch(id -> !lowTags.contains(id)))
+          // {
+          //   rejectPose = true;
+          // }
+
           // If singleTargetPostID is set, only use measurements from the optimal tag and camera
           if (singleTargetPostID >= 0) {
             boolean isFlipped = AllianceFlipUtil.shouldFlip();

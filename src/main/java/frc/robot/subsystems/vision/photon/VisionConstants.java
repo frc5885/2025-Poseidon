@@ -14,17 +14,35 @@
 package frc.robot.subsystems.vision.photon;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Filesystem;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class VisionConstants {
-  // AprilTag layout
-  public static final AprilTagFieldLayout kAprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+  // AprilTag layout - load directly to avoid circular dependency
+  public static final AprilTagFieldLayout kAprilTagLayout;
+
+  static {
+    AprilTagFieldLayout layout = null;
+    try {
+      layout =
+          new AprilTagFieldLayout(
+              Path.of(
+                  Filesystem.getDeployDirectory().getPath(),
+                  "apriltags",
+                  "welded",
+                  "2025-both-reefs.json"));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load AprilTag layout", e);
+    }
+    kAprilTagLayout = layout;
+  }
 
   // Camera names, must match names configured on coprocessor
   public static final String kCamera0Name = "tsunami";
@@ -86,6 +104,8 @@ public class VisionConstants {
     TrustedAprilTags.put(10, Map.of(false, 17, true, 8));
     TrustedAprilTags.put(11, Map.of(false, 17, true, 8));
   }
+
+  public static List<Integer> lowTags = List.of(6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22);
 
   public static int getTrustedTag(int post, boolean isFlipped) {
     return TrustedAprilTags.get(post).get(isFlipped);

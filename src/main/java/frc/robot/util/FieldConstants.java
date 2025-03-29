@@ -26,15 +26,15 @@ import lombok.RequiredArgsConstructor;
  * have a blue alliance origin.
  */
 public class FieldConstants {
-  public static final FieldType fieldType = FieldType.WELDED;
-
-  // Replace with:
+  public static final FieldType fieldType;
   public static final double fieldLength;
   public static final double fieldWidth;
 
-  // Add static initializer block
+  // Static initializer block
   static {
-    // this fixed the crash when doing algae first, don't know why
+    fieldType = FieldType.WELDED;
+
+    // Load field dimensions from the layout
     AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
     fieldLength = layout.getFieldLength();
     fieldWidth = layout.getFieldWidth();
@@ -48,7 +48,20 @@ public class FieldConstants {
     public static final Pose2d centerFace;
 
     static {
-      var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
+      // Load layout directly to avoid circular dependency
+      AprilTagFieldLayout aprilTagLayout;
+      try {
+        aprilTagLayout =
+            new AprilTagFieldLayout(
+                Path.of(
+                    Filesystem.getDeployDirectory().getPath(),
+                    "apriltags",
+                    fieldType.getJsonFolder(),
+                    "2025-official.json"));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
       centerFace =
           aprilTagLayout
               .getTagPose(16)
@@ -92,16 +105,29 @@ public class FieldConstants {
     public static final double faceToZoneLine =
         Units.inchesToMeters(12); // Side of the reef to the inside of the reef zone line
 
-    public static final Pose2d[] centerFaces =
-        new Pose2d[6]; // Starting facing the reef in clockwise order
-    public static final SuperStructureState[] AlgaeLevel = new SuperStructureState[6];
+    public static final Pose2d[] centerFaces;
+    public static final SuperStructureState[] AlgaeLevel;
     public static final double centerFaceOffset = 0.65;
-    public static final List<Map<ReefLevel, Pose3d>> branchPositions =
-        new ArrayList<>(); // Starting at the right branch facing the reef in clockwise
+    public static final List<Map<ReefLevel, Pose3d>> branchPositions = new ArrayList<>();
 
     static {
-      // Initialize faces
-      var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
+      centerFaces = new Pose2d[6];
+      AlgaeLevel = new SuperStructureState[6];
+
+      // Initialize faces - load layout directly to avoid circular dependency
+      AprilTagFieldLayout aprilTagLayout;
+      try {
+        aprilTagLayout =
+            new AprilTagFieldLayout(
+                Path.of(
+                    Filesystem.getDeployDirectory().getPath(),
+                    "apriltags",
+                    fieldType.getJsonFolder(),
+                    "2025-official.json"));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
       centerFaces[0] =
           aprilTagLayout
               .getTagPose(18)
@@ -154,7 +180,6 @@ public class FieldConstants {
         for (var level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)));
           double adjustX = Units.inchesToMeters(30.738);
-          // 6.469
           double adjustY = Units.inchesToMeters(6.0);
 
           fillRight.put(
@@ -234,7 +259,6 @@ public class FieldConstants {
   @RequiredArgsConstructor
   public enum ReefLevel {
     // height, pitch, offset (x, y, rotationDegrees)
-    // L1(Units.inchesToMeters(25.0), 0, -0.15, -1.0, 75),
     L1(Units.inchesToMeters(25.0), 0, -0.57, Units.inchesToMeters(5.0), 0.0),
     L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.57, 0.0, 0.0),
     L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.75, 0.0, 0.0),
@@ -262,22 +286,41 @@ public class FieldConstants {
   public static final int aprilTagCount = 22;
   public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
 
-  public static Pose2d[] HumanPlayerStations = {
-    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(1).get().toPose2d(),
-    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(2).get().toPose2d(),
-    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(12).get().toPose2d(),
-    AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(13).get().toPose2d()
-  };
+  public static Pose2d[] HumanPlayerStations;
+
+  static {
+    // Initialize HumanPlayerStations directly to avoid circular dependency
+    AprilTagFieldLayout officialLayout;
+    try {
+      officialLayout =
+          new AprilTagFieldLayout(
+              Path.of(
+                  Filesystem.getDeployDirectory().getPath(),
+                  "apriltags",
+                  fieldType.getJsonFolder(),
+                  "2025-official.json"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    HumanPlayerStations =
+        new Pose2d[] {
+          officialLayout.getTagPose(1).get().toPose2d(),
+          officialLayout.getTagPose(2).get().toPose2d(),
+          officialLayout.getTagPose(12).get().toPose2d(),
+          officialLayout.getTagPose(13).get().toPose2d()
+        };
+  }
 
   @Getter
   public enum AprilTagLayoutType {
-    OFFICIAL("2025-official"),
     NO_BARGE("2025-no-barge"),
     BLUE_REEF("2025-blue-reef"),
-    RED_REEF("2025-red-reef");
+    RED_REEF("2025-red-reef"),
+    OFFICIAL("2025-official"),
+    REEFS("2025-both-reefs");
 
     AprilTagLayoutType(String name) {
-
       try {
         layout =
             new AprilTagFieldLayout(
