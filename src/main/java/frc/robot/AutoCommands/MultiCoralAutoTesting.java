@@ -200,7 +200,7 @@ public class MultiCoralAutoTesting extends SequentialCommandGroup {
         return blueRightIntakePose;
       }
     } else {
-        // this always returns for some reason
+      // this always returns for some reason
       return new Pose2d(5.22, 0.88, Rotation2d.fromDegrees(54.27));
     }
   }
