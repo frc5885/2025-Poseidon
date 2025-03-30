@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -41,7 +42,7 @@ public class RedLeftAuto extends SequentialCommandGroup {
   // initial pose for blue Left side, gets flipped if needed later (only used in SIM)
   //   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
 
-  private Pose2d redLeftIntakePose = new Pose2d(16.33, 0.88, Rotation2d.fromDegrees(125.73));
+  private Pose2d redLeftIntakePose = new Pose2d(16.4, 1.03, Rotation2d.fromDegrees(125.73));
   private Pose2d redLeftInitialPose = new Pose2d(10.25, 1.6, Rotation2d.fromRadians(Math.PI));
 
   private double kDistanceFromReefToWaitForHandoff = 0.5;
@@ -86,9 +87,18 @@ public class RedLeftAuto extends SequentialCommandGroup {
                   driveToReefAndHandoffCommand(
                       drive, superStructure, feeder, endEffector, () -> branchPose3d.toPose2d()),
                   new AutoScoreCoralAtBranchCommand(
-                      drive, superStructure, endEffector, () -> branchPose3d, () -> branchNum),
-                  startFeederAndDriveToLoadingStationCommand(
-                      drive, superStructure, feeder, () -> intakePose));
+                      drive,
+                      superStructure,
+                      endEffector,
+                      () -> branchPose3d,
+                      () -> branchNum,
+                      () -> false),
+                  new ConditionalCommand(
+                      startFeederAndDriveToLoadingStation_backOutCommand(
+                          drive, superStructure, feeder, () -> intakePose),
+                      startFeederAndDriveToLoadingStation_straightCommand(
+                          drive, superStructure, feeder, () -> intakePose),
+                      (() -> branchNum == 4)));
             });
   }
 
@@ -119,7 +129,7 @@ public class RedLeftAuto extends SequentialCommandGroup {
                             new Rotation2d(kRadiansToReefToWaitForHandoff)))));
   }
 
-  private Command startFeederAndDriveToLoadingStationCommand(
+  private Command startFeederAndDriveToLoadingStation_backOutCommand(
       Drive drive,
       SuperStructure superStructure,
       Feeder feeder,
@@ -131,6 +141,25 @@ public class RedLeftAuto extends SequentialCommandGroup {
                 new ResetSuperStructureCommand(drive, superStructure, false),
                 new DeferredCommand(
                     () -> DriveCommands.auto_reefBackOutToStation(drive, intakePoseSupplier),
+                    Set.of(drive)),
+                new WaitUntilCloseToCommand(
+                        () -> drive.getPose(), () -> intakePoseSupplier.get(), kLEDFlashDistance)
+                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))));
+  }
+
+  private Command startFeederAndDriveToLoadingStation_straightCommand(
+      Drive drive,
+      SuperStructure superStructure,
+      Feeder feeder,
+      Supplier<Pose2d> intakePoseSupplier) {
+    return feeder
+        .startFeederCmd()
+        .andThen(
+            new ParallelCommandGroup(
+                new ResetSuperStructureCommand(drive, superStructure, false),
+                new DeferredCommand(
+                    () ->
+                        DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier, true),
                     Set.of(drive)),
                 new WaitUntilCloseToCommand(
                         () -> drive.getPose(), () -> intakePoseSupplier.get(), kLEDFlashDistance)

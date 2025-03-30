@@ -34,7 +34,7 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                         drive,
                         () ->
                             new Pose2d(
-                                8.0,
+                                8.12,
                                 AllianceFlipUtil.applyY(drive.getPose().getY()),
                                 Rotation2d.k180deg)),
                 Set.of(drive))

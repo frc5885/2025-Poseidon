@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.BlueLeftAuto;
 import frc.robot.AutoCommands.BlueRightAuto;
@@ -38,6 +39,7 @@ import frc.robot.commands.AfterAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ManualIntakeAlgaeReefCommand;
+import frc.robot.commands.PlaceCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -82,7 +84,6 @@ import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.List;
@@ -122,11 +123,11 @@ public class RobotContainer {
   /** left bumper and button 2 false */
   //   private final Trigger m_algaeFloorTrigger;
   /** right trigger and button 2 true */
-  private final Trigger m_manualTroughSuperStructureTrigger;
-  /** a and button 4 true */
-  private final Trigger m_manualTroughScoreTrigger;
+  //   private final Trigger m_manualTroughSuperStructureTrigger;
+  //   /** a and button 4 true */
+  //   private final Trigger m_manualTroughScoreTrigger;
   /** right trigger and button 4 false */
-  private final Trigger m_automaticCoralScoreTrigger;
+  //   private final Trigger m_automaticCoralScoreTrigger;
   /** bogus call button 8 */
   private final Trigger m_bogusCallTrigger;
   /** disable brake mode button 5 */
@@ -149,11 +150,12 @@ public class RobotContainer {
     //         .leftBumper()
     //         .debounce(0.1)
     //         .and(m_operatorPanel.getNegatedOverrideSwitch(1));
-    m_manualTroughSuperStructureTrigger =
-        m_driverController.rightTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(3));
-    m_automaticCoralScoreTrigger =
-        m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
-    m_manualTroughScoreTrigger = m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
+    // m_manualTroughSuperStructureTrigger =
+    //     m_driverController.rightTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(3));
+    // m_automaticCoralScoreTrigger =
+    //     m_driverController.rightTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(3));
+    // m_manualTroughScoreTrigger =
+    // m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
     m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
     m_disableBrakeModeTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(4));
 
@@ -273,8 +275,16 @@ public class RobotContainer {
     //         m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
     // m_autoChooser.addDefaultOption(
     //     "Right Side",
-    //     new MultiCoralAuto(
-    //         m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+    //     new DeferredCommand(
+    //         () ->
+    //             new MultiCoralAuto(
+    //                 m_drive,
+    //                 m_superStructure,
+    //                 m_feeder,
+    //                 m_endEffector,
+    //                 Side.RIGHT,
+    //                 List.of(9, 10, 11)),
+    //         Set.of()));
 
     m_autoChooser.addOption(
         "Tush Push Left Side",
@@ -337,18 +347,18 @@ public class RobotContainer {
     //     "Turn SysId (Dynamic Reverse)",
     // m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Quasistatic Forward)",
-    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Quasistatic Reverse)",
-    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Dynamic Forward)",
-    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Elevator SysId (Dynamic Reverse)",
-    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Elevator SysId (Quasistatic Forward)",
+        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Elevator SysId (Quasistatic Reverse)",
+        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Elevator SysId (Dynamic Forward)",
+        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Elevator SysId (Dynamic Reverse)",
+        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
     // m_autoChooser.addOption(
     //     "Arm SysId (Quasistatic Forward)",
     //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -451,14 +461,16 @@ public class RobotContainer {
                 .alongWith(new InstantCommand(m_endEffector::stopEndEffector, m_endEffector)));
 
     // SCORE CORAL
-    m_automaticCoralScoreTrigger
+    m_driverController
+        .rightTrigger(0.1)
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
                 m_drive,
                 m_superStructure,
                 m_endEffector,
                 () -> m_operatorPanel.getTargetPose(),
-                () -> m_operatorPanel.getReefTarget()))
+                () -> m_operatorPanel.getReefTarget(),
+                m_operatorPanel.getOverrideSwitch(3)))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF
@@ -503,7 +515,17 @@ public class RobotContainer {
     //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
     // MANUAL CORAL SCORE
-    // m_manualTroughScoreTrigger.onTrue(new ScoreCoralCommand(m_endEffector));
+    // m_driverController
+    //     .a()
+    //     .onTrue(
+    //         new DeferredCommand(
+    //             () ->
+    //                 new PlaceCoralCommand(
+    //                     FieldConstants.ReefLevel.fromHeight(m_operatorPanel.getTargetPose().getZ()),
+    //                     m_superStructure,
+    //                     m_endEffector),
+    //             Set.of(m_superStructure, m_endEffector)))
+    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // BOGUS CALL
     m_bogusCallTrigger

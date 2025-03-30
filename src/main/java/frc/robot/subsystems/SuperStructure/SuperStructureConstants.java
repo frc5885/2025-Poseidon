@@ -32,15 +32,15 @@ public class SuperStructureConstants {
     public static final double kElevatorEncoderVelocityFactor =
         kElevatorEncoderPositionFactor / 60.0;
 
-    public static final double kElevatorKs = 0.38922;
-    public static final double kElevatorKv = 10.618;
-    public static final double kElevatorKa = 0.53166;
-    public static final double kElevatorKg = 0.5;
+    public static final double kElevatorKs = 0.21258;
+    public static final double kElevatorKv = 10.6;
+    public static final double kElevatorKa = 0.60877;
+    public static final double kElevatorKg = 0.15244; // 0.5;
     public static final double kElevatorKp = 5.0;
     public static final double kElevatorKd = 0.0;
     public static final double kElevatorLatencyCompensationMs = 0.025;
 
-    public static final double kElevatorErrorToleranceMeters = 0.01;
+    public static final double kElevatorErrorToleranceMeters = 0.015;
 
     @AllArgsConstructor
     public static enum ElevatorLevel {

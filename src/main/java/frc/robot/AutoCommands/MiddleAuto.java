@@ -56,7 +56,7 @@ public class MiddleAuto extends SequentialCommandGroup {
         driveToReefAndHandoffCommand(
             drive, superStructure, feeder, endEffector, () -> branchPose3d.toPose2d()),
         new AutoScoreCoralAtBranchCommand(
-            drive, superStructure, endEffector, () -> branchPose3d, () -> 7),
+            drive, superStructure, endEffector, () -> branchPose3d, () -> 7, () -> false),
         DriveCommands.pidToPose(
                 drive,
                 () -> drive.getPose().transformBy(new Transform2d(-0.3, 0.0, Rotation2d.kZero)))
