@@ -47,9 +47,9 @@ public class SuperStructureConstants {
       STOW(() -> kElevatorStartingPositionMeters),
       IDLE(TunableDouble.register("Elevator/IDLE", 0.1)),
       L2(TunableDouble.register("Elevator/L2", 0.28)),
-      ALGAE_L3(TunableDouble.register("Elevator/ALGAE_L3", 0.35)),
+      ALGAE_L3(TunableDouble.register("Elevator/ALGAE_L3", 0.3)),
       AFTER_ALGAE_L2(TunableDouble.register("Elevator/AFTER_ALGAE_L2", 0.1)),
-      AFTER_ALGAE_L3(TunableDouble.register("Elevator/AFTER_ALGAE_L3", 0.45)),
+      AFTER_ALGAE_L3(TunableDouble.register("Elevator/AFTER_ALGAE_L3", 0.4)),
       L4(TunableDouble.register("Elevator/L4", 0.65)),
       NET(TunableDouble.register("Elevator/NET", 0.75));
 
@@ -68,9 +68,9 @@ public class SuperStructureConstants {
     public static final double kArmMaxAngleRads = Units.degreesToRadians(120);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = 7.0 * 0.5;
+    public static final double kArmMaxVelocity = 7.0;
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = 35.0 * 0.5;
+    public static final double kArmMaxAcceleration = 35.0;
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 1.0 / 13.35;
     public static final double kArmMotorReduction = 2 * Math.PI / kArmEncoderPositionFactor; // real
@@ -93,7 +93,7 @@ public class SuperStructureConstants {
       // IDLE_CORAL(TunableDouble.register("Arm/IDLE_CORAL", -80.0)),
       IDLE(() -> Units.radiansToDegrees(kArmStartingPositionRads)),
       IDLE_ALGAE(TunableDouble.register("Arm/IDLE_ALGAE", 60.0)),
-      ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -5.0)),
+      ALGAE_L2(TunableDouble.register("Arm/ALGAE_L2", -10.0)),
       ALGAE_L3(TunableDouble.register("Arm/ALGAE_L3", 0.0)),
       CORAL_L1(TunableDouble.register("Arm/CORAL_L1", -45.0)),
       CORAL_L2(TunableDouble.register("Arm/CORAL_L2", -70.0)),

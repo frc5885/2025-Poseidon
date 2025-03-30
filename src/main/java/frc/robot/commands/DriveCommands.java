@@ -49,8 +49,8 @@ import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 3.0;
-  private static final double kAngleKd = 0.2;
+  private static final double kAngleKp = 5.0;
+  private static final double kAngleKd = 0.3;
   private static final double kTranslateKp = 4.5;
   private static final double kTranslateKd = 0.7;
   private static final double kFfStartDelay = 2.0; // Secs

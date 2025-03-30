@@ -82,6 +82,7 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
@@ -436,6 +437,18 @@ public class RobotContainer {
                             () -> LEDSubsystem.getInstance().setStates(LEDStates.HOLDING_PIECE)),
                 Set.of(m_drive)))
         .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
+
+    m_driverController
+        .rightStick()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                m_drive,
+                () -> -m_driverController.getLeftY(),
+                () -> -m_driverController.getLeftX(),
+                () ->
+                    AllianceFlipUtil.apply(FieldConstants.Reef.center)
+                        .minus(m_drive.getPose().getTranslation())
+                        .getAngle()));
 
     // m_driverController
     //     .b()
