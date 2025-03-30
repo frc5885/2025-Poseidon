@@ -85,7 +85,7 @@ public class DriveCommands {
     m_chassisController =
         new ChassisTrapezoidalController(
             new TrapezoidProfile.Constraints(
-                kPathConstraintsFast.maxVelocityMPS() * 0.65,
+                kPathConstraintsFast.maxVelocityMPS() * 1.0,
                 kPathConstraintsFast.maxAccelerationMPSSq() * 1.0),
             new TrapezoidProfile.Constraints(
                 kPathConstraintsFast.maxAngularVelocityRadPerSec() * 1.0,
@@ -245,7 +245,7 @@ public class DriveCommands {
                           drive.getPose(),
                           new ChassisSpeeds(), // drive.getChassisSpeeds(),
                           drive.getPathPlannerSetpoint());
-                      m_chassisController.setFinalGoalPose(flippedTargetPose.get());
+                      m_chassisController.setFinalGoalPose(targetPose.get());
                     })
                 .until(() -> m_chassisController.isGoalAchieved()))
         .finallyDo(drive::stop);

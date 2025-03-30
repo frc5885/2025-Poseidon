@@ -39,7 +39,6 @@ import frc.robot.commands.AfterAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ManualIntakeAlgaeReefCommand;
-import frc.robot.commands.PlaceCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -84,6 +83,7 @@ import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.List;
@@ -417,6 +417,17 @@ public class RobotContainer {
                     DriveCommands.auto_optimalTrajectoryReefAlign(
                             m_drive,
                             () ->
+                                // m_drive
+                                //     .getPose()
+                                //     .nearest(
+                                //         List.of(
+                                //             IntStream.range(
+                                //                     0, FieldConstants.Reef.centerFaces.length)
+                                //                 .mapToObj(
+                                //                     i ->
+                                //                         AllianceFlipUtil.apply(
+                                //                             FieldConstants.Reef.centerFaces[i]))
+                                //                 .toArray(Pose2d[]::new))))
                                 FieldConstants.Reef.branchPositions
                                     .get(m_operatorPanel.getReefTarget())
                                     .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
@@ -425,6 +436,22 @@ public class RobotContainer {
                             () -> LEDSubsystem.getInstance().setStates(LEDStates.HOLDING_PIECE)),
                 Set.of(m_drive)))
         .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
+
+    // m_driverController
+    //     .b()
+    //     .whileTrue(
+    //         Commands.startEnd(
+    //             () -> m_superStructure.runElevatorOpenLoop(12.0),
+    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             m_superStructure));
+
+    // m_driverController
+    //     .a()
+    //     .whileTrue(
+    //         Commands.startEnd(
+    //             () -> m_superStructure.runElevatorOpenLoop(-12.0),
+    //             () -> m_superStructure.runElevatorOpenLoop(0.0),
+    //             m_superStructure));
 
     // ============================================================================
     // vvvvvvvvvvvvvvvvvvvvvvvvv TELEOP CONTROLLER BINDS vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -521,7 +548,8 @@ public class RobotContainer {
     //         new DeferredCommand(
     //             () ->
     //                 new PlaceCoralCommand(
-    //                     FieldConstants.ReefLevel.fromHeight(m_operatorPanel.getTargetPose().getZ()),
+    //
+    // FieldConstants.ReefLevel.fromHeight(m_operatorPanel.getTargetPose().getZ()),
     //                     m_superStructure,
     //                     m_endEffector),
     //             Set.of(m_superStructure, m_endEffector)))

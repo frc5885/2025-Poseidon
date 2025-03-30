@@ -23,9 +23,9 @@ public class SuperStructureConstants {
         new Translation2d(Units.inchesToMeters(9.5), 0.0);
 
     // In Meters/Sec
-    public static final double kElevatorMaxVelocity = 0.95;
+    public static final double kElevatorMaxVelocity = 1.02;
     // In Meters/SecSq
-    public static final double kElevatorMaxAcceleration = 3.0;
+    public static final double kElevatorMaxAcceleration = 3.62;
     // Motor Rotations -> Elevator Meters
     public static final double kElevatorEncoderPositionFactor = 1.0 / 86.0;
     // Motor RPM -> Elevator Meters/Sec
@@ -68,9 +68,9 @@ public class SuperStructureConstants {
     public static final double kArmMaxAngleRads = Units.degreesToRadians(120);
 
     // In Rad/Sec
-    public static final double kArmMaxVelocity = 7.0 * 0.9;
+    public static final double kArmMaxVelocity = 7.0 * 0.5;
     // In Rad/SecSq
-    public static final double kArmMaxAcceleration = 35.0 * 0.9;
+    public static final double kArmMaxAcceleration = 35.0 * 0.5;
     // Motor Rotations -> Arm Radians
     public static final double kArmEncoderPositionFactor = 1.0 / 13.35;
     public static final double kArmMotorReduction = 2 * Math.PI / kArmEncoderPositionFactor; // real

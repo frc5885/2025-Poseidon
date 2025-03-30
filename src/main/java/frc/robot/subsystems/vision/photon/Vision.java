@@ -145,11 +145,11 @@ public class Vision extends SubsystemBase {
                 "Vision/SingleTargetMode/TrustedCamera",
                 trustedCamera == 0 ? kCamera0Name : kCamera1Name);
             // reject if wrong camera
-            if (cameraIndex != trustedCamera) {
-              rejectPose = true;
-              // reject if wrong tag
-            } else if (Arrays.stream(m_inputs[cameraIndex].tagIds)
-                .noneMatch(id -> id == trustedTag)) {
+            // if (cameraIndex != trustedCamera) {
+            //   rejectPose = true;
+            //   // reject if wrong tag
+            // } else
+            if (Arrays.stream(m_inputs[cameraIndex].tagIds).noneMatch(id -> id == trustedTag)) {
               rejectPose = true;
             }
           }
