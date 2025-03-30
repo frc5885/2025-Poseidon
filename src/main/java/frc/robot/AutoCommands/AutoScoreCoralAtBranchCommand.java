@@ -17,6 +17,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants.ReefLevel;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
@@ -32,7 +33,8 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
       SuperStructure superStructure,
       EndEffector endEffector,
       Supplier<Pose3d> targetPose,
-      Supplier<Integer> branchID) {
+      Supplier<Integer> branchID,
+      BooleanSupplier isManualSwitchOn) {
 
     addCommands(
         new InstantCommand(
@@ -56,10 +58,12 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
                 new ParallelCommandGroup(
                         new SuperStructureCommand(superStructure, () -> superStructureState),
                         DriveCommands.pidToPose(drive, () -> targetPose.get().toPose2d(), branchID)
-                            .unless(() -> DriverStation.isTest()))
+                            .unless(
+                                () -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean()))
                     .andThen(
                         // place coral
-                        new PlaceCoralCommand(reefLevel, superStructure, endEffector)),
+                        new PlaceCoralCommand(reefLevel, superStructure, endEffector)
+                            .unless(() -> isManualSwitchOn.getAsBoolean())),
             Set.of(superStructure)));
   }
 }

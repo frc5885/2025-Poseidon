@@ -41,7 +41,7 @@ public class RedRightAuto extends SequentialCommandGroup {
   // initial pose for blue right side, gets flipped if needed later (only used in SIM)
   //   private Pose2d initialPose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
 
-  private Pose2d redRightIntakePose = new Pose2d(16.33, 7.17, Rotation2d.fromDegrees(234.27));
+  private Pose2d redRightIntakePose = new Pose2d(16.40, 7.0, Rotation2d.fromDegrees(234.27));
   private Pose2d redRightInitialPose = new Pose2d(10.25, 6.45, Rotation2d.fromRadians(0));
 
   private double kDistanceFromReefToWaitForHandoff = 0.5;
@@ -86,7 +86,12 @@ public class RedRightAuto extends SequentialCommandGroup {
                   driveToReefAndHandoffCommand(
                       drive, superStructure, feeder, endEffector, () -> branchPose3d.toPose2d()),
                   new AutoScoreCoralAtBranchCommand(
-                      drive, superStructure, endEffector, () -> branchPose3d, () -> branchNum),
+                      drive,
+                      superStructure,
+                      endEffector,
+                      () -> branchPose3d,
+                      () -> branchNum,
+                      () -> false),
                   startFeederAndDriveToLoadingStationCommand(
                       drive, superStructure, feeder, () -> intakePose));
             });
