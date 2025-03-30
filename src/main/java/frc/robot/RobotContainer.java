@@ -404,7 +404,7 @@ public class RobotContainer {
         .whileTrue(
             new DeferredCommand(
                 () ->
-                    DriveCommands.pidToPose(
+                    DriveCommands.auto_optimalTrajectoryReefAlign(
                             m_drive,
                             () ->
                                 FieldConstants.Reef.branchPositions

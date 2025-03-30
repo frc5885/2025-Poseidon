@@ -91,6 +91,7 @@ public class Drive extends SubsystemBase {
 
   private Pose2d m_pathPlannerSetpoint = new Pose2d();
   private boolean m_usePPRunVelocity = false;
+  private Pose2d m_pathPlannerStartPose = new Pose2d();
 
   public Drive(
       GyroIO gyroIO,
@@ -116,7 +117,7 @@ public class Drive extends SubsystemBase {
 
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
-        this::getPose,
+        this::ppGetPose,
         this::setPose,
         this::getChassisSpeeds,
         this::ppRunVelocity,
@@ -382,6 +383,17 @@ public class Drive extends SubsystemBase {
         : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
   }
 
+  public Command getBetterDriveToPoseCommand(
+      Supplier<Pose2d> startPose, Supplier<Pose2d> endPose, boolean doNotFlip) {
+    m_pathPlannerStartPose = startPose.get();
+    Command cmd =
+        doNotFlip
+            ? AutoBuilder.pathfindToPose(endPose.get(), kPathConstraintsFast)
+            : AutoBuilder.pathfindToPoseFlipped(endPose.get(), kPathConstraintsFast);
+    // m_pathPlannerStartPose = new Pose2d();
+    return cmd;
+  }
+
   public Command getPathFollowCommand(Supplier<Pose2d> target) {
     PathPlannerPath path =
         new PathPlannerPath(
@@ -453,6 +465,21 @@ public class Drive extends SubsystemBase {
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return m_poseController.getEstimatedPosition();
+  }
+
+  /**
+   * Returns the current odometry pose for path planner. Certain use cases set the start pose to
+   * some pose in the future rather than the real robot pose.
+   */
+  public Pose2d ppGetPose() {
+    return m_pathPlannerStartPose.equals(new Pose2d()) ? getPose() : m_pathPlannerStartPose;
+  }
+  /**
+   * Resets the current odometry pose for path planner to use the real robot pose. Certain use cases
+   * set the start pose to some pose in the future rather than the real robot pose.
+   */
+  public void resetPathPlannerGetPose() {
+    m_pathPlannerStartPose = new Pose2d();
   }
 
   /** Returns the current odometry rotation. */

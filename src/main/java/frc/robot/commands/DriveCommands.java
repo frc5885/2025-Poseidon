@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -44,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
@@ -214,17 +216,20 @@ public class DriveCommands {
                         return;
                       }
                       // if far away, use good "sweep-in" trajectory, else just path to pose
+                      Pose2d futurePose =
+                          calculateLookAheadPose(drive.getPose(), drive.getChassisSpeeds(), 0.2);
+                      Logger.recordOutput("Odometry/LookAheadPose", futurePose);
                       Command pathPlannerCommand =
-                          distance > 1.0
-                              ? drive.getPathFollowCommand(flippedTargetPose)
-                              : drive.getDriveToPoseCommand(flippedTargetPose, false);
+                          drive.getBetterDriveToPoseCommand(
+                              () -> futurePose, flippedTargetPose, false);
                       pathPlannerCommand.schedule();
                     })
                 .andThen(
                     Commands.waitUntil(
-                        () ->
-                            drive.getPathPlannerSetpoint() != pathPlannerSetpointHolder[0]
-                                || distance <= 0.5)),
+                            () ->
+                                drive.getPathPlannerSetpoint() != pathPlannerSetpointHolder[0]
+                                    || distance <= 0.5)
+                        .andThen(() -> drive.resetPathPlannerGetPose())),
 
             // Once PathPlanner has a valid setpoint, initialize and run the controller
             Commands.run(
@@ -556,5 +561,24 @@ public class DriveCommands {
   private static class MaxTurnVelocityState {
     // Array for 4 modules. Initialized to 0.
     public double[] maxVelocities = new double[4];
+  }
+
+  /**
+   * Calculate the robot's pose x seconds in the future for trajectory generation
+   *
+   * @param currentPose
+   * @param chassisSpeeds
+   * @param lookAheadTime
+   * @return
+   */
+  public static Pose2d calculateLookAheadPose(
+      Pose2d currentPose, ChassisSpeeds chassisSpeeds, double lookAheadTime) {
+    ChassisSpeeds frSpeeds =
+        ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, currentPose.getRotation());
+    return currentPose.exp(
+        new Twist2d(
+            frSpeeds.vxMetersPerSecond * lookAheadTime,
+            frSpeeds.vyMetersPerSecond * lookAheadTime,
+            frSpeeds.omegaRadiansPerSecond * lookAheadTime));
   }
 }
