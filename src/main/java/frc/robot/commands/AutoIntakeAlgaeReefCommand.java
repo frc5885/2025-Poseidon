@@ -13,24 +13,23 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.CalculateAlgaeStateUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 
 public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
-  private final double kTransitionDistance = 0.4;
+  private final double kTransitionDistance = 0.3;
+  private final double kDriveInDistance = 0.15;
   private Pose2d targetPose;
+  private Pose2d grabPose;
   private Pose2d transitionPose2d;
   private Supplier<SuperStructureState> stateSupplier;
 
@@ -39,62 +38,46 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
    * to the correct height, and intakes the algae.
    */
   public AutoIntakeAlgaeReefCommand(
-      Drive drive,
-      CommandXboxController controller,
-      SuperStructure superStructure,
-      EndEffector endEffector,
-      Supplier<Pose2d> drivePose) {
+      Drive drive, SuperStructure superStructure, EndEffector endEffector) {
 
     addCommands(
         // Fake initializer to calculate target pose and state
         new InstantCommand(
             () -> {
-              List<Pose2d> faces =
-                  List.of(
-                      IntStream.range(0, FieldConstants.Reef.centerFaces.length)
-                          .mapToObj(i -> AllianceFlipUtil.apply(FieldConstants.Reef.centerFaces[i]))
-                          .toArray(Pose2d[]::new));
-              targetPose = drivePose.get().nearest(faces);
+              targetPose = drive.getPose().nearest(FieldConstants.getReefFaces());
               transitionPose2d =
                   targetPose.transformBy(
                       new Transform2d(-kTransitionDistance, 0.0, new Rotation2d()));
-              stateSupplier = () -> calculateState(targetPose);
+              stateSupplier = () -> CalculateAlgaeStateUtil.calculateIntakeState(targetPose);
+
+              grabPose =
+                  transitionPose2d.transformBy(
+                      new Transform2d(kDriveInDistance, 0.0, new Rotation2d()));
 
               LEDSubsystem.getInstance().setStates(LEDStates.ALGAE_INTAKE_LINE_UP);
             }),
+        // go to transition pose
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> stateSupplier.get()),
             new DeferredCommand(
-                    () ->
-                        DriveCommands.pidToPose(
-                            drive, () -> AllianceFlipUtil.apply(transitionPose2d)),
-                    Set.of(drive))
+                    () -> DriveCommands.pidToPose(drive, () -> transitionPose2d), Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
+        // drive in to reef
         new ParallelDeadlineGroup(
-            new DeferredCommand(
-                    () ->
-                        DriveCommands.adjustablePidToPose(
-                            drive,
-                            () -> AllianceFlipUtil.apply(targetPose),
-                            () -> -1,
-                            () -> -controller.getLeftY(),
-                            () -> -controller.getLeftX()),
-                    Set.of(drive))
+            DriveCommands.driveDistance(drive, kDriveInDistance)
                 .unless(() -> DriverStation.isTest()),
             new IntakeAlgaeCommand(endEffector)),
+        // raise elevator
+        new SuperStructureCommand(
+            superStructure,
+            () -> CalculateAlgaeStateUtil.calculateAfterIntakeState(stateSupplier.get())),
+        // back out of reef
+        DriveCommands.driveDistance(drive, -kDriveInDistance).unless(() -> DriverStation.isTest()),
         new InstantCommand(
             () -> {
               GamePieceVisualizer.setHasAlgae(true);
             }));
 
     addRequirements(drive, superStructure);
-  }
-
-  private SuperStructureState calculateState(Pose2d pose) {
-    return IntStream.range(0, FieldConstants.Reef.centerFaces.length)
-        .filter(i -> FieldConstants.Reef.centerFaces[i].equals(pose))
-        .mapToObj(i -> FieldConstants.Reef.AlgaeLevel[i])
-        .findFirst()
-        .orElse(SuperStructureState.INTAKE_ALGAE_L2);
   }
 }

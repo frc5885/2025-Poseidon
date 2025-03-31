@@ -18,6 +18,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -364,5 +365,42 @@ public class FieldConstants {
     WELDED("welded");
 
     @Getter private final String jsonFolder;
+  }
+
+  public static Pose3d getBranchPose3d(int id, ReefLevel level) {
+    return AllianceFlipUtil.apply(Reef.branchPositions.get(id).get(level));
+  }
+
+  public static Pose2d getBranchPose2d(int id, ReefLevel level) {
+    return getBranchPose3d(id, level).toPose2d();
+  }
+
+  public static Pose3d getBranchPose3d(int face, ReefLevel level, Side side) {
+    return AllianceFlipUtil.apply(
+        Reef.branchPositions.get(face * 2 + (side == Side.RIGHT ? 0 : 1)).get(level));
+  }
+
+  public static Pose2d getBranchPose2d(int face, ReefLevel level, Side side) {
+    return getBranchPose3d(face, level, side).toPose2d();
+  }
+
+  public static int getBranchID(int face, Side side) {
+    return face * 2 + (side == Side.RIGHT ? 0 : 1);
+  }
+
+  public static ArrayList<Pose2d> getReefFaces() {
+    return Arrays.stream(Reef.centerFaces)
+        .map(AllianceFlipUtil::apply)
+        .collect(Collectors.toCollection(ArrayList::new));
+  }
+
+  public static Translation2d getReefCenter() {
+    return AllianceFlipUtil.apply(Reef.center);
+  }
+
+  public static ArrayList<Pose3d> getAllL4Poses() {
+    return Reef.branchPositions.stream()
+        .map(map -> map.get(ReefLevel.L4))
+        .collect(Collectors.toCollection(ArrayList::new));
   }
 }

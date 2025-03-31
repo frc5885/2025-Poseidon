@@ -15,14 +15,16 @@ import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
 import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefLevel;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
-  private ReefLevel reefLevel;
-  private SuperStructureState superStructureState;
+  private Pose3d m_branchPose;
+  private ReefLevel m_reefLevel;
+  private SuperStructureState m_superStructureState;
 
   /**
    * A command that scores a coral at a branch. Moves to the correct branch, moves the
@@ -32,17 +34,18 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
       Drive drive,
       SuperStructure superStructure,
       EndEffector endEffector,
-      Supplier<Pose3d> targetPose,
       Supplier<Integer> branchID,
+      Supplier<Integer> reefLevel,
       BooleanSupplier isManualSwitchOn) {
 
     addCommands(
         new InstantCommand(
             () -> {
               // set up starting state
-              reefLevel = ReefLevel.fromHeight(targetPose.get().getZ());
-              superStructureState =
-                  switch (reefLevel) {
+              m_reefLevel = ReefLevel.fromLevel(reefLevel.get());
+              m_branchPose = FieldConstants.getBranchPose3d(branchID.get(), m_reefLevel);
+              m_superStructureState =
+                  switch (m_reefLevel) {
                     case L1 -> SuperStructureState.SCORE_CORAL_L1;
                     case L2 -> SuperStructureState.SCORE_CORAL_L2;
                     case L3 -> SuperStructureState.SCORE_CORAL_L3;
@@ -56,14 +59,14 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
         new DeferredCommand(
             () ->
                 new ParallelCommandGroup(
-                        new SuperStructureCommand(superStructure, () -> superStructureState),
-                        DriveCommands.pidToPose(drive, () -> targetPose.get().toPose2d(), branchID)
+                        new SuperStructureCommand(superStructure, () -> m_superStructureState),
+                        DriveCommands.pidToPose(drive, () -> m_branchPose.toPose2d(), branchID)
                             .unless(
                                 () -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean()))
                     .andThen(
                         // place coral
-                        new PlaceCoralCommand(reefLevel, superStructure, endEffector)
+                        new PlaceCoralCommand(m_reefLevel, superStructure, endEffector)
                             .unless(() -> isManualSwitchOn.getAsBoolean())),
-            Set.of(superStructure)));
+            Set.of(superStructure, drive)));
   }
 }

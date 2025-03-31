@@ -16,33 +16,22 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
-import frc.robot.AutoCommands.BlueLeftAuto;
-import frc.robot.AutoCommands.BlueRightAuto;
-import frc.robot.AutoCommands.MiddleAuto;
-import frc.robot.AutoCommands.MultiCoralAuto;
-import frc.robot.AutoCommands.RedLeftAuto;
-import frc.robot.AutoCommands.RedRightAuto;
-import frc.robot.commands.AfterAlgaeReefCommand;
+import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.ManualIntakeAlgaeReefCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
-import frc.robot.commands.WaitUntilFarFromCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOReal;
 import frc.robot.io.beambreak.BeamBreakIOSim;
@@ -82,13 +71,10 @@ import frc.robot.subsystems.vision.photon.VisionIO;
 import frc.robot.subsystems.vision.photon.VisionIO.CameraType;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.photon.VisionIOPhotonVisionSim;
-import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.ReefLevel;
 import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
-import java.util.List;
-import java.util.Set;
+import frc.robot.util.PoseUtil;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -253,63 +239,6 @@ public class RobotContainer {
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
     // m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
-    m_autoChooser.addDefaultOption(
-        "Red Left Side",
-        new RedLeftAuto(
-            m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
-    m_autoChooser.addDefaultOption(
-        "Red Right Side",
-        new RedRightAuto(
-            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
-    m_autoChooser.addDefaultOption(
-        "Blue Left Side",
-        new BlueLeftAuto(
-            m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
-    m_autoChooser.addDefaultOption(
-        "Blue Right Side",
-        new BlueRightAuto(
-            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
-
-    // m_autoChooser.addDefaultOption(
-    //     "Left Side",
-    //     new MultiCoralAuto(
-    //         m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
-    // m_autoChooser.addDefaultOption(
-    //     "Right Side",
-    //     new DeferredCommand(
-    //         () ->
-    //             new MultiCoralAuto(
-    //                 m_drive,
-    //                 m_superStructure,
-    //                 m_feeder,
-    //                 m_endEffector,
-    //                 Side.RIGHT,
-    //                 List.of(9, 10, 11)),
-    //         Set.of()));
-
-    m_autoChooser.addOption(
-        "Tush Push Left Side",
-        new MultiCoralAuto(
-                m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2))
-            .beforeStarting(
-                new WaitUntilFarFromCommand(m_drive::getPose, 0.3)
-                    .deadlineFor(
-                        new RunCommand(
-                            () -> m_drive.runVelocity(new ChassisSpeeds(-1.2, 0.0, 0.0)),
-                            m_drive))));
-
-    m_autoChooser.addOption(
-        "mid Auto", new MiddleAuto(m_drive, m_superStructure, m_feeder, m_endEffector));
-    m_autoChooser.addOption(
-        "Tush Push Right Side",
-        new MultiCoralAuto(
-                m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11))
-            .beforeStarting(
-                new WaitUntilFarFromCommand(m_drive::getPose, 0.3)
-                    .deadlineFor(
-                        new RunCommand(
-                            () -> m_drive.runVelocity(new ChassisSpeeds(-1.2, 0.0, 0.0)),
-                            m_drive))));
     // m_autoChooser.addDefaultOption(
     //     "LCC Testing",
     //     new MultiCoralAuto(
@@ -409,35 +338,7 @@ public class RobotContainer {
         .onFalse(
             new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
 
-    // Align test bind
-    m_driverController
-        .a()
-        .whileTrue(
-            new DeferredCommand(
-                () ->
-                    DriveCommands.auto_optimalTrajectoryReefAlign(
-                            m_drive,
-                            () ->
-                                // m_drive
-                                //     .getPose()
-                                //     .nearest(
-                                //         List.of(
-                                //             IntStream.range(
-                                //                     0, FieldConstants.Reef.centerFaces.length)
-                                //                 .mapToObj(
-                                //                     i ->
-                                //                         AllianceFlipUtil.apply(
-                                //                             FieldConstants.Reef.centerFaces[i]))
-                                //                 .toArray(Pose2d[]::new))))
-                                FieldConstants.Reef.branchPositions
-                                    .get(m_operatorPanel.getReefTarget())
-                                    .get(ReefLevel.fromLevel(m_operatorPanel.getReefLevel()))
-                                    .toPose2d())
-                        .andThen(
-                            () -> LEDSubsystem.getInstance().setStates(LEDStates.HOLDING_PIECE)),
-                Set.of(m_drive)))
-        .onFalse(new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
-
+    // Orbit reef
     m_driverController
         .rightStick()
         .whileTrue(
@@ -446,7 +347,7 @@ public class RobotContainer {
                 () -> -m_driverController.getLeftY(),
                 () -> -m_driverController.getLeftX(),
                 () ->
-                    AllianceFlipUtil.apply(FieldConstants.Reef.center)
+                    FieldConstants.getReefCenter()
                         .minus(m_drive.getPose().getTranslation())
                         .getAngle()));
 
@@ -508,8 +409,8 @@ public class RobotContainer {
                 m_drive,
                 m_superStructure,
                 m_endEffector,
-                () -> m_operatorPanel.getTargetPose(),
-                () -> m_operatorPanel.getReefTarget(),
+                () -> PoseUtil.getClosestDesiredBranchID(m_drive.getPose(), Side.LEFT),
+                () -> m_operatorPanel.getReefLevel() - 1,
                 m_operatorPanel.getOverrideSwitch(3)))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
@@ -517,14 +418,8 @@ public class RobotContainer {
     m_driverController
         .leftBumper()
         .debounce(0.1)
-        .whileTrue(
-            new ManualIntakeAlgaeReefCommand(
-                m_drive,
-                m_driverController,
-                m_superStructure,
-                m_endEffector,
-                () -> m_drive.getPose()))
-        .onFalse(new AfterAlgaeReefCommand(m_drive, m_superStructure, m_endEffector));
+        .whileTrue(new AutoIntakeAlgaeReefCommand(m_drive, m_superStructure, m_endEffector))
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, true));
 
     // INTAKE ALGAE FLOOR
     // m_algaeFloorTrigger

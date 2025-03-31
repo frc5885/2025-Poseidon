@@ -30,8 +30,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -199,20 +199,23 @@ public class DriveCommands {
    * @param targetPose The target pose
    * @return The command
    */
-  public static Command auto_optimalTrajectoryReefAlign(Drive drive, Supplier<Pose2d> targetPose) {
+  public static Command bestPIDPathToReef(
+      Drive drive, Supplier<Pose2d> targetPose, Supplier<Integer> branchID) {
     Pose2d[] pathPlannerSetpointHolder = new Pose2d[] {new Pose2d()};
-    Supplier<Pose2d> flippedTargetPose = () -> AllianceFlipUtil.apply(targetPose.get());
     double distance =
-        drive.getPose().getTranslation().getDistance(flippedTargetPose.get().getTranslation());
+        drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation());
     return new SequentialCommandGroup(
             // First, start PathPlanner and wait until it has generated a valid path
             new InstantCommand(
                     () -> {
+                      // only look at a single tag
+                      Vision.setSingleTargetPostID(branchID.get());
+
                       pathPlannerSetpointHolder[0] = drive.getPathPlannerSetpoint();
 
                       // if within 0.5m, just trap pid to target
                       if (distance <= 0.5) {
-                        drive.setPathPlannerSetpoint(flippedTargetPose.get());
+                        drive.setPathPlannerSetpoint(targetPose.get());
                         return;
                       }
                       // if far away, use good "sweep-in" trajectory, else just path to pose
@@ -220,8 +223,7 @@ public class DriveCommands {
                           calculateLookAheadPose(drive.getPose(), drive.getChassisSpeeds(), 0.2);
                       Logger.recordOutput("Odometry/LookAheadPose", futurePose);
                       Command pathPlannerCommand =
-                          drive.getBetterDriveToPoseCommand(
-                              () -> futurePose, flippedTargetPose, false);
+                          drive.getBetterDriveToPoseCommand(() -> futurePose, targetPose, true);
                       pathPlannerCommand.schedule();
                     })
                 .andThen(
@@ -248,25 +250,30 @@ public class DriveCommands {
                       m_chassisController.setFinalGoalPose(targetPose.get());
                     })
                 .until(() -> m_chassisController.isGoalAchieved()))
-        .finallyDo(drive::stop);
+        .finallyDo(
+            () -> {
+              drive.stop();
+              Vision.setSingleTargetPostID(-1); // all tags
+            });
   }
 
-  public static Command getAutoSmartOptimalTrajectoryAlign(
-      Drive drive, Supplier<Pose2d> targetPose, Supplier<Boolean> isHandOffReady) {
-    return auto_optimalTrajectoryReefAlign(drive, targetPose)
-        .onlyWhile(
-            () ->
-                drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                        > 1.0
-                    || isHandOffReady.get())
-        .andThen(
-            new ConditionalCommand(
-                pidToPose(drive, targetPose),
-                Commands.none(),
-                () ->
-                    drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
-                        > 0.5));
-  }
+  // public static Command getAutoSmartOptimalTrajectoryAlign(
+  //     Drive drive, Supplier<Pose2d> targetPose, Supplier<Boolean> isHandOffReady) {
+  //   return bestPIDPathToReef(drive, targetPose)
+  //       .onlyWhile(
+  //           () ->
+  //               drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+  //                       > 1.0
+  //                   || isHandOffReady.get())
+  //       .andThen(
+  //           new ConditionalCommand(
+  //               pidToPose(drive, targetPose),
+  //               Commands.none(),
+  //               () ->
+  //
+  // drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+  //                       > 0.5));
+  // }
 
   /**
    * Command to follow a basic AutoBuilder trajectory using Pathplanner. Not precise at all, but
@@ -302,7 +309,6 @@ public class DriveCommands {
    */
   public static Command pidToPose(
       Drive drive, Supplier<Pose2d> targetPose, Supplier<Integer> reefPostID) {
-    Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
     return Commands.run(
             () -> {
               drive.runVelocity(m_chassisController.calculate(drive.getPose()));
@@ -310,7 +316,8 @@ public class DriveCommands {
             drive)
         .beforeStarting(
             () -> {
-              m_chassisController.reset(drive.getPose(), drive.getChassisSpeeds(), targetPoseValue);
+              m_chassisController.reset(
+                  drive.getPose(), drive.getChassisSpeeds(), targetPose.get());
               Vision.setSingleTargetPostID(reefPostID.get());
             })
         .until(() -> m_chassisController.isGoalAchieved())
@@ -372,6 +379,13 @@ public class DriveCommands {
 
   public static Command pidToPose(Drive drive, Supplier<Pose2d> targetPose) {
     return pidToPose(drive, targetPose, () -> -1);
+  }
+
+  public static Command driveDistance(Drive drive, double distance) {
+    return new ParallelDeadlineGroup(
+        new WaitUntilFarFromCommand(drive::getPose, Math.abs(distance)),
+        Commands.run(
+            () -> drive.runVelocity(new ChassisSpeeds(1.0 * Math.signum(distance), 0.0, 0.0))));
   }
 
   /**
