@@ -104,7 +104,7 @@ public class MultiCoralAuto extends SequentialCommandGroup {
         new WaitUntilCommand(() -> feeder.getIsHandoffReady())
             .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector)),
         // drive to reef
-        new OptimalPIDToReef(
+        DriveCommands.pidToPose(
             drive,
             () ->
                 targetPoseSupplier
