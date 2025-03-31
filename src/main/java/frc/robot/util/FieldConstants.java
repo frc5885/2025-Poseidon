@@ -404,7 +404,7 @@ public class FieldConstants {
 
   public static ArrayList<Pose3d> getAllL4Poses() {
     return Reef.branchPositions.stream()
-        .map(map -> map.get(ReefLevel.L4))
+        .map(map -> AllianceFlipUtil.apply(map.get(ReefLevel.L4)))
         .collect(Collectors.toCollection(ArrayList::new));
   }
 }

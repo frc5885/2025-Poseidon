@@ -77,6 +77,14 @@ public class ChassisTrapezoidalController {
     m_finalGoalPose = goal;
   }
 
+  public Pose2d getGoalPose() {
+    return m_goalPose;
+  }
+
+  public Pose2d getFinalGoalPose() {
+    return m_finalGoalPose;
+  }
+
   public void setCurrentState(Pose2d robotPose, ChassisSpeeds chassisSpeeds) {
     m_currentPose = robotPose;
 

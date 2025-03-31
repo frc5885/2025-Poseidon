@@ -480,6 +480,7 @@ public class Drive extends SubsystemBase {
    */
   public void resetPathPlannerGetPose() {
     m_pathPlannerStartPose = new Pose2d();
+    m_pathPlannerSetpoint = new Pose2d();
   }
 
   /** Returns the current odometry rotation. */

@@ -6,7 +6,6 @@ import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.commands.DriveCommands;
 import frc.robot.commands.PlaceCoralCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
@@ -60,7 +59,7 @@ public class AutoScoreCoralAtBranchCommand extends SequentialCommandGroup {
             () ->
                 new ParallelCommandGroup(
                         new SuperStructureCommand(superStructure, () -> m_superStructureState),
-                        DriveCommands.pidToPose(drive, () -> m_branchPose.toPose2d(), branchID)
+                        new OptimalPIDToReef(drive, () -> m_branchPose.toPose2d(), branchID)
                             .unless(
                                 () -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean()))
                     .andThen(

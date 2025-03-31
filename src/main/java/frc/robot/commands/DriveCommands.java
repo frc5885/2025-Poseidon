@@ -591,8 +591,12 @@ public class DriveCommands {
         ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, currentPose.getRotation());
     return currentPose.exp(
         new Twist2d(
-            frSpeeds.vxMetersPerSecond * lookAheadTime,
-            frSpeeds.vyMetersPerSecond * lookAheadTime,
-            frSpeeds.omegaRadiansPerSecond * lookAheadTime));
+            chassisSpeeds.vxMetersPerSecond * lookAheadTime,
+            chassisSpeeds.vyMetersPerSecond * lookAheadTime,
+            chassisSpeeds.omegaRadiansPerSecond * lookAheadTime));
+  }
+
+  public static ChassisTrapezoidalController getChassisController() {
+    return m_chassisController;
   }
 }
