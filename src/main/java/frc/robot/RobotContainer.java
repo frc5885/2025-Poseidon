@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.MultiCoralAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
@@ -75,6 +76,7 @@ import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import frc.robot.util.PoseUtil;
+import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -239,10 +241,10 @@ public class RobotContainer {
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
     // m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
-    // m_autoChooser.addDefaultOption(
-    //     "LCC Testing",
-    //     new MultiCoralAuto(
-    //         m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 0, 1)));
+    m_autoChooser.addDefaultOption(
+        "LCC Testing",
+        new MultiCoralAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 0, 1)));
 
     // Set up SysId routines
     // m_autoChooser.addOption(

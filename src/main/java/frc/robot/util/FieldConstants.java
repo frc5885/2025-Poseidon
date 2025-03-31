@@ -407,4 +407,38 @@ public class FieldConstants {
         .map(map -> AllianceFlipUtil.apply(map.get(ReefLevel.L4)))
         .collect(Collectors.toCollection(ArrayList::new));
   }
+
+  public static Pose2d getIntakePose(Side side) {
+    boolean isRed = AllianceFlipUtil.shouldFlip();
+    Pose2d pose = new Pose2d();
+
+    if (!isRed && side == Side.RIGHT) {
+      pose = new Pose2d(1.22, 0.88, Rotation2d.fromDegrees(54.27));
+    } else if (!isRed && side == Side.LEFT) {
+      pose = new Pose2d(1.22, 7.17, Rotation2d.fromDegrees(305.73));
+    } else if (isRed && side == Side.RIGHT) {
+      pose = new Pose2d(16.40, 7.0, Rotation2d.fromDegrees(234.27));
+    } else if (isRed && side == Side.LEFT) {
+      pose = new Pose2d(16.4, 1.03, Rotation2d.fromDegrees(125.73));
+    }
+
+    return pose;
+  }
+
+  public static Pose2d getSimInitialPose(Side side) {
+    boolean isRed = AllianceFlipUtil.shouldFlip();
+    Pose2d pose = new Pose2d();
+
+    if (!isRed && side == Side.RIGHT) {
+      pose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
+    } else if (!isRed && side == Side.LEFT) {
+      pose = new Pose2d(7.3, 6.45, Rotation2d.fromRadians(Math.PI));
+    } else if (isRed && side == Side.RIGHT) {
+      pose = new Pose2d(10.25, 6.45, Rotation2d.fromRadians(0));
+    } else if (isRed && side == Side.LEFT) {
+      pose = new Pose2d(10.25, 1.6, Rotation2d.fromRadians(0));
+    }
+
+    return pose;
+  }
 }
