@@ -409,7 +409,9 @@ public class RobotContainer {
                 m_drive,
                 m_superStructure,
                 m_endEffector,
-                () -> PoseUtil.getClosestDesiredBranchID(m_drive.getPose(), Side.LEFT),
+                () ->
+                    PoseUtil.getClosestDesiredBranchID(
+                        m_drive.getPose(), Side.from(m_operatorPanel.getReefTarget())),
                 () -> m_operatorPanel.getReefLevel() - 1,
                 m_operatorPanel.getOverrideSwitch(3)))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));

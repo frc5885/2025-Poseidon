@@ -352,7 +352,11 @@ public class FieldConstants {
 
   public static enum Side {
     LEFT,
-    RIGHT
+    RIGHT;
+
+    public static Side from(int value) {
+      return value == 0 ? RIGHT : LEFT;
+    }
   }
 
   public record CoralObjective(int branchId, ReefLevel reefLevel) {}
