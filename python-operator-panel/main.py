@@ -15,8 +15,8 @@ logging.basicConfig(level=logging.DEBUG)
 # Configuration
 WINDOW_SIZE = (1024, 600)
 HEX_RADIUS = 270  # Radius of the hexagon
-BUTTON_LENGTH = 100  # Length of rectangular buttons
-BUTTON_WIDTH = 60   # Width of rectangular buttons
+BUTTON_LENGTH = 200  # Length of rectangular buttons
+BUTTON_WIDTH = 75   # Width of rectangular buttons
 ROTATION_ANGLE = 90  # Rotate hexagon by 90 degrees
 BUTTON_ANGLE = 30
 COLORS = {
@@ -284,9 +284,9 @@ class HexagonButton:
 def createButtons():
     buttons = []
     for i in range(1,5):
-        button = HexagonButton((300, 20 + 110*i), 0, 52, 100, False, 5-i)
+        button = HexagonButton((250, 20 + 110*i), 0, BUTTON_WIDTH, BUTTON_LENGTH, False, 5-i)
         buttons.append(button)
-        button = HexagonButton((724, 20 + 110*i), 0, 52, 100, True, 5-i)
+        button = HexagonButton((774, 20 + 110*i), 0, BUTTON_WIDTH, BUTTON_LENGTH, True, 5-i)
         buttons.append(button)
     return buttons
 
