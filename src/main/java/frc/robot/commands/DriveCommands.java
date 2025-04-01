@@ -61,6 +61,7 @@ public class DriveCommands {
   private static final double kTranslationTolerance = 0.02;
 
   public static boolean snapToReef = false;
+  public static boolean pidMode = false;
 
   // Create PID controllers
   private static TunablePIDController angleController;
@@ -330,12 +331,14 @@ public class DriveCommands {
                       m_chassisController.reset(
                           drive.getPose(), drive.getChassisSpeeds(), targetPose.get());
                       Vision.setSingleTargetPostID(reefPostID.get());
+                      DriveCommands.pidMode = true;
                     })
                 .until(() -> m_chassisController.isGoalAchieved())
                 .finallyDo(
                     () -> {
                       drive.stop();
                       Vision.setSingleTargetPostID(-1); // all tags
+                      DriveCommands.pidMode = false;
                     }),
         Set.of(drive));
   }
