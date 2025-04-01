@@ -150,7 +150,7 @@ public class RobotContainer {
     // m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
     m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
     m_disableBrakeModeTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(4));
-    m_snapToReefTrigger = new Trigger(() -> DriveCommands.snapToReef && !DriveCommands.pidMode);
+    m_snapToReefTrigger = new Trigger(() -> DriveCommands.snapToReef);
 
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
@@ -348,18 +348,21 @@ public class RobotContainer {
             new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
 
     // Flip snap to reef flag
-    m_driverController.a().onTrue(new InstantCommand(() -> DriveCommands.snapToReef = true));
+    m_driverController
+        .rightStick()
+        .onTrue(new InstantCommand(() -> DriveCommands.snapToReef = !DriveCommands.snapToReef));
 
     m_snapToReefTrigger.whileTrue(
         DriveCommands.joystickDriveAtAngle(
-            m_drive,
-            () -> -m_driverController.getLeftY(),
-            () -> -m_driverController.getLeftX(),
-            () -> -m_driverController.getRightX(),
-            () ->
-                FieldConstants.getReefCenter()
-                    .minus(m_drive.getPose().getTranslation())
-                    .getAngle()));
+                m_drive,
+                () -> -m_driverController.getLeftY(),
+                () -> -m_driverController.getLeftX(),
+                () -> -m_driverController.getRightX(),
+                () ->
+                    FieldConstants.getReefCenter()
+                        .minus(m_drive.getPose().getTranslation())
+                        .getAngle())
+            .finallyDo(() -> DriveCommands.snapToReef = false));
 
     // m_driverController
     //     .b()
@@ -401,19 +404,18 @@ public class RobotContainer {
         .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
 
     // OVERRIDE CORAL FORCE EJECT
-    // m_driverController
-    //     .b()
-    //     .whileTrue(
-    //         new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1)
-    //             .alongWith(new InstantCommand(m_endEffector::runEndEffectorOuttake,
-    // m_endEffector)))
-    //     .onFalse(
-    //         new ResetSuperStructureCommand(m_drive, m_superStructure, false)
-    //             .alongWith(new InstantCommand(m_endEffector::stopEndEffector, m_endEffector)));
+    m_driverController
+        .b()
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.SCORE_CORAL_L1)
+                .alongWith(new InstantCommand(m_endEffector::runEndEffectorOuttake, m_endEffector)))
+        .onFalse(
+            new ResetSuperStructureCommand(m_drive, m_superStructure, false)
+                .alongWith(new InstantCommand(m_endEffector::stopEndEffector, m_endEffector)));
 
     // SCORE CORAL
     m_driverController
-        .b()
+        .rightTrigger(0.1)
         .whileTrue(
             new AutoScoreCoralAtBranchCommand(
                 m_drive,
