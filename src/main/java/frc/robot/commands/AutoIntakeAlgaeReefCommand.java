@@ -82,7 +82,7 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
             () -> CalculateAlgaeStateUtil.calculateAfterIntakeState(stateSupplier.get())),
         // back out of reef
         DriveCommands.driveStraight(drive, -kDriveInSpeed)
-            .withTimeout(1.5)
+            .withTimeout(1.0)
             .unless(() -> DriverStation.isTest()));
 
     addRequirements(drive, superStructure);

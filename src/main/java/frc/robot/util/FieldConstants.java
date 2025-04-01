@@ -446,4 +446,16 @@ public class FieldConstants {
 
     return pose;
   }
+
+  public static Pose2d getSimInitialMiddlePose() {
+    return AllianceFlipUtil.apply(new Pose2d(7.3, 4.6, Rotation2d.fromRadians(Math.PI)));
+  }
+
+  public static Pose2d getAutonomousAlgaeScorePose() {
+    return AllianceFlipUtil.apply(new Pose2d(8.0, 5.0, Rotation2d.fromRadians(Math.PI)));
+  }
+
+  public static Pose2d getAutonomous2ndAlgaeLineupPose() {
+    return AllianceFlipUtil.apply(new Pose2d(5.9, 5.5, Rotation2d.fromRadians(-2.0)));
+  }
 }

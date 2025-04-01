@@ -24,8 +24,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.AutoCommands.AlgeaAuto;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
+import frc.robot.AutoCommands.BargeAuto;
 import frc.robot.AutoCommands.MultiCoralAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
@@ -249,7 +249,9 @@ public class RobotContainer {
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
 
-    m_autoChooser.addOption("Algea", new AlgeaAuto(m_drive, m_superStructure, m_endEffector));
+    m_autoChooser.addOption(
+        "Middle Barge", new BargeAuto(m_drive, m_superStructure, m_feeder, m_endEffector));
+
     // Set up SysId routines
     // m_autoChooser.addOption(
     //     "Drive Wheel Radius Characterization",
