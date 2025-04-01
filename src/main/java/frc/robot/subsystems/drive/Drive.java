@@ -19,6 +19,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPoint;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -51,6 +52,8 @@ import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.TunableDouble;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -409,20 +412,21 @@ public class Drive extends SubsystemBase {
   }
 
   public Command getPathFollowBackOutCommand(Supplier<Pose2d> target) {
+    List<PathPoint> pathPoints =
+        new PathPlannerPath(
+                PathPlannerPath.waypointsFromPoses(target.get(), getPose()),
+                kPathConstraintsFast,
+                null,
+                new GoalEndState(0.0, getRotation()))
+            .getAllPathPoints();
+    Collections.reverse(pathPoints);
+    pathPoints.remove(0);
 
     PathPlannerPath path =
-        new PathPlannerPath(
-            PathPlannerPath.waypointsFromPoses(
-                getPose(),
-                getPose().transformBy(new Transform2d(-0.5, 0.0, target.get().getRotation())),
-                target.get()),
-            kPathConstraintsFast,
-            null,
-            new GoalEndState(0.0, target.get().getRotation()));
+        PathPlannerPath.fromPathPoints(
+            pathPoints, kPathConstraintsFast, new GoalEndState(0.6, target.get().getRotation()));
     path.preventFlipping = true;
-    return AutoBuilder.followPath(path)
-        .onlyWhile(
-            () -> getPose().getTranslation().getDistance(target.get().getTranslation()) > 0.2);
+    return AutoBuilder.followPath(path);
   }
 
   /**

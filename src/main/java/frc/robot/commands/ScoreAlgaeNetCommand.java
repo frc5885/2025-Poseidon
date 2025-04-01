@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.EndEffector.EndEffector;
@@ -28,25 +27,24 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
     addCommands(
         new InstantCommand(
             () -> LEDSubsystem.getInstance().setStates(LEDSubsystem.LEDStates.SCORING_LINE_UP)),
-        new DeferredCommand(
-                () ->
-                    DriveCommands.pidToPose(
-                        drive,
-                        () ->
-                            new Pose2d(
-                                AllianceFlipUtil.applyX(8.12),
-                                drive.getPose().getY(),
-                                AllianceFlipUtil.apply(Rotation2d.k180deg))),
-                Set.of(drive))
-            .unless(() -> DriverStation.isTest()),
-        new SuperStructureCommand(superStructure, () -> SuperStructureState.BEFORE_NET),
-        // exit the score command in simulation so that the visualizer works in sim
         new ParallelCommandGroup(
+            new DeferredCommand(
+                    () ->
+                        DriveCommands.pidToPoseLooseTolerance(
+                            drive,
+                            () ->
+                                new Pose2d(
+                                    AllianceFlipUtil.applyX(8.12),
+                                    drive.getPose().getY(),
+                                    AllianceFlipUtil.apply(Rotation2d.k180deg))),
+                    Set.of(drive))
+                .unless(() -> DriverStation.isTest()),
+            new SuperStructureCommand(superStructure, () -> SuperStructureState.BEFORE_NET)),
+        // exit the score command in simulation so that the visualizer works in sim
+        new SequentialCommandGroup(
             new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
-            new WaitCommand(0.0)
-                .andThen(
-                    new ScoreAlgaeCommand(endEffector)
-                        .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30))),
+            new ScoreAlgaeCommand(endEffector)
+                .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30)),
         new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)));
 
     addRequirements(drive, superStructure);

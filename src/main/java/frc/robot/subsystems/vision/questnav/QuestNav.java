@@ -51,7 +51,7 @@ public class QuestNav extends SubsystemBase {
     m_questNavIO.processHeartbeat();
     m_questNavIO.cleanUpQuestNavMessages();
 
-    m_disconnectedAlert.set(!m_questNavIOInputs.connected);
+    // m_disconnectedAlert.set(!m_questNavIOInputs.connected);
   }
 
   /**

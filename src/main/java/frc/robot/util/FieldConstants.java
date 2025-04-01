@@ -413,13 +413,13 @@ public class FieldConstants {
     Pose2d pose = new Pose2d();
 
     if (!isRed && side == Side.RIGHT) {
-      pose = new Pose2d(1.22, 0.88, Rotation2d.fromDegrees(54.27));
+      pose = new Pose2d(1.25, 1.0, Rotation2d.fromDegrees(54.5));
     } else if (!isRed && side == Side.LEFT) {
-      pose = new Pose2d(1.22, 7.17, Rotation2d.fromDegrees(305.73));
+      pose = new Pose2d(1.25, 7.0, Rotation2d.fromDegrees(-54.5));
     } else if (isRed && side == Side.RIGHT) {
-      pose = new Pose2d(16.40, 7.0, Rotation2d.fromDegrees(234.27));
+      pose = new Pose2d(16.30, 7.0, Rotation2d.fromDegrees(-125.5));
     } else if (isRed && side == Side.LEFT) {
-      pose = new Pose2d(16.4, 1.03, Rotation2d.fromDegrees(125.73));
+      pose = new Pose2d(16.30, 1.0, Rotation2d.fromDegrees(125.5));
     }
 
     return pose;

@@ -6,7 +6,6 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.Feeder.Feeder;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
@@ -20,8 +19,9 @@ public class CoralHandoffCommand extends SequentialCommandGroup {
   public CoralHandoffCommand(
       SuperStructure superStructure, Feeder feeder, EndEffector endEffector) {
     addCommands(
-        new WaitUntilCommand(
-            () -> superStructure.getSuperStructureGoal() == SuperStructureState.IDLE),
+        new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE),
+        // new WaitUntilCommand(
+        //     () -> superStructure.getSuperStructureGoal() == SuperStructureState.IDLE),
         new InstantCommand(() -> endEffector.runEndEffectorIntake(), endEffector),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.INTAKE_CORAL),
         new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE),

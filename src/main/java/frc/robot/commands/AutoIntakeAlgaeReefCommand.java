@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 
 public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
   private final double kTransitionDistance = 0.3;
-  private final double kDriveInDistance = 0.15;
+  private final double kDriveInSpeed = 0.5;
   private Pose2d targetPose;
   private Pose2d grabPose;
   private Pose2d transitionPose2d;
@@ -52,7 +52,7 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
 
               grabPose =
                   transitionPose2d.transformBy(
-                      new Transform2d(kDriveInDistance, 0.0, new Rotation2d()));
+                      new Transform2d(kDriveInSpeed, 0.0, new Rotation2d()));
 
               LEDSubsystem.getInstance().setStates(LEDStates.ALGAE_INTAKE_LINE_UP);
             }),
@@ -60,23 +60,27 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
         new ParallelCommandGroup(
             new SuperStructureCommand(superStructure, () -> stateSupplier.get()),
             new DeferredCommand(
-                    () -> DriveCommands.pidToPose(drive, () -> transitionPose2d), Set.of(drive))
+                    () -> DriveCommands.pidToPoseLooseTolerance(drive, () -> transitionPose2d),
+                    Set.of(drive))
                 .unless(() -> DriverStation.isTest())),
         // drive in to reef
         new ParallelDeadlineGroup(
-            DriveCommands.driveDistance(drive, kDriveInDistance)
+            DriveCommands.driveStraight(drive, kDriveInSpeed)
+                .until(() -> endEffector.isHoldingAlgae())
                 .unless(() -> DriverStation.isTest()),
             new IntakeAlgaeCommand(endEffector)),
+        new InstantCommand(
+            () -> {
+              GamePieceVisualizer.setHasAlgae(true);
+            }),
         // raise elevator
         new SuperStructureCommand(
             superStructure,
             () -> CalculateAlgaeStateUtil.calculateAfterIntakeState(stateSupplier.get())),
         // back out of reef
-        DriveCommands.driveDistance(drive, -kDriveInDistance).unless(() -> DriverStation.isTest()),
-        new InstantCommand(
-            () -> {
-              GamePieceVisualizer.setHasAlgae(true);
-            }));
+        DriveCommands.driveStraight(drive, -kDriveInSpeed)
+            .withTimeout(1.5)
+            .unless(() -> DriverStation.isTest()));
 
     addRequirements(drive, superStructure);
   }

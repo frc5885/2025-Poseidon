@@ -102,7 +102,8 @@ public class MultiCoralAuto extends SequentialCommandGroup {
     return new ParallelDeadlineGroup(
         // wait for handoff ready, then handoff
         new WaitUntilCommand(() -> feeder.getIsHandoffReady())
-            .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector)),
+            .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
+            .withTimeout(3.0),
         // drive to reef
         DriveCommands.pidToPose(
             drive,
@@ -128,7 +129,7 @@ public class MultiCoralAuto extends SequentialCommandGroup {
         .andThen(
             new ParallelCommandGroup(
                 new ResetSuperStructureCommand(drive, superStructure, false),
-                DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier, true),
+                DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier),
                 new WaitUntilCloseToCommand(
                         () -> drive.getPose(), intakePoseSupplier, kLEDFlashDistance)
                     .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))));

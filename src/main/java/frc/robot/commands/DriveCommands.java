@@ -31,7 +31,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -43,6 +42,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -59,6 +59,8 @@ public class DriveCommands {
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
   private static final double kAngleTolerance = Units.degreesToRadians(1.5);
   private static final double kTranslationTolerance = 0.02;
+
+  public static boolean snapToReef = false;
 
   // Create PID controllers
   private static TunablePIDController angleController;
@@ -158,11 +160,17 @@ public class DriveCommands {
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
     // Construct command
     return Commands.run(
         () -> {
+          // cancel snap to reef on right joystick move
+          if (Math.abs(omegaSupplier.getAsDouble()) > 0.75) {
+            snapToReef = false;
+          }
+
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
@@ -281,15 +289,16 @@ public class DriveCommands {
    *
    * @param drive The drive subsystem
    * @param targetPose The target pose
-   * @param doNotFlip Whether to flip the target pose
    * @return The command
    */
-  public static Command auto_basicPathplannerToPose(
-      Drive drive, Supplier<Pose2d> targetPose, boolean doNotFlip) {
-    return drive
-        .getDriveToPoseCommand(targetPose, doNotFlip)
-        .beforeStarting(() -> drive.setUsePPRunVelocity(true))
-        .finallyDo(() -> drive.setUsePPRunVelocity(false));
+  public static Command auto_basicPathplannerToPose(Drive drive, Supplier<Pose2d> targetPose) {
+    return Commands.defer(
+        () ->
+            drive
+                .getPathFollowBackOutCommand(targetPose)
+                .beforeStarting(() -> drive.setUsePPRunVelocity(true))
+                .finallyDo(() -> drive.setUsePPRunVelocity(false)),
+        Set.of(drive));
   }
 
   public static Command auto_reefBackOutToStation(Drive drive, Supplier<Pose2d> targetPose) {
@@ -309,23 +318,26 @@ public class DriveCommands {
    */
   public static Command pidToPose(
       Drive drive, Supplier<Pose2d> targetPose, Supplier<Integer> reefPostID) {
-    return Commands.run(
-            () -> {
-              drive.runVelocity(m_chassisController.calculate(drive.getPose()));
-            },
-            drive)
-        .beforeStarting(
-            () -> {
-              m_chassisController.reset(
-                  drive.getPose(), drive.getChassisSpeeds(), targetPose.get());
-              Vision.setSingleTargetPostID(reefPostID.get());
-            })
-        .until(() -> m_chassisController.isGoalAchieved())
-        .finallyDo(
-            () -> {
-              drive.stop();
-              Vision.setSingleTargetPostID(-1); // all tags
-            });
+    return Commands.defer(
+        () ->
+            Commands.run(
+                    () -> {
+                      drive.runVelocity(m_chassisController.calculate(drive.getPose()));
+                    },
+                    drive)
+                .beforeStarting(
+                    () -> {
+                      m_chassisController.reset(
+                          drive.getPose(), drive.getChassisSpeeds(), targetPose.get());
+                      Vision.setSingleTargetPostID(reefPostID.get());
+                    })
+                .until(() -> m_chassisController.isGoalAchieved())
+                .finallyDo(
+                    () -> {
+                      drive.stop();
+                      Vision.setSingleTargetPostID(-1); // all tags
+                    }),
+        Set.of(drive));
   }
 
   /**
@@ -381,11 +393,22 @@ public class DriveCommands {
     return pidToPose(drive, targetPose, () -> -1);
   }
 
-  public static Command driveDistance(Drive drive, double distance) {
-    return new ParallelDeadlineGroup(
-        new WaitUntilFarFromCommand(drive::getPose, Math.abs(distance)),
-        Commands.run(
-            () -> drive.runVelocity(new ChassisSpeeds(1.0 * Math.signum(distance), 0.0, 0.0))));
+  public static Command pidToPoseLooseTolerance(Drive drive, Supplier<Pose2d> targetPose) {
+    return pidToPose(drive, targetPose)
+        .beforeStarting(
+            () -> {
+              angleController.setTolerance(kAngleTolerance * 3.0);
+              translateController.setTolerance(kTranslationTolerance * 3.0);
+            })
+        .andThen(
+            () -> {
+              angleController.setTolerance(kAngleTolerance);
+              translateController.setTolerance(kTranslationTolerance);
+            });
+  }
+
+  public static Command driveStraight(Drive drive, double speed) {
+    return Commands.run(() -> drive.runVelocity(new ChassisSpeeds(speed, 0.0, 0.0)));
   }
 
   /**

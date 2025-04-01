@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -121,6 +120,8 @@ public class RobotContainer {
   private final Trigger m_bogusCallTrigger;
   /** disable brake mode button 5 */
   private final Trigger m_disableBrakeModeTrigger;
+  /** right stick toggle */
+  private final Trigger m_snapToReefTrigger;
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> m_autoChooser;
   private final LoggedDashboardChooser<SuperStructureState> m_stateChooser;
@@ -147,6 +148,7 @@ public class RobotContainer {
     // m_driverController.a().and(m_operatorPanel.getOverrideSwitch(3));
     m_bogusCallTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(7));
     m_disableBrakeModeTrigger = new Trigger(m_operatorPanel.getOverrideSwitch(4));
+    m_snapToReefTrigger = new Trigger(() -> DriveCommands.snapToReef);
 
     m_poseController = new HeimdallPoseController(HeimdallOdometrySource.AUTO_SWITCH);
     switch (Constants.kCurrentMode) {
@@ -244,7 +246,7 @@ public class RobotContainer {
     m_autoChooser.addDefaultOption(
         "LCC Testing",
         new MultiCoralAuto(
-            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 0, 1)));
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
 
     // Set up SysId routines
     // m_autoChooser.addOption(
@@ -340,18 +342,21 @@ public class RobotContainer {
         .onFalse(
             new InstantCommand(() -> m_superStructure.setBrakeMode(true)).ignoringDisable(true));
 
-    // Orbit reef
+    // Flip snap to reef flag
     m_driverController
         .rightStick()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                m_drive,
-                () -> -m_driverController.getLeftY(),
-                () -> -m_driverController.getLeftX(),
-                () ->
-                    FieldConstants.getReefCenter()
-                        .minus(m_drive.getPose().getTranslation())
-                        .getAngle()));
+        .onTrue(new InstantCommand(() -> DriveCommands.snapToReef = !DriveCommands.snapToReef));
+
+    m_snapToReefTrigger.whileTrue(
+        DriveCommands.joystickDriveAtAngle(
+            m_drive,
+            () -> -m_driverController.getLeftY(),
+            () -> -m_driverController.getLeftX(),
+            () -> -m_driverController.getRightX(),
+            () ->
+                FieldConstants.getReefCenter()
+                    .minus(m_drive.getPose().getTranslation())
+                    .getAngle()));
 
     // m_driverController
     //     .b()
@@ -377,9 +382,8 @@ public class RobotContainer {
     m_driverController.rightBumper().debounce(0.1).onTrue(m_feeder.startFeederCmd());
     m_feeder
         .getHandoffTrigger()
-        .onTrue(
-            new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        .onTrue(new CoralHandoffCommand(m_superStructure, m_feeder, m_endEffector));
+    // .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
     // OVERRIDE FORCE FEED
     m_driverController.start().whileTrue(m_feeder.forceFeedCmd());
 
