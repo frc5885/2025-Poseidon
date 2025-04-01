@@ -351,14 +351,15 @@ public class RobotContainer {
 
     m_snapToReefTrigger.whileTrue(
         DriveCommands.joystickDriveAtAngle(
-            m_drive,
-            () -> -m_driverController.getLeftY(),
-            () -> -m_driverController.getLeftX(),
-            () -> -m_driverController.getRightX(),
-            () ->
-                FieldConstants.getReefCenter()
-                    .minus(m_drive.getPose().getTranslation())
-                    .getAngle()));
+                m_drive,
+                () -> -m_driverController.getLeftY(),
+                () -> -m_driverController.getLeftX(),
+                () -> -m_driverController.getRightX(),
+                () ->
+                    FieldConstants.getReefCenter()
+                        .minus(m_drive.getPose().getTranslation())
+                        .getAngle())
+            .finallyDo(() -> DriveCommands.snapToReef = false));
 
     // m_driverController
     //     .b()

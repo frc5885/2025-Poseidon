@@ -424,7 +424,7 @@ public class Drive extends SubsystemBase {
 
     PathPlannerPath path =
         PathPlannerPath.fromPathPoints(
-            pathPoints, kPathConstraintsFast, new GoalEndState(0.6, target.get().getRotation()));
+            pathPoints, kPathConstraintsFast, new GoalEndState(0.0, target.get().getRotation()));
     path.preventFlipping = true;
     return AutoBuilder.followPath(path);
   }

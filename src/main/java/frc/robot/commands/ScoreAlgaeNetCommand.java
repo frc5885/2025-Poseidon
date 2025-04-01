@@ -42,7 +42,9 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
             new SuperStructureCommand(superStructure, () -> SuperStructureState.BEFORE_NET)),
         // exit the score command in simulation so that the visualizer works in sim
         new SequentialCommandGroup(
-            new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET),
+            // need to timeout if arm slams barge and can't hit setpoint
+            new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET)
+                .withTimeout(3),
             new ScoreAlgaeCommand(endEffector)
                 .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30)),
         new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)));
