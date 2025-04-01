@@ -126,7 +126,7 @@ public class ChassisTrapezoidalController {
         m_translateProfile.calculate(dt, m_translatePrevSetpoint, m_translateGoalState);
 
     // Calculate direction vector to goal
-    Translation2d errorVector = robotPose.getTranslation().minus(m_goalPose.getTranslation());
+    Translation2d errorVector = m_goalPose.getTranslation().minus(robotPose.getTranslation());
     Translation2d directionVector;
 
     if (errorVector.getNorm() > 1e-6) {
@@ -137,7 +137,7 @@ public class ChassisTrapezoidalController {
 
     // Calculate translate velocity using PID
     double translateVelocity =
-        m_translateController.calculate(distanceToGoal, translateSetpoint.position);
+        -m_translateController.calculate(distanceToGoal, translateSetpoint.position);
 
     // Calculate x and y components of velocity
     double vxMetersPerSecond = directionVector.getX() * translateVelocity;
