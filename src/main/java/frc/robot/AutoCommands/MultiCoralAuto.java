@@ -38,6 +38,8 @@ public class MultiCoralAuto extends SequentialCommandGroup {
 
   private double kLEDFlashDistance = 1.75;
 
+  private boolean m_didNotHandOff;
+
   public MultiCoralAuto(
       Drive drive,
       SuperStructure superStructure,
@@ -50,6 +52,7 @@ public class MultiCoralAuto extends SequentialCommandGroup {
     addCommands(
         new InstantCommand(
             () -> {
+              m_didNotHandOff = true;
               if (Constants.kCurrentMode.equals(Mode.SIM)) {
                 drive.setPose(FieldConstants.getSimInitialPose(side));
                 feeder.simulateCoralFeed();
@@ -65,6 +68,10 @@ public class MultiCoralAuto extends SequentialCommandGroup {
             branchNum -> {
               Pose3d branchPose3d = FieldConstants.getBranchPose3d(branchNum, ReefLevel.L4);
               addCommands(
+                  new InstantCommand(
+                      () -> {
+                        m_didNotHandOff = true;
+                      }),
                   driveToReefAndHandoffCommand(
                       drive,
                       superStructure,
@@ -73,12 +80,13 @@ public class MultiCoralAuto extends SequentialCommandGroup {
                       () -> branchPose3d.toPose2d(),
                       () -> branchNum),
                   new AutoScoreCoralAtBranchCommand(
-                      drive,
-                      superStructure,
-                      endEffector,
-                      () -> branchNum,
-                      () -> ReefLevel.L4.ordinal(),
-                      () -> false),
+                          drive,
+                          superStructure,
+                          endEffector,
+                          () -> branchNum,
+                          () -> ReefLevel.L4.ordinal(),
+                          () -> false)
+                      .unless(() -> m_didNotHandOff),
                   startFeederAndDriveToLoadingStationCommand(
                       drive,
                       superStructure,
@@ -99,10 +107,16 @@ public class MultiCoralAuto extends SequentialCommandGroup {
       EndEffector endEffector,
       Supplier<Pose2d> targetPoseSupplier,
       Supplier<Integer> branchNumSupplier) {
+
     return new ParallelDeadlineGroup(
         // wait for handoff ready, then handoff
         new WaitUntilCommand(() -> feeder.getIsHandoffReady())
-            .andThen(new CoralHandoffCommand(superStructure, feeder, endEffector))
+            .andThen(
+                new CoralHandoffCommand(superStructure, feeder, endEffector),
+                new InstantCommand(
+                    () -> {
+                      m_didNotHandOff = false;
+                    }))
             .withTimeout(3.0),
         // drive to reef
         DriveCommands.pidToPose(
@@ -132,6 +146,10 @@ public class MultiCoralAuto extends SequentialCommandGroup {
                 DriveCommands.auto_basicPathplannerToPose(drive, intakePoseSupplier),
                 new WaitUntilCloseToCommand(
                         () -> drive.getPose(), intakePoseSupplier, kLEDFlashDistance)
-                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))));
+                    .andThen(new InstantCommand(() -> LEDSubsystem.getInstance().flashGreen()))),
+            new InstantCommand(
+                () -> {
+                  m_didNotHandOff = false;
+                }));
   }
 }
