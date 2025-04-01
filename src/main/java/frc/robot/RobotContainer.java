@@ -30,6 +30,7 @@ import frc.robot.AutoCommands.MultiCoralAuto;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeAlgaeCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -108,9 +109,9 @@ public class RobotContainer {
   /** leftTrigger and button 1 true */
   //   private final Trigger m_algaeNetTrigger;
   /** leftBumper and button 2 true */
-  //   private final Trigger m_algaeReefTrigger;
+  private final Trigger m_algaeReefTrigger;
   /** left bumper and button 2 false */
-  //   private final Trigger m_algaeFloorTrigger;
+  private final Trigger m_algaeFloorTrigger;
   /** right trigger and button 2 true */
   //   private final Trigger m_manualTroughSuperStructureTrigger;
   //   /** a and button 4 true */
@@ -134,13 +135,13 @@ public class RobotContainer {
     //     m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(0));
     // m_algaeProcessorTrigger =
     //     m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
-    // m_algaeReefTrigger =
-    //     m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
-    // m_algaeFloorTrigger =
-    //     m_driverController
-    //         .leftBumper()
-    //         .debounce(0.1)
-    //         .and(m_operatorPanel.getNegatedOverrideSwitch(1));
+    m_algaeReefTrigger =
+        m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
+    m_algaeFloorTrigger =
+        m_driverController
+            .leftBumper()
+            .debounce(0.1)
+            .and(m_operatorPanel.getNegatedOverrideSwitch(1));
     // m_manualTroughSuperStructureTrigger =
     //     m_driverController.rightTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(3));
     // m_automaticCoralScoreTrigger =
@@ -428,19 +429,16 @@ public class RobotContainer {
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // INTAKE ALGAE REEF
-    m_driverController
-        .leftBumper()
-        .debounce(0.1)
+    m_algaeReefTrigger
         .whileTrue(new AutoIntakeAlgaeReefCommand(m_drive, m_superStructure, m_endEffector))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, true));
 
     // INTAKE ALGAE FLOOR
-    // m_algaeFloorTrigger
-    //     .whileTrue(
-    //         new SuperStructureCommand(
-    //                 m_superStructure, () -> SuperStructureState.INTAKE_ALGAE_FLOOR)
-    //             .alongWith(new IntakeAlgaeCommand(m_endEffector)))
-    //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
+    m_algaeFloorTrigger
+        .whileTrue(
+            new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_LOLLIPOP)
+                .alongWith(new IntakeAlgaeCommand(m_endEffector)))
+        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE_ALGAE));
 
     // // SCORE ALGAE PROCESSOR
     // m_algaeProcessorTrigger
