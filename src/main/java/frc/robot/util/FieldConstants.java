@@ -352,7 +352,8 @@ public class FieldConstants {
 
   public static enum Side {
     LEFT,
-    RIGHT;
+    RIGHT,
+    MIDDLE;
 
     public static Side from(int value) {
       return value == 0 ? RIGHT : LEFT;
@@ -437,6 +438,10 @@ public class FieldConstants {
       pose = new Pose2d(10.25, 6.45, Rotation2d.fromRadians(0));
     } else if (isRed && side == Side.LEFT) {
       pose = new Pose2d(10.25, 1.6, Rotation2d.fromRadians(0));
+    } else if (!isRed && side == Side.MIDDLE) {
+      pose = new Pose2d(7.6, 4.0, new Rotation2d(Math.PI));
+    } else if (isRed && side == Side.MIDDLE) {
+      pose = new Pose2d(10, 4.0, new Rotation2d());
     }
 
     return pose;
