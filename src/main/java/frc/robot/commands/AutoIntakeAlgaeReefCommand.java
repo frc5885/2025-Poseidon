@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
@@ -27,7 +29,7 @@ import java.util.function.Supplier;
 
 public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
   private final double kTransitionDistance = 0.3;
-  private final double kDriveInSpeed = 0.5;
+  private final double kDriveInSpeed = 1.0;
   private Pose2d targetPose;
   private Pose2d grabPose;
   private Pose2d transitionPose2d;
@@ -67,7 +69,8 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
         new ParallelDeadlineGroup(
             DriveCommands.driveStraight(drive, kDriveInSpeed)
                 .until(() -> endEffector.isHoldingAlgae())
-                .unless(() -> DriverStation.isTest()),
+                .unless(() -> DriverStation.isTest())
+                .withTimeout(Constants.kCurrentMode == Mode.SIM ? 1.0 : 30),
             new IntakeAlgaeCommand(endEffector)),
         new InstantCommand(
             () -> {
