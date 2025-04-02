@@ -96,7 +96,13 @@ public class StateGraph {
               // SuperStructureState.SCORED_CORAL_L4,
               // SuperStructureState.SCORE_ALGAE_NET,
               SuperStructureState.BEFORE_NET,
-              SuperStructureState.INTAKE_LOLLIPOP
+              SuperStructureState.INTAKE_LOLLIPOP,
+              SuperStructureState.SCORE_ALGAE_PROCESSOR,
+            },
+
+            // SCORE_ALGAE_PROCESSOR
+            new SuperStructureState[] {
+              SuperStructureState.SCORE_ALGAE_PROCESSOR, SuperStructureState.IDLE,
             },
 
             // BEFORE_L3 transitions

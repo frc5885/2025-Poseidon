@@ -105,9 +105,9 @@ public class RobotContainer {
   private final CommandXboxController m_driverController = new CommandXboxController(0);
   private final OperatorPanel m_operatorPanel = new OperatorPanel(1);
   /** leftTrigger and button 1 false */
-  //   private final Trigger m_algaeProcessorTrigger;
+  private final Trigger m_algaeProcessorTrigger;
   /** leftTrigger and button 1 true */
-  //   private final Trigger m_algaeNetTrigger;
+  private final Trigger m_algaeNetTrigger;
   /** leftBumper and button 2 true */
   private final Trigger m_algaeReefTrigger;
   /** left bumper and button 2 false */
@@ -131,10 +131,10 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
-    // m_algaeNetTrigger =
-    //     m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(0));
-    // m_algaeProcessorTrigger =
-    //     m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
+    m_algaeNetTrigger =
+        m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(0));
+    m_algaeProcessorTrigger =
+        m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
     m_algaeReefTrigger =
         m_driverController.leftBumper().debounce(0.1).and(m_operatorPanel.getOverrideSwitch(1));
     m_algaeFloorTrigger =
@@ -441,15 +441,27 @@ public class RobotContainer {
         .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE_ALGAE));
 
     // // SCORE ALGAE PROCESSOR
-    // m_algaeProcessorTrigger
-    //     .whileTrue(
-    //         new ScoreAlgaeProcessor(m_drive, m_superStructure, m_endEffector)
-    //             .unless(() -> !m_endEffector.isAlgaeHeld()))
-    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure));
+    m_algaeProcessorTrigger.whileTrue(
+        new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.SCORING_LINE_UP))
+            .andThen(
+                new SuperStructureCommand(
+                        m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR)
+                    .alongWith(
+                        DriveCommands.joystickDriveAtAngle(
+                            m_drive,
+                            () -> -m_driverController.getLeftY(),
+                            () -> -m_driverController.getLeftX(),
+                            () -> -m_driverController.getRightX(),
+                            () -> FieldConstants.getProcessorAngle()))
+                // .unless(() -> DriverStation.isTest()))
+                ));
+    // .onFalse(
+    //     new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE)
+    //         .alongWith(new ScoreAlgaeCommand(m_endEffector)));
+    // new ScoreAlgaeCommand(m_endEffector));
 
     // SCORE ALGAE NET
-    m_driverController
-        .leftTrigger(0.1)
+    m_algaeNetTrigger
         .whileTrue(new ScoreAlgaeNetCommand(m_drive, m_superStructure, m_endEffector))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 

@@ -23,6 +23,7 @@ public enum SuperStructureState {
   SCORED_CORAL_L3(ElevatorLevel.STOW, ArmGoals.SCORED_REEF_HIGH),
   SCORED_CORAL_L4(ElevatorLevel.L4, ArmGoals.SCORED_REEF_HIGH),
   SCORE_ALGAE_NET(ElevatorLevel.NET, ArmGoals.NET),
+  SCORE_ALGAE_PROCESSOR(ElevatorLevel.STOW, ArmGoals.PROCESSOR),
   INTAKE_LOLLIPOP(ElevatorLevel.STOW, ArmGoals.ALGAE_LOLLIPOP),
 
   // transition for between idle and L3

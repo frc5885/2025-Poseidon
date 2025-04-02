@@ -458,4 +458,8 @@ public class FieldConstants {
   public static Pose2d getAutonomous2ndAlgaeLineupPose() {
     return AllianceFlipUtil.apply(new Pose2d(5.9, 5.5, Rotation2d.fromRadians(-2.0)));
   }
+
+  public static Rotation2d getProcessorAngle() {
+    return AllianceFlipUtil.apply(new Rotation2d(3 * Math.PI / 2));
+  }
 }
