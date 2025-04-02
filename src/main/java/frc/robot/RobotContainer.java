@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -31,6 +32,7 @@ import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeAlgaeCommand;
+import frc.robot.commands.PlaceCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
@@ -78,6 +80,7 @@ import frc.robot.util.FieldConstants.Side;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import frc.robot.util.PoseUtil;
 import java.util.List;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -350,7 +353,7 @@ public class RobotContainer {
     // Flip snap to reef flag
     m_driverController
         .rightStick()
-        .onTrue(new InstantCommand(() -> DriveCommands.snapToReef = !DriveCommands.snapToReef));
+        .onTrue(new InstantCommand(() -> DriveCommands.snapToReef = true));
 
     m_snapToReefTrigger.whileTrue(
         DriveCommands.joystickDriveAtAngle(
@@ -438,7 +441,13 @@ public class RobotContainer {
         .whileTrue(
             new SuperStructureCommand(m_superStructure, () -> SuperStructureState.INTAKE_LOLLIPOP)
                 .alongWith(new IntakeAlgaeCommand(m_endEffector)))
-        .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE_ALGAE));
+        .onFalse(
+            new SuperStructureCommand(
+                m_superStructure,
+                () ->
+                    m_endEffector.isHoldingAlgae()
+                        ? SuperStructureState.IDLE_ALGAE
+                        : SuperStructureState.IDLE));
 
     // // SCORE ALGAE PROCESSOR
     m_algaeProcessorTrigger.whileTrue(
@@ -473,18 +482,17 @@ public class RobotContainer {
     //     .onFalse(new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE));
 
     // MANUAL CORAL SCORE
-    // m_driverController
-    //     .a()
-    //     .onTrue(
-    //         new DeferredCommand(
-    //             () ->
-    //                 new PlaceCoralCommand(
-    //
-    // FieldConstants.ReefLevel.fromHeight(m_operatorPanel.getTargetPose().getZ()),
-    //                     m_superStructure,
-    //                     m_endEffector),
-    //             Set.of(m_superStructure, m_endEffector)))
-    //     .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
+    m_driverController
+        .a()
+        .onTrue(
+            new DeferredCommand(
+                () ->
+                    new PlaceCoralCommand(
+                        FieldConstants.ReefLevel.fromHeight(m_operatorPanel.getTargetPose().getZ()),
+                        m_superStructure,
+                        m_endEffector),
+                Set.of(m_superStructure, m_endEffector)))
+        .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
 
     // BOGUS CALL
     m_bogusCallTrigger

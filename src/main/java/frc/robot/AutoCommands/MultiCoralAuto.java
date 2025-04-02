@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
@@ -36,9 +38,9 @@ public class MultiCoralAuto extends SequentialCommandGroup {
   private double kDistanceFromReefToWaitForHandoff = 0.5;
   private double kRadiansToReefToWaitForHandoff = Units.degreesToRadians(0);
 
-  private double kLEDFlashDistance = 1.75;
+  private double kLEDFlashDistance = 1.5;
 
-  private boolean m_didNotHandOff;
+  private boolean m_didNotHandOff = false;
 
   public MultiCoralAuto(
       Drive drive,
@@ -52,7 +54,6 @@ public class MultiCoralAuto extends SequentialCommandGroup {
     addCommands(
         new InstantCommand(
             () -> {
-              m_didNotHandOff = true;
               if (Constants.kCurrentMode.equals(Mode.SIM)) {
                 drive.setPose(FieldConstants.getSimInitialPose(side));
                 feeder.simulateCoralFeed();
@@ -60,7 +61,8 @@ public class MultiCoralAuto extends SequentialCommandGroup {
             }));
 
     // start feeding immediately
-    addCommands(feeder.startFeederCmd());
+    // addCommands(feeder.startFeederCmd());
+    addCommands(new InstantCommand(() -> endEffector.runEndEffectorIntake()));
 
     // for each branch, drive to reef, score, then intake
     branches.stream()
@@ -70,15 +72,22 @@ public class MultiCoralAuto extends SequentialCommandGroup {
               addCommands(
                   new InstantCommand(
                       () -> {
-                        m_didNotHandOff = true;
+                        // need to check if handoff succeeded for all branches other than first
+                        if (branchNum != branches.get(0)) {
+                          m_didNotHandOff = true;
+                        }
                       }),
-                  driveToReefAndHandoffCommand(
-                      drive,
-                      superStructure,
-                      feeder,
-                      endEffector,
-                      () -> branchPose3d.toPose2d(),
-                      () -> branchNum),
+                  // only wait for handoff on branches that aren't the first one
+                  new ConditionalCommand(
+                      Commands.none(),
+                      driveToReefAndHandoffCommand(
+                          drive,
+                          superStructure,
+                          feeder,
+                          endEffector,
+                          () -> branchPose3d.toPose2d(),
+                          () -> branchNum),
+                      () -> branchNum == branches.get(0)),
                   new AutoScoreCoralAtBranchCommand(
                           drive,
                           superStructure,
