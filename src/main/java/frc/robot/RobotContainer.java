@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.BargeAuto;
 import frc.robot.AutoCommands.MultiCoralAuto;
+import frc.robot.commands.AlgaeProcessorCommand;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
@@ -451,19 +452,16 @@ public class RobotContainer {
 
     // // SCORE ALGAE PROCESSOR
     m_algaeProcessorTrigger.whileTrue(
-        new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.SCORING_LINE_UP))
-            .andThen(
-                new SuperStructureCommand(
-                        m_superStructure, () -> SuperStructureState.SCORE_ALGAE_PROCESSOR)
-                    .alongWith(
-                        DriveCommands.joystickDriveAtAngle(
-                            m_drive,
-                            () -> -m_driverController.getLeftY(),
-                            () -> -m_driverController.getLeftX(),
-                            () -> -m_driverController.getRightX(),
-                            () -> FieldConstants.getProcessorAngle()))
-                // .unless(() -> DriverStation.isTest()))
-                ));
+        new AlgaeProcessorCommand(m_superStructure)
+            .alongWith(
+                DriveCommands.joystickDriveAtAngle(
+                    m_drive,
+                    () -> -m_driverController.getLeftY(),
+                    () -> -m_driverController.getLeftX(),
+                    () -> -m_driverController.getRightX(),
+                    () -> FieldConstants.getProcessorAngle()))
+        // .unless(() -> DriverStation.isTest()))
+        );
     // .onFalse(
     //     new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE)
     //         .alongWith(new ScoreAlgaeCommand(m_endEffector)));

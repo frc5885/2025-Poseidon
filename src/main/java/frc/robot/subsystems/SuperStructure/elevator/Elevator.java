@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -175,6 +176,14 @@ public class Elevator {
     m_io.setBrakeMode(brakeModeEnabled);
     stop();
     m_runClosedLoop = false;
+  }
+
+  public void forceSetCurrentState(ElevatorLevel goalPosition) {
+    TrapezoidProfile.State state =
+        new TrapezoidProfile.State(goalPosition.setpointMeters.getAsDouble(), 0.0);
+    m_goalState = state;
+    m_prevSetpoint = state;
+    m_runClosedLoop = true;
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/AdjustmentCoefficient")

@@ -95,6 +95,10 @@ public class SuperStructure extends SubsystemBase {
     return m_goalState;
   }
 
+  public double getArmPositionRads() {
+    return m_arm.getPositionRads();
+  }
+
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
     m_finalGoalState = state;
     Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoalState);
@@ -204,6 +208,11 @@ public class SuperStructure extends SubsystemBase {
 
   public void runArmOpenLoop(double voltage) {
     m_arm.runArmOpenLoop(voltage);
+  }
+
+  public void forceSetCurrentState(SuperStructureState state) {
+    m_arm.forceSetCurrentState(state.armGoal);
+    m_elevator.forceSetCurrentState(state.elevatorGoal);
   }
 
   public void setBrakeMode(boolean brakeModeEnabled) {

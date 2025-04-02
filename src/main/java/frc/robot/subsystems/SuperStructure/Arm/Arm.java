@@ -15,6 +15,7 @@ import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -89,13 +90,13 @@ public class Arm {
   public void runArmOpenLoop(double outputVolts) {
     // disable closed loop when running open loop
     m_runClosedLoop = false;
-    if (outputVolts > 0) {
-      m_io.setVoltage(isWithinMaximum(getPositionRads()) ? outputVolts : 0.0);
-    } else if (outputVolts < 0) {
-      m_io.setVoltage(isWithinMinimum(getPositionRads()) ? outputVolts : 0.0);
-    } else {
-      m_io.setVoltage(outputVolts);
-    }
+    // if (outputVolts > 0) {
+    //   m_io.setVoltage(isWithinMaximum(getPositionRads()) ? outputVolts : 0.0);
+    // } else if (outputVolts < 0) {
+    //   m_io.setVoltage(isWithinMinimum(getPositionRads()) ? outputVolts : 0.0);
+    // } else {
+    m_io.setVoltage(outputVolts);
+    // }
   }
 
   public void runClosedLoopControl() {
@@ -168,6 +169,15 @@ public class Arm {
     m_io.setBrakeMode(brakeModeEnabled);
     stop();
     m_runClosedLoop = false;
+  }
+
+  public void forceSetCurrentState(ArmGoals goalPosition) {
+    TrapezoidProfile.State state =
+        new TrapezoidProfile.State(
+            Units.degreesToRadians(goalPosition.setpointDegrees.getAsDouble()), 0.0);
+    m_goalState = state;
+    m_prevSetpoint = state;
+    m_runClosedLoop = true;
   }
 
   public TrapezoidProfile.State getCurrentState() {
