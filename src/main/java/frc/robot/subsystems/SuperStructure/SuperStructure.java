@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.SuperStructure.Arm.Arm;
 import frc.robot.subsystems.SuperStructure.Arm.ArmIO;
@@ -40,8 +41,8 @@ public class SuperStructure extends SubsystemBase {
   private final Elevator m_elevator;
   private final Arm m_arm;
 
-  private SuperStructureState m_goalState = SuperStructureState.STOWED;
-  private SuperStructureState m_finalGoalState = SuperStructureState.STOWED;
+  private SuperStructureState m_goalState = SuperStructureState.IDLE;
+  private SuperStructureState m_finalGoalState = SuperStructureState.IDLE;
   private StateGraph m_graph = StateGraph.getInstance();
 
   private LoggedMechanism2d m_canvas;
@@ -82,15 +83,26 @@ public class SuperStructure extends SubsystemBase {
     return goal;
   }
 
+  @AutoLogOutput(key = "SuperStructure/Arm/Goal")
+  public ArmGoals getArmGoal() {
+    ArmGoals goal = m_goalState.armGoal;
+    Logger.recordOutput("SuperStructure/Arm/GoalPosition", m_arm.getGoalPosition());
+    return goal;
+  }
+
   @AutoLogOutput(key = "SuperStructure/Goal")
   public SuperStructureState getSuperStructureGoal() {
     return m_goalState;
   }
 
+  public double getArmPositionRads() {
+    return m_arm.getPositionRads();
+  }
+
   public SequentialCommandGroup setSuperStructureGoal(SuperStructureState state) {
     m_finalGoalState = state;
     Logger.recordOutput("SuperStructure/FinalGoal", m_finalGoalState);
-    List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), state);
+    List<SuperStructureState> states = findShortestPath(getSuperStructureGoal(), m_finalGoalState);
     Logger.recordOutput("SuperStructure/States", states.toString());
 
     return new SequentialCommandGroup(
@@ -160,12 +172,13 @@ public class SuperStructure extends SubsystemBase {
   }
 
   private Command setSingleState(SuperStructureState goal) {
-    return Commands.run(
+    return Commands.runOnce(
             () -> {
               setElevatorGoal(goal.elevatorGoal);
+              setArmGoal(goal.armGoal);
             },
             this)
-        .until(this::isGoalAchieved)
+        .andThen(new WaitUntilCommand(this::isGoalAchieved))
         .finallyDo(() -> m_goalState = goal);
   }
 
@@ -173,7 +186,7 @@ public class SuperStructure extends SubsystemBase {
   // state
   @AutoLogOutput(key = "SuperStructure/isGoalAchieved")
   public boolean isGoalAchieved() {
-    return m_elevator.isSetpointAchieved();
+    return m_elevator.isSetpointAchieved() && m_arm.isSetpointAchieved();
   }
 
   @AutoLogOutput(key = "SuperStructure/isFinalGoalAchieved")
@@ -185,6 +198,10 @@ public class SuperStructure extends SubsystemBase {
     m_elevator.setGoalPosition(goal.setpointMeters.getAsDouble());
   }
 
+  public void setArmGoal(ArmGoals goal) {
+    m_arm.setGoalPosition(Units.degreesToRadians(goal.setpointDegrees.getAsDouble()));
+  }
+
   public void runElevatorOpenLoop(double voltage) {
     m_elevator.runElevatorOpenLoop(voltage);
   }
@@ -193,8 +210,14 @@ public class SuperStructure extends SubsystemBase {
     m_arm.runArmOpenLoop(voltage);
   }
 
+  public void forceSetCurrentState(SuperStructureState state) {
+    m_arm.forceSetCurrentState(state.armGoal);
+    m_elevator.forceSetCurrentState(state.elevatorGoal);
+  }
+
   public void setBrakeMode(boolean brakeModeEnabled) {
     m_elevator.setBrakeMode(brakeModeEnabled);
+    m_arm.setBrakeMode(brakeModeEnabled);
   }
 
   /** Returns a command to run a elevator quasistatic test in the specified direction. */
@@ -276,6 +299,6 @@ public class SuperStructure extends SubsystemBase {
         m_armRootTranslation.getY()
             + m_elevator.getPositionMeters()
             + kArmLengthMeters * Math.sin(Units.degreesToRadians(m_armMech.getAngle())),
-        new Rotation3d());
+        new Rotation3d(0, -m_arm.getPositionRads(), 0));
   }
 }

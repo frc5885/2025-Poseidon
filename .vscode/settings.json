@@ -69,7 +69,7 @@
   "[java]": {
     "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
   },
-  "wpilib.skipSelectSimulateExtension": true,
+  "wpilib.skipSelectSimulateExtension": false,
   "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
   "command-runner.commands": {
     "Start Operator Reef Panel": "./python-operator-panel/env/Scripts/python.exe ./python-operator-panel/main.py"

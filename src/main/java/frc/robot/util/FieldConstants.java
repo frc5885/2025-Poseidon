@@ -18,6 +18,7 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -26,15 +27,15 @@ import lombok.RequiredArgsConstructor;
  * have a blue alliance origin.
  */
 public class FieldConstants {
-  public static final FieldType fieldType = FieldType.WELDED;
-
-  // Replace with:
+  public static final FieldType fieldType;
   public static final double fieldLength;
   public static final double fieldWidth;
 
-  // Add static initializer block
+  // Static initializer block
   static {
-    // this fixed the crash when doing algae first, don't know why
+    fieldType = FieldType.WELDED;
+
+    // Load field dimensions from the layout
     AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
     fieldLength = layout.getFieldLength();
     fieldWidth = layout.getFieldWidth();
@@ -48,7 +49,20 @@ public class FieldConstants {
     public static final Pose2d centerFace;
 
     static {
-      var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
+      // Load layout directly to avoid circular dependency
+      AprilTagFieldLayout aprilTagLayout;
+      try {
+        aprilTagLayout =
+            new AprilTagFieldLayout(
+                Path.of(
+                    Filesystem.getDeployDirectory().getPath(),
+                    "apriltags",
+                    fieldType.getJsonFolder(),
+                    "2025-official.json"));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
       centerFace =
           aprilTagLayout
               .getTagPose(16)
@@ -92,16 +106,29 @@ public class FieldConstants {
     public static final double faceToZoneLine =
         Units.inchesToMeters(12); // Side of the reef to the inside of the reef zone line
 
-    public static final Pose2d[] centerFaces =
-        new Pose2d[6]; // Starting facing the reef in clockwise order
-    public static final SuperStructureState[] AlgaeLevel = new SuperStructureState[6];
+    public static final Pose2d[] centerFaces;
+    public static final SuperStructureState[] AlgaeLevel;
     public static final double centerFaceOffset = 0.65;
-    public static final List<Map<ReefLevel, Pose3d>> branchPositions =
-        new ArrayList<>(); // Starting at the right branch facing the reef in clockwise
+    public static final List<Map<ReefLevel, Pose3d>> branchPositions = new ArrayList<>();
 
     static {
-      // Initialize faces
-      var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
+      centerFaces = new Pose2d[6];
+      AlgaeLevel = new SuperStructureState[6];
+
+      // Initialize faces - load layout directly to avoid circular dependency
+      AprilTagFieldLayout aprilTagLayout;
+      try {
+        aprilTagLayout =
+            new AprilTagFieldLayout(
+                Path.of(
+                    Filesystem.getDeployDirectory().getPath(),
+                    "apriltags",
+                    fieldType.getJsonFolder(),
+                    "2025-official.json"));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
       centerFaces[0] =
           aprilTagLayout
               .getTagPose(18)
@@ -154,7 +181,7 @@ public class FieldConstants {
         for (var level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)));
           double adjustX = Units.inchesToMeters(30.738);
-          double adjustY = Units.inchesToMeters(6.469);
+          double adjustY = Units.inchesToMeters(6.0);
 
           fillRight.put(
               level,
@@ -162,34 +189,56 @@ public class FieldConstants {
                   new Translation3d(
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  adjustY - level.yOffset,
+                                  new Rotation2d()))
                           .getX(),
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  adjustY - level.yOffset,
+                                  new Rotation2d()))
                           .getY(),
                       level.height),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
-                      poseDirection.getRotation().rotateBy(new Rotation2d(Math.PI)).getRadians())));
+                      poseDirection
+                          .getRotation()
+                          .rotateBy(
+                              new Rotation2d(
+                                  Math.PI + Units.degreesToRadians(level.rotationOffset)))
+                          .getRadians())));
           fillLeft.put(
               level,
               new Pose3d(
                   new Translation3d(
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, -adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  -adjustY + level.yOffset,
+                                  new Rotation2d()))
                           .getX(),
                       poseDirection
                           .transformBy(
-                              new Transform2d(adjustX - level.offset, -adjustY, new Rotation2d()))
+                              new Transform2d(
+                                  adjustX - level.xOffset,
+                                  -adjustY + level.yOffset,
+                                  new Rotation2d()))
                           .getY(),
                       level.height),
                   new Rotation3d(
                       0,
                       Units.degreesToRadians(level.pitch),
-                      poseDirection.getRotation().rotateBy(new Rotation2d(Math.PI)).getRadians())));
+                      poseDirection
+                          .getRotation()
+                          .rotateBy(
+                              new Rotation2d(
+                                  Math.PI - Units.degreesToRadians(level.rotationOffset)))
+                          .getRadians())));
         }
         branchPositions.add(fillRight);
         branchPositions.add(fillLeft);
@@ -210,10 +259,11 @@ public class FieldConstants {
 
   @RequiredArgsConstructor
   public enum ReefLevel {
-    L1(Units.inchesToMeters(25.0), 0, -0.6),
-    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
-    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.65),
-    L4(Units.inchesToMeters(72), -90, -0.6);
+    // height, pitch, offset (x, y, rotationDegrees)
+    L1(Units.inchesToMeters(25.0), 0, -0.57, Units.inchesToMeters(5.0), 0.0),
+    L2(Units.inchesToMeters(31.875 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.57, 0.0, 0.0),
+    L3(Units.inchesToMeters(47.625 - Math.cos(Math.toRadians(35.0)) * 0.625), -35, -0.75, 0.0, 0.0),
+    L4(Units.inchesToMeters(72), -90, -0.78, 0.0, 0.0);
 
     public static ReefLevel fromLevel(int level) {
       return Arrays.stream(values())
@@ -228,22 +278,50 @@ public class FieldConstants {
 
     public final double height;
     public final double pitch;
-    public final double offset;
+    public final double xOffset;
+    public final double yOffset;
+    public final double rotationOffset; // in degrees
   }
 
   public static final double aprilTagWidth = Units.inchesToMeters(6.50);
   public static final int aprilTagCount = 22;
   public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
 
+  public static Pose2d[] HumanPlayerStations;
+
+  static {
+    // Initialize HumanPlayerStations directly to avoid circular dependency
+    AprilTagFieldLayout officialLayout;
+    try {
+      officialLayout =
+          new AprilTagFieldLayout(
+              Path.of(
+                  Filesystem.getDeployDirectory().getPath(),
+                  "apriltags",
+                  fieldType.getJsonFolder(),
+                  "2025-official.json"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    HumanPlayerStations =
+        new Pose2d[] {
+          officialLayout.getTagPose(1).get().toPose2d(),
+          officialLayout.getTagPose(2).get().toPose2d(),
+          officialLayout.getTagPose(12).get().toPose2d(),
+          officialLayout.getTagPose(13).get().toPose2d()
+        };
+  }
+
   @Getter
   public enum AprilTagLayoutType {
-    OFFICIAL("2025-official"),
     NO_BARGE("2025-no-barge"),
     BLUE_REEF("2025-blue-reef"),
-    RED_REEF("2025-red-reef");
+    RED_REEF("2025-red-reef"),
+    OFFICIAL("2025-official"),
+    REEFS("2025-both-reefs");
 
     AprilTagLayoutType(String name) {
-
       try {
         layout =
             new AprilTagFieldLayout(
@@ -272,6 +350,16 @@ public class FieldConstants {
     private final String layoutString;
   }
 
+  public static enum Side {
+    LEFT,
+    RIGHT,
+    MIDDLE;
+
+    public static Side from(int value) {
+      return value == 0 ? RIGHT : LEFT;
+    }
+  }
+
   public record CoralObjective(int branchId, ReefLevel reefLevel) {}
 
   public record AlgaeObjective(int id) {}
@@ -282,5 +370,96 @@ public class FieldConstants {
     WELDED("welded");
 
     @Getter private final String jsonFolder;
+  }
+
+  public static Pose3d getBranchPose3d(int id, ReefLevel level) {
+    return AllianceFlipUtil.apply(Reef.branchPositions.get(id).get(level));
+  }
+
+  public static Pose2d getBranchPose2d(int id, ReefLevel level) {
+    return getBranchPose3d(id, level).toPose2d();
+  }
+
+  public static Pose3d getBranchPose3d(int face, ReefLevel level, Side side) {
+    return AllianceFlipUtil.apply(
+        Reef.branchPositions.get(face * 2 + (side == Side.RIGHT ? 0 : 1)).get(level));
+  }
+
+  public static Pose2d getBranchPose2d(int face, ReefLevel level, Side side) {
+    return getBranchPose3d(face, level, side).toPose2d();
+  }
+
+  public static int getBranchID(int face, Side side) {
+    return face * 2 + (side == Side.RIGHT ? 0 : 1);
+  }
+
+  public static ArrayList<Pose2d> getReefFaces() {
+    return Arrays.stream(Reef.centerFaces)
+        .map(AllianceFlipUtil::apply)
+        .collect(Collectors.toCollection(ArrayList::new));
+  }
+
+  public static Translation2d getReefCenter() {
+    return AllianceFlipUtil.apply(Reef.center);
+  }
+
+  public static ArrayList<Pose3d> getAllL4Poses() {
+    return Reef.branchPositions.stream()
+        .map(map -> AllianceFlipUtil.apply(map.get(ReefLevel.L4)))
+        .collect(Collectors.toCollection(ArrayList::new));
+  }
+
+  public static Pose2d getIntakePose(Side side) {
+    boolean isRed = AllianceFlipUtil.shouldFlip();
+    Pose2d pose = new Pose2d();
+
+    if (!isRed && side == Side.RIGHT) {
+      pose = new Pose2d(1.25, 1.0, Rotation2d.fromDegrees(54.5));
+    } else if (!isRed && side == Side.LEFT) {
+      pose = new Pose2d(1.25, 7.0, Rotation2d.fromDegrees(-54.5));
+    } else if (isRed && side == Side.RIGHT) {
+      pose = new Pose2d(16.30, 7.0, Rotation2d.fromDegrees(-125.5));
+    } else if (isRed && side == Side.LEFT) {
+      pose = new Pose2d(16.30, 1.0, Rotation2d.fromDegrees(125.5));
+    }
+
+    return pose;
+  }
+
+  public static Pose2d getSimInitialPose(Side side) {
+    boolean isRed = AllianceFlipUtil.shouldFlip();
+    Pose2d pose = new Pose2d();
+
+    if (!isRed && side == Side.RIGHT) {
+      pose = new Pose2d(7.3, 1.6, Rotation2d.fromRadians(Math.PI));
+    } else if (!isRed && side == Side.LEFT) {
+      pose = new Pose2d(7.3, 6.45, Rotation2d.fromRadians(Math.PI));
+    } else if (isRed && side == Side.RIGHT) {
+      pose = new Pose2d(10.25, 6.45, Rotation2d.fromRadians(0));
+    } else if (isRed && side == Side.LEFT) {
+      pose = new Pose2d(10.25, 1.6, Rotation2d.fromRadians(0));
+    } else if (!isRed && side == Side.MIDDLE) {
+      pose = new Pose2d(7.6, 4.0, new Rotation2d(Math.PI));
+    } else if (isRed && side == Side.MIDDLE) {
+      pose = new Pose2d(10, 4.0, new Rotation2d());
+    }
+
+    return pose;
+  }
+
+  public static Pose2d getSimInitialMiddlePose() {
+    return AllianceFlipUtil.apply(new Pose2d(7.3, 4.6, Rotation2d.fromRadians(Math.PI)));
+  }
+
+  public static Pose2d getAutonomousAlgaeScorePose() {
+    return AllianceFlipUtil.apply(new Pose2d(8.0, 5.0, Rotation2d.fromRadians(Math.PI)));
+  }
+
+  public static Pose2d getAutonomous2ndAlgaeLineupPose() {
+    return AllianceFlipUtil.apply(new Pose2d(5.9, 5.5, Rotation2d.fromRadians(-2.0)));
+  }
+
+  public static Rotation2d getProcessorAngle() {
+    return AllianceFlipUtil.apply(new Rotation2d(3 * Math.PI / 2));
   }
 }

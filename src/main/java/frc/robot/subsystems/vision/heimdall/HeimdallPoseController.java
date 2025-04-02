@@ -186,6 +186,7 @@ public class HeimdallPoseController {
     // Calculate distance-based factor that peaks at optimal distance and falls off symmetrically
 
     double factor = MathUtil.clamp(1 - averageTagDistance / 10, 0, 1);
+    factor = Math.pow(factor, 3);
     double transFactor = kTranslationConvergenceFactor * factor; // higher factor for closer tags
     double rotFactor = kRotationConvergenceFactor * factor; // higher factor for closer tags
     Transform2d newQuestToField =

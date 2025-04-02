@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
+import frc.robot.util.FieldConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -169,5 +170,26 @@ public class GamePieceVisualizer {
                 endEffectorPoseSupplier.get().getRotation())
             .plus(new Transform3d(0.1, 0.0, 0, new Rotation3d()));
     return new Pose3d(robotPoseSupplier.get()).transformBy(indexerTransform);
+  }
+
+  /**
+   * Checks if the robot is near a loading station. This is used in simulation to determine when the
+   * handoff should happen
+   */
+  public static boolean isNearLoadingStation() {
+    Pose2d[] loadingStationPoses = FieldConstants.HumanPlayerStations;
+    Pose2d robotPose = robotPoseSupplier.get();
+    for (Pose2d loadingStationPose : loadingStationPoses) {
+      if (robotPose
+              .transformBy(new Transform2d(-0.2, 0, new Rotation2d()))
+              .getTranslation()
+              .getDistance(loadingStationPose.getTranslation())
+          < 1.0) {
+        Logger.recordOutput("GamePieceVisualizer/NearLoadingStation", true);
+        return true;
+      }
+    }
+    Logger.recordOutput("GamePieceVisualizer/NearLoadingStation", false);
+    return false;
   }
 }

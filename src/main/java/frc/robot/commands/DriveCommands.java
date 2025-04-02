@@ -13,10 +13,7 @@
 
 package frc.robot.commands;
 
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAccelerationMetersPerSecSq;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularAccelerationRadiansPerSecSq;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxAngularSpeedRadiansPerSec;
-import static frc.robot.subsystems.drive.DriveConstants.kMaxSpeedMetersPerSec;
+import static frc.robot.subsystems.drive.DriveConstants.kPathConstraintsFast;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -24,6 +21,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -32,10 +30,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import frc.robot.subsystems.LEDS.LEDSubsystem;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.ChassisTrapezoidalController;
 import frc.robot.util.TunablePIDController;
@@ -46,44 +45,54 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double kDeadband = 0.1;
-  private static final double kAngleKp = 2.5;
-  private static final double kAngleKd = 0.0;
-  private static final double kTranslateKp = 2.5;
-  private static final double kTranslateKd = 0.0;
+  private static final double kAngleKp = 5.0;
+  private static final double kAngleKd = 0.3;
+  private static final double kTranslateKp = 4.5;
+  private static final double kTranslateKd = 0.7;
   private static final double kFfStartDelay = 2.0; // Secs
   private static final double kFfRampRate = 0.1; // Volts/Sec
   private static final double kWheelRadiusMaxVelocity = 0.25; // Rad/Sec
   private static final double kWheelRadiusRampRate = 0.05; // Rad/Sec^2
-  private static final double kAngleTolerance = 0.02;
+  private static final double kAngleTolerance = Units.degreesToRadians(1.5);
   private static final double kTranslationTolerance = 0.02;
+
+  public static boolean snapToReef = false;
 
   // Create PID controllers
   private static TunablePIDController angleController;
-  private static TunablePIDController xController;
-  private static TunablePIDController yController;
-  private static ChassisTrapezoidalController chassisController;
+  private static TunablePIDController translateController;
+
+  private static ChassisTrapezoidalController m_chassisController;
+
   // Static initialization block
   static {
     angleController =
         new TunablePIDController(
             kAngleKp, 0.0, kAngleKd, kAngleTolerance, "DriveAngleController", true);
     angleController.enableContinuousInput(-Math.PI, Math.PI);
-    xController =
+
+    translateController =
         new TunablePIDController(
-            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveXController", true);
-    yController =
-        new TunablePIDController(
-            kTranslateKp, 0.0, kTranslateKd, kTranslationTolerance, "DriveYController", true);
-    chassisController =
+            kTranslateKp,
+            0.0,
+            kTranslateKd,
+            kTranslationTolerance,
+            "DriveTranslateController",
+            true);
+
+    m_chassisController =
         new ChassisTrapezoidalController(
-            new TrapezoidProfile.Constraints(kMaxSpeedMetersPerSec, kMaxAccelerationMetersPerSecSq),
             new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSec, kMaxAngularAccelerationRadiansPerSecSq),
-            xController,
-            yController,
+                kPathConstraintsFast.maxVelocityMPS() * 1.0,
+                kPathConstraintsFast.maxAccelerationMPSSq() * 1.0),
+            new TrapezoidProfile.Constraints(
+                kPathConstraintsFast.maxAngularVelocityRadPerSec() * 1.0,
+                kPathConstraintsFast.maxAngularAccelerationRadPerSecSq() * 1.0),
+            translateController,
             angleController);
   }
 
@@ -151,11 +160,17 @@ public class DriveCommands {
       Drive drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
       Supplier<Rotation2d> rotationSupplier) {
 
     // Construct command
     return Commands.run(
         () -> {
+          // cancel snap to reef on right joystick move
+          if (Math.abs(omegaSupplier.getAsDouble()) > 0.75) {
+            snapToReef = false;
+          }
+
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
@@ -184,110 +199,216 @@ public class DriveCommands {
         drive);
   }
 
-  /** Robot relative drive command using PID for angular control. */
-  public static Command driveToGamePiece(
-      Drive drive,
-      DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier,
-      DoubleSupplier joystickRotSupplier,
-      DoubleSupplier visionRotSupplier,
-      boolean humanOperated) {
+  /**
+   * Command to follow an optimal trajectory generated by pathplanner, but followed using the double
+   * trapezoidal PID controller. Meant to be used for aligning to the reef in autonomous.
+   *
+   * @param drive The drive subsystem
+   * @param targetPose The target pose
+   * @return The command
+   */
+  public static Command bestPIDPathToReef(
+      Drive drive, Supplier<Pose2d> targetPose, Supplier<Integer> branchID) {
+    Pose2d[] pathPlannerSetpointHolder = new Pose2d[] {new Pose2d()};
+    double distance =
+        drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation());
+    return new SequentialCommandGroup(
+            // First, start PathPlanner and wait until it has generated a valid path
+            new InstantCommand(
+                    () -> {
+                      // only look at a single tag
+                      Vision.setSingleTargetPostID(branchID.get());
 
-    // Construct command
-    return Commands.run(
+                      pathPlannerSetpointHolder[0] = drive.getPathPlannerSetpoint();
+
+                      // if within 0.5m, just trap pid to target
+                      if (distance <= 0.5) {
+                        drive.setPathPlannerSetpoint(targetPose.get());
+                        return;
+                      }
+                      // if far away, use good "sweep-in" trajectory, else just path to pose
+                      Pose2d futurePose =
+                          calculateLookAheadPose(drive.getPose(), drive.getChassisSpeeds(), 0.2);
+                      Logger.recordOutput("Odometry/LookAheadPose", futurePose);
+                      Command pathPlannerCommand =
+                          drive.getBetterDriveToPoseCommand(() -> futurePose, targetPose, true);
+                      pathPlannerCommand.schedule();
+                    })
+                .andThen(
+                    Commands.waitUntil(
+                            () ->
+                                drive.getPathPlannerSetpoint() != pathPlannerSetpointHolder[0]
+                                    || distance <= 0.5)
+                        .andThen(() -> drive.resetPathPlannerGetPose())),
+
+            // Once PathPlanner has a valid setpoint, initialize and run the controller
+            Commands.run(
+                    () -> {
+                      m_chassisController.setGoalPose(drive.getPathPlannerSetpoint());
+                      drive.runVelocity(m_chassisController.calculate(drive.getPose()));
+                    },
+                    drive)
+                .beforeStarting(
+                    () -> {
+                      // Now PathPlanner has had time to set a valid goal
+                      m_chassisController.reset(
+                          drive.getPose(),
+                          new ChassisSpeeds(), // drive.getChassisSpeeds(),
+                          drive.getPathPlannerSetpoint());
+                      m_chassisController.setFinalGoalPose(targetPose.get());
+                    })
+                .until(() -> m_chassisController.isGoalAchieved()))
+        .finallyDo(
             () -> {
-              boolean seesGamePiece = visionRotSupplier.getAsDouble() != 0.0;
-              LEDSubsystem.getInstance().setSeesGamePiece(seesGamePiece);
-
-              // Get linear velocity based on control mode
-              Translation2d linearVelocity;
-              if (humanOperated) {
-                // Use joystick input for manual control
-                linearVelocity =
-                    getLinearVelocityFromJoysticks(
-                        xSupplier.getAsDouble(), ySupplier.getAsDouble());
-              } else {
-                // Use vision feedback for autonomous control
-                // Scale vision input down by dividing by PI to reduce sensitivity
-                double yVelocity =
-                    yController.calculate(visionRotSupplier.getAsDouble() / Math.PI, 0);
-                linearVelocity = new Translation2d(xSupplier.getAsDouble(), -yVelocity);
-              }
-
-              // Process rotation input from joystick
-              double joystickOmega =
-                  MathUtil.applyDeadband(joystickRotSupplier.getAsDouble(), kDeadband);
-              joystickOmega =
-                  Math.copySign(
-                      joystickOmega * joystickOmega, joystickOmega); // Square for fine control
-              joystickOmega *= drive.getMaxAngularSpeedRadPerSec();
-
-              // Calculate final rotation speed
-              double omega;
-              if (DriverStation.isTest()) {
-                // Use direct joystick control in test mode
-                omega = joystickOmega;
-              } else {
-                // Use vision-based alignment with joystick offset
-                omega =
-                    angleController.calculate(visionRotSupplier.getAsDouble() - joystickOmega, 0);
-              }
-
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
-
-              if (humanOperated) {
-                // field oriented (teleop)
-                boolean isFlipped =
-                    DriverStation.getAlliance().isPresent()
-                        && DriverStation.getAlliance().get() == Alliance.Red;
-                drive.runVelocity(
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        speeds,
-                        isFlipped
-                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                            : drive.getRotation()));
-              } else {
-                // robot oriented (auto)
-                drive.runVelocity(speeds);
-              }
-            },
-            drive)
-        .finallyDo(() -> LEDSubsystem.getInstance().setSeesGamePiece(false));
+              drive.stop();
+              Vision.setSingleTargetPostID(-1); // all tags
+            });
   }
 
-  /** Robot relative drive command for precise reef faces aligning. */
-  public static Command preciseChassisAlign(Drive drive, Supplier<Pose2d> targetPose) {
+  // public static Command getAutoSmartOptimalTrajectoryAlign(
+  //     Drive drive, Supplier<Pose2d> targetPose, Supplier<Boolean> isHandOffReady) {
+  //   return bestPIDPathToReef(drive, targetPose)
+  //       .onlyWhile(
+  //           () ->
+  //               drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+  //                       > 1.0
+  //                   || isHandOffReady.get())
+  //       .andThen(
+  //           new ConditionalCommand(
+  //               pidToPose(drive, targetPose),
+  //               Commands.none(),
+  //               () ->
+  //
+  // drive.getPose().getTranslation().getDistance(targetPose.get().getTranslation())
+  //                       > 0.5));
+  // }
 
-    // Construct command
-    return Commands.run(
-            () -> {
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds = chassisController.calculate(drive.getPose());
-              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
-            },
-            drive)
-        .until(chassisController::isGoalAchieved)
-        .beforeStarting(
-            () -> {
-              chassisController.setGoalPose(AllianceFlipUtil.apply(targetPose.get()));
-              chassisController.setCurrentState(drive.getPose(), drive.getChassisSpeeds());
-            })
-        .finallyDo(drive::stop);
+  /**
+   * Command to follow a basic AutoBuilder trajectory using Pathplanner. Not precise at all, but
+   * gets to the loading station fast
+   *
+   * @param drive The drive subsystem
+   * @param targetPose The target pose
+   * @return The command
+   */
+  public static Command auto_basicPathplannerToPose(Drive drive, Supplier<Pose2d> targetPose) {
+    return Commands.defer(
+        () ->
+            drive
+                .getPathFollowBackOutCommand(targetPose)
+                .beforeStarting(() -> drive.setUsePPRunVelocity(true))
+                .finallyDo(() -> drive.setUsePPRunVelocity(false)),
+        Set.of(drive));
+  }
+
+  public static Command auto_reefBackOutToStation(Drive drive, Supplier<Pose2d> targetPose) {
+    return drive
+        .getPathFollowBackOutCommand(() -> targetPose.get())
+        .beforeStarting(() -> drive.setUsePPRunVelocity(true))
+        .finallyDo(() -> drive.setUsePPRunVelocity(false));
   }
 
   /**
-   * Pathfinding to pose, followed by a smooth transition to precise chassis align
+   * Drive directly to a pose (no trajectory) using double trapezoidal PID profiles
    *
-   * @param drive Drive subsystem
-   * @param targetPose Target pose
+   * @param drive The drive subsystem
+   * @param targetPose The target pose
+   * @param reefPostID The reef post ID for vision filtering
+   * @return The command
    */
-  public static Command pathfindThenPreciseAlign(Drive drive, Supplier<Pose2d> targetPose) {
-    return new DeferredCommand(() -> drive.getPathFollowCommand(targetPose), Set.of(drive));
+  public static Command pidToPose(
+      Drive drive, Supplier<Pose2d> targetPose, Supplier<Integer> reefPostID) {
+    return Commands.defer(
+        () ->
+            Commands.run(
+                    () -> {
+                      drive.runVelocity(m_chassisController.calculate(drive.getPose()));
+                    },
+                    drive)
+                .beforeStarting(
+                    () -> {
+                      m_chassisController.reset(
+                          drive.getPose(), drive.getChassisSpeeds(), targetPose.get());
+                      Vision.setSingleTargetPostID(reefPostID.get());
+                    })
+                .until(() -> m_chassisController.isGoalAchieved())
+                .finallyDo(
+                    () -> {
+                      drive.stop();
+                      Vision.setSingleTargetPostID(-1); // all tags
+                    }),
+        Set.of(drive));
+  }
+
+  /**
+   * Drive directly to a pose (no trajectory) using double trapezoidal PID profiles and allow {@code
+   * field relative translational} adjustments from the joystick
+   *
+   * @param drive The drive subsystem
+   * @param targetPose The target pose
+   * @param reefPostID The reef post ID for vision filtering
+   * @param xSupplier The Y axis value of left stick
+   * @param ySupplier The X axis value of left stick
+   * @return The command
+   */
+  public static Command adjustablePidToPose(
+      Drive drive,
+      Supplier<Pose2d> targetPose,
+      Supplier<Integer> reefPostID,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier) {
+    Pose2d targetPoseValue = AllianceFlipUtil.apply(targetPose.get());
+    boolean isFlipped =
+        DriverStation.getAlliance().isPresent()
+            && DriverStation.getAlliance().get() == Alliance.Red;
+    return Commands.run(
+            () -> {
+              ChassisSpeeds controllerInput = m_chassisController.calculate(drive.getPose());
+              Translation2d joystickInput =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+              drive.runVelocity(
+                  controllerInput.plus(
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          joystickInput.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                          joystickInput.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                          0.0,
+                          isFlipped
+                              ? drive.getRotation().plus(Rotation2d.k180deg)
+                              : drive.getRotation())));
+            },
+            drive)
+        .beforeStarting(
+            () -> {
+              m_chassisController.reset(drive.getPose(), drive.getChassisSpeeds(), targetPoseValue);
+              Vision.setSingleTargetPostID(reefPostID.get());
+            })
+        .finallyDo(
+            () -> {
+              drive.stop();
+              Vision.setSingleTargetPostID(-1); // all tags
+            });
+  }
+
+  public static Command pidToPose(Drive drive, Supplier<Pose2d> targetPose) {
+    return pidToPose(drive, targetPose, () -> -1);
+  }
+
+  public static Command pidToPoseLooseTolerance(Drive drive, Supplier<Pose2d> targetPose) {
+    return pidToPose(drive, targetPose)
+        .beforeStarting(
+            () -> {
+              angleController.setTolerance(kAngleTolerance * 3.0);
+              translateController.setTolerance(kTranslationTolerance * 3.0);
+            })
+        .andThen(
+            () -> {
+              angleController.setTolerance(kAngleTolerance);
+              translateController.setTolerance(kTranslationTolerance);
+            });
+  }
+
+  public static Command driveStraight(Drive drive, double speed) {
+    return Commands.run(() -> drive.runVelocity(new ChassisSpeeds(speed, 0.0, 0.0)));
   }
 
   /**
@@ -477,5 +598,28 @@ public class DriveCommands {
   private static class MaxTurnVelocityState {
     // Array for 4 modules. Initialized to 0.
     public double[] maxVelocities = new double[4];
+  }
+
+  /**
+   * Calculate the robot's pose x seconds in the future for trajectory generation
+   *
+   * @param currentPose
+   * @param chassisSpeeds
+   * @param lookAheadTime
+   * @return
+   */
+  public static Pose2d calculateLookAheadPose(
+      Pose2d currentPose, ChassisSpeeds chassisSpeeds, double lookAheadTime) {
+    ChassisSpeeds frSpeeds =
+        ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, currentPose.getRotation());
+    return currentPose.exp(
+        new Twist2d(
+            chassisSpeeds.vxMetersPerSecond * lookAheadTime,
+            chassisSpeeds.vyMetersPerSecond * lookAheadTime,
+            chassisSpeeds.omegaRadiansPerSecond * lookAheadTime));
+  }
+
+  public static ChassisTrapezoidalController getChassisController() {
+    return m_chassisController;
   }
 }

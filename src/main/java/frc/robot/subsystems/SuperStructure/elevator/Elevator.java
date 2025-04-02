@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.SuperStructure.SuperStructure;
+import frc.robot.subsystems.SuperStructure.SuperStructureConstants.ElevatorConstants.ElevatorLevel;
 import frc.robot.util.TunablePIDController;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -47,9 +48,13 @@ public class Elevator {
 
   private boolean m_isSetpointAchievedInvalid = false;
 
+  // private TrapezoidProfile.State m_goalState =
+  //     new TrapezoidProfile.State(kElevatorStartingPositionMeters, 0.0);
+  // experimental, set the goal state to IDLE, which is up a bit from starting position
   private TrapezoidProfile.State m_goalState =
+      new TrapezoidProfile.State(ElevatorLevel.IDLE.setpointMeters.getAsDouble(), 0.0);
+  private TrapezoidProfile.State m_prevSetpoint =
       new TrapezoidProfile.State(kElevatorStartingPositionMeters, 0.0);
-  private TrapezoidProfile.State m_prevSetpoint = m_goalState;
   private boolean m_runClosedLoop = true;
 
   public Elevator(ElevatorIO io) {
@@ -59,7 +64,7 @@ public class Elevator {
     m_plant = LinearSystemId.identifyPositionSystem(kElevatorKv, kElevatorKa);
     m_regulator =
         new LinearQuadraticRegulator<>(
-            m_plant, VecBuilder.fill(0.01, 1.0), VecBuilder.fill(12.0), 0.02);
+            m_plant, VecBuilder.fill(0.01, 0.1), VecBuilder.fill(12.0), 0.02);
     if (Constants.kCurrentMode == Mode.REAL) {
       m_regulator.latencyCompensate(m_plant, 0.02, kElevatorLatencyCompensationMs);
     }
@@ -171,6 +176,14 @@ public class Elevator {
     m_io.setBrakeMode(brakeModeEnabled);
     stop();
     m_runClosedLoop = false;
+  }
+
+  public void forceSetCurrentState(ElevatorLevel goalPosition) {
+    TrapezoidProfile.State state =
+        new TrapezoidProfile.State(goalPosition.setpointMeters.getAsDouble(), 0.0);
+    m_goalState = state;
+    m_prevSetpoint = state;
+    m_runClosedLoop = true;
   }
 
   @AutoLogOutput(key = "SuperStructure/Elevator/AdjustmentCoefficient")

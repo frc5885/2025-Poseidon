@@ -19,6 +19,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPoint;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -49,9 +50,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.heimdall.HeimdallPoseController;
-import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.TunableDouble;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -90,6 +92,10 @@ public class Drive extends SubsystemBase {
       TunableDouble.register("Drive/AdjustmentBaseFactor", 0.3);
   @Setter private DoubleSupplier adjustmentFactor = () -> 0.0;
 
+  private Pose2d m_pathPlannerSetpoint = new Pose2d();
+  private boolean m_usePPRunVelocity = false;
+  private Pose2d m_pathPlannerStartPose = new Pose2d();
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -114,14 +120,13 @@ public class Drive extends SubsystemBase {
 
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
-        this::getPose,
+        this::ppGetPose,
         this::setPose,
         this::getChassisSpeeds,
-        this::runVelocity,
+        this::ppRunVelocity,
         kPPController,
         kPPConfig,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        this);
+        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) -> {
@@ -130,6 +135,7 @@ public class Drive extends SubsystemBase {
         });
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> {
+          m_pathPlannerSetpoint = targetPose;
           Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
         });
     m_setpointGenerator =
@@ -261,6 +267,20 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
+  /**
+   * Runs the drive at the desired velocity using the path planner, if the usePPRunVelocity flag is
+   * true.
+   */
+  public void ppRunVelocity(ChassisSpeeds speeds) {
+    if (m_usePPRunVelocity) {
+      runVelocity(speeds);
+    }
+  }
+
+  public void setUsePPRunVelocity(boolean usePPRunVelocity) {
+    m_usePPRunVelocity = usePPRunVelocity;
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
@@ -366,16 +386,47 @@ public class Drive extends SubsystemBase {
         : AutoBuilder.pathfindToPoseFlipped(pose.get(), kPathConstraintsFast);
   }
 
+  public Command getBetterDriveToPoseCommand(
+      Supplier<Pose2d> startPose, Supplier<Pose2d> endPose, boolean doNotFlip) {
+    m_pathPlannerStartPose = startPose.get();
+    Command cmd =
+        doNotFlip
+            ? AutoBuilder.pathfindToPose(endPose.get(), kPathConstraintsFast)
+            : AutoBuilder.pathfindToPoseFlipped(endPose.get(), kPathConstraintsFast);
+    // m_pathPlannerStartPose = new Pose2d();
+    return cmd;
+  }
+
   public Command getPathFollowCommand(Supplier<Pose2d> target) {
-    return AutoBuilder.followPath(
+    PathPlannerPath path =
         new PathPlannerPath(
             PathPlannerPath.waypointsFromPoses(
-                AllianceFlipUtil.apply(getPose()),
+                getPose(),
                 target.get().transformBy(new Transform2d(-0.5, 0.0, Rotation2d.kZero)),
                 target.get()),
             kPathConstraintsFast,
             null,
-            new GoalEndState(0.0, Rotation2d.kZero)));
+            new GoalEndState(0.0, target.get().getRotation()));
+    path.preventFlipping = true;
+    return AutoBuilder.followPath(path);
+  }
+
+  public Command getPathFollowBackOutCommand(Supplier<Pose2d> target) {
+    List<PathPoint> pathPoints =
+        new PathPlannerPath(
+                PathPlannerPath.waypointsFromPoses(target.get(), getPose()),
+                kPathConstraintsFast,
+                null,
+                new GoalEndState(0.0, getRotation()))
+            .getAllPathPoints();
+    Collections.reverse(pathPoints);
+    pathPoints.remove(0);
+
+    PathPlannerPath path =
+        PathPlannerPath.fromPathPoints(
+            pathPoints, kPathConstraintsFast, new GoalEndState(-0.2, target.get().getRotation()));
+    path.preventFlipping = true;
+    return AutoBuilder.followPath(path);
   }
 
   /**
@@ -386,6 +437,14 @@ public class Drive extends SubsystemBase {
    */
   public Command getPathFindFollowCommand(Supplier<PathPlannerPath> goalPath) {
     return AutoBuilder.pathfindThenFollowPath(goalPath.get(), kPathConstraintsFast);
+  }
+
+  public Pose2d getPathPlannerSetpoint() {
+    return m_pathPlannerSetpoint;
+  }
+
+  public void setPathPlannerSetpoint(Pose2d setpoint) {
+    m_pathPlannerSetpoint = setpoint;
   }
 
   /** Returns the position of each module in radians. */
@@ -410,6 +469,22 @@ public class Drive extends SubsystemBase {
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return m_poseController.getEstimatedPosition();
+  }
+
+  /**
+   * Returns the current odometry pose for path planner. Certain use cases set the start pose to
+   * some pose in the future rather than the real robot pose.
+   */
+  public Pose2d ppGetPose() {
+    return m_pathPlannerStartPose.equals(new Pose2d()) ? getPose() : m_pathPlannerStartPose;
+  }
+  /**
+   * Resets the current odometry pose for path planner to use the real robot pose. Certain use cases
+   * set the start pose to some pose in the future rather than the real robot pose.
+   */
+  public void resetPathPlannerGetPose() {
+    m_pathPlannerStartPose = new Pose2d();
+    m_pathPlannerSetpoint = new Pose2d();
   }
 
   /** Returns the current odometry rotation. */
@@ -454,5 +529,9 @@ public class Drive extends SubsystemBase {
   /** Reset the gyro */
   public void resetGyro() {
     m_gyroIO.resetGyro();
+  }
+
+  public HeimdallPoseController getHeimdall() {
+    return m_poseController;
   }
 }

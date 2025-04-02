@@ -1,12 +1,22 @@
 package frc.robot.subsystems.Feeder;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.io.beambreak.BeamBreakIO;
 import frc.robot.io.beambreak.BeamBreakIOInputsAutoLogged;
-import frc.robot.subsystems.Feeder.FeederConstants.*;
-import java.util.Arrays;
+import frc.robot.io.beambreak.BeamBreakIOSim;
+import frc.robot.subsystems.LEDS.LEDSubsystem;
+import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
+import frc.robot.util.GamePieces.GamePieceVisualizer;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Feeder extends SubsystemBase {
@@ -16,8 +26,11 @@ public class Feeder extends SubsystemBase {
   private final FeederIOInputsAutoLogged m_inputs = new FeederIOInputsAutoLogged();
   private final BeamBreakIO m_beamBreakIO;
   private final BeamBreakIOInputsAutoLogged m_beamBreakInputs = new BeamBreakIOInputsAutoLogged();
+  private final Debouncer m_beambreakDebouncer = new Debouncer(0.12);
 
-  private FeederState m_state = FeederState.IDLE;
+  private boolean m_isHandOffReady = false;
+
+  private boolean m_simulatedCoralIntakeCoolDownRunning = false;
 
   public Feeder(FeederIO io, BeamBreakIO beamBreakIO) {
     m_feederIO = io;
@@ -29,32 +42,14 @@ public class Feeder extends SubsystemBase {
 
   public void periodic() {
     m_feederIO.updateInputs(m_inputs);
-    Logger.processInputs("Collector/Feeder", m_inputs);
+    Logger.processInputs("Feeder", m_inputs);
 
     m_beamBreakIO.updateInputs(m_beamBreakInputs);
-    Logger.processInputs("Collector/Intake/BeamBreak", m_beamBreakInputs);
+    Logger.processInputs("Feeder/BeamBreak", m_beamBreakInputs);
 
     // Update alert
     m_motor1DisconnectedAlert.set(!m_inputs.motor1Connected);
     m_motor2DisconnectedAlert.set(!m_inputs.motor2Connected);
-
-    switch (m_state) {
-      case IDLE:
-        stop();
-        break;
-      case FEEDING:
-        runFeeder(6.0);
-        if (isBeamBreakTriggered()) {
-          m_state = FeederState.FEEDING_SLOW;
-        }
-        break;
-      case FEEDING_SLOW:
-        runFeeder(2.0);
-        if (!isBeamBreakTriggered()) {
-          m_state = FeederState.IDLE;
-        }
-        break;
-    }
   }
 
   public void runFeeder(double volts) {
@@ -62,7 +57,7 @@ public class Feeder extends SubsystemBase {
   }
 
   public boolean isBeamBreakTriggered() {
-    return m_beamBreakInputs.state;
+    return m_beambreakDebouncer.calculate(m_beamBreakInputs.state);
   }
 
   public BeamBreakIO getBeamBreakIO() {
@@ -73,18 +68,95 @@ public class Feeder extends SubsystemBase {
     m_feederIO.setVoltage(0.0);
   }
 
-  public boolean isCurrentOverThreshold() {
-    return Arrays.stream(m_inputs.currentAmps).average().getAsDouble()
-        > FeederConstants.kFeederCurrentThreshold;
+  @AutoLogOutput
+  public boolean getIsHandoffReady() {
+    return m_isHandOffReady;
   }
 
-  public void setFeederState(FeederState state) {
-    if (m_state == FeederState.FEEDING_SLOW) return;
-
-    m_state = state;
+  public Trigger getHandoffTrigger() {
+    return new Trigger(() -> (m_isHandOffReady && !DriverStation.isAutonomous()));
   }
 
-  public FeederState getFeederState() {
-    return m_state;
+  public void handoffComplete() {
+    m_isHandOffReady = false;
+    m_simulatedCoralIntakeCoolDownRunning = false;
+    LEDSubsystem.getInstance().setStates(LEDStates.HOLDING_PIECE);
+    stop();
+
+    if (Constants.kCurrentMode == Mode.SIM) {
+      GamePieceVisualizer.setHasCoral(true);
+    }
+  }
+
+  public boolean isRunning() {
+    return m_inputs.appliedVolts > 0.1;
+  }
+
+  /** Only use this in simulation */
+  public void simulateCoralFeed() {
+    if (!GamePieceVisualizer.hasCoral() && !m_simulatedCoralIntakeCoolDownRunning) {
+      if (m_beamBreakIO instanceof BeamBreakIOSim) {
+        ((BeamBreakIOSim) m_beamBreakIO).simulateCoralHopperFeed(1.0, 0.25);
+        m_simulatedCoralIntakeCoolDownRunning = true;
+      }
+    }
+  }
+
+  public Command startFeederCmd() {
+    Command cmd =
+        new Command() {
+          private boolean m_wasBeamBreakTriggered = false;
+          private boolean m_isFinished = false;
+
+          @Override
+          public void initialize() {
+            runFeeder(FeederConstants.kFeedSpeed);
+            LEDSubsystem.getInstance().setStates(LEDStates.INTAKE_RUNNING);
+            m_wasBeamBreakTriggered = false;
+            m_isFinished = false;
+            m_isHandOffReady = false;
+          }
+
+          @Override
+          public void execute() {
+
+            if (!m_wasBeamBreakTriggered && isBeamBreakTriggered()) {
+              // feed slow
+              runFeeder(FeederConstants.kFeedSlowSpeed);
+              m_wasBeamBreakTriggered = true;
+            } else if (m_wasBeamBreakTriggered && !isBeamBreakTriggered()) {
+              stop();
+              m_isHandOffReady = true;
+              m_isFinished = true;
+              LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
+            }
+          }
+
+          @Override
+          public boolean isFinished() {
+            return m_isFinished || (Constants.kCurrentMode == Mode.SIM && m_isHandOffReady);
+          }
+        };
+    cmd.addRequirements(this);
+    return new InstantCommand(() -> cmd.schedule());
+  }
+
+  public Command forceFeedCmd() {
+    Command cmd =
+        new Command() {
+          @Override
+          public void initialize() {
+            runFeeder(FeederConstants.kFeedSpeed);
+            m_isHandOffReady = false;
+          }
+
+          @Override
+          public void end(boolean interrupted) {
+            stop();
+            LEDSubsystem.getInstance().setStates(LEDStates.IDLE);
+          }
+        };
+    cmd.addRequirements(this);
+    return cmd;
   }
 }

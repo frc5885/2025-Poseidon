@@ -15,8 +15,8 @@ logging.basicConfig(level=logging.DEBUG)
 # Configuration
 WINDOW_SIZE = (1024, 600)
 HEX_RADIUS = 270  # Radius of the hexagon
-BUTTON_LENGTH = 100  # Length of rectangular buttons
-BUTTON_WIDTH = 60   # Width of rectangular buttons
+BUTTON_LENGTH = 200  # Length of rectangular buttons
+BUTTON_WIDTH = 75   # Width of rectangular buttons
 ROTATION_ANGLE = 90  # Rotate hexagon by 90 degrees
 BUTTON_ANGLE = 30
 COLORS = {
@@ -44,8 +44,11 @@ small_font = pygame.font.SysFont(None, 36)
 # Reef graphics
 reef = pygame.image.load("python-operator-panel/reef.png")
 
-branch = pygame.image.load("python-operator-panel/branch.png").convert_alpha()
-branch = pygame.transform.scale(branch, (126, 402))
+leftBranch = pygame.image.load("python-operator-panel/branch.png").convert_alpha()
+leftBranch = pygame.transform.scale(leftBranch, (126, 402))
+leftBranch = pygame.transform.flip(leftBranch, True, False)
+rightBranch = pygame.image.load("python-operator-panel/branch.png").convert_alpha()
+rightBranch = pygame.transform.scale(rightBranch, (126, 402))
 
 programIcon = pygame.image.load('python-operator-panel\WiredcatsVectorLogo.png')
 pygame.display.set_icon(programIcon)
@@ -194,12 +197,8 @@ font = pygame.font.SysFont(None, 48)
 small_font = pygame.font.SysFont(None, 36)
 button_font = pygame.font.SysFont(None, 28)  # New font for button numbers
 
-letters = ["A", "B", "C", "D", "E", "F"]
-positions = [(333, 170), (448, 237), (448, 368), 
-             (333, 434), (218, 368), (218, 237)]
-
 class HexagonButton:
-    def __init__(self, center, angle, width, length, number, is_level_button=False):
+    def __init__(self, center, angle, width, length, isRight, level):
         """Initialize button with flag for level button"""
         self.width = width
         self.length = length
@@ -208,9 +207,8 @@ class HexagonButton:
         self.rect = pygame.Rect(0, 0, length, width)
         self.rect.center = center
         self.is_active = False
-        self.number = number
-        self.is_level_button = is_level_button
-        self.display_number = number  # For level buttons, this will change dynamically
+        self.isRight = isRight
+        self.level = level
 
     def draw(self, surface):
         temp_surface = pygame.Surface((self.length, self.width), pygame.SRCALPHA)
@@ -218,10 +216,10 @@ class HexagonButton:
         temp_surface.fill(bg_color)
         
         # Different text handling for hexagon vs level buttons
-        if not self.is_level_button:
-            display_text = "1 - 4" if self.number % 2 != 0 else "5 - 8"
+        if self.isRight:
+            display_text = "R " + str(self.level)
         else:
-            display_text = str(self.display_number)
+            display_text = "L " + str(self.level)
             
         text_color = COLORS['text'] if self.is_active else (255, 255, 255)
         text_surf = button_font.render(display_text, True, text_color)
@@ -242,52 +240,54 @@ class HexagonButton:
         return (abs(rotated_vec.x) < BUTTON_LENGTH/2 and 
                 abs(rotated_vec.y) < BUTTON_WIDTH/2)
 
-def calculate_hexagon_points(center, radius, rotation=0):
-    """Generate hexagon vertex coordinates with rotation
-    Args:
-        center (tuple): (x, y) of hexagon center
-        radius (float): Hexagon radius
-        rotation (float): Rotation angle in degrees
-    Returns:
-        list: Six (x, y) tuples representing vertices
-    """
-    return [(center[0] + radius * math.cos(math.radians(angle + rotation)),
-             center[1] + radius * math.sin(math.radians(angle + rotation)))
-            for angle in range(30, 390, 60)]
+# def calculate_hexagon_points(center, radius, rotation=0):
+#     """Generate hexagon vertex coordinates with rotation
+#     Args:
+#         center (tuple): (x, y) of hexagon center
+#         radius (float): Hexagon radius
+#         rotation (float): Rotation angle in degrees
+#     Returns:
+#         list: Six (x, y) tuples representing vertices
+#     """
+#     return [(center[0] + radius * math.cos(math.radians(angle + rotation)),
+#              center[1] + radius * math.sin(math.radians(angle + rotation)))
+#             for angle in range(30, 390, 60)]
 
-def create_buttons(center, radius, rotation=0):
-    """Generate numbered buttons along hexagon edges"""
-    buttons = []
-    button_number = 1  # Start numbering from 1
-    vertices = calculate_hexagon_points(center, radius, rotation)
+# def create_buttons(center, radius, rotation=0):
+#     """Generate numbered buttons along hexagon edges"""
+#     buttons = []
+#     button_number = 1  # Start numbering from 1
+#     vertices = calculate_hexagon_points(center, radius, rotation)
     
-    for i in range(6):
-        start = vertices[i]
-        end = vertices[(i+1)%6]
-        edge_vector = (end[0]-start[0], end[1]-start[1])
-        edge_angle = math.atan2(edge_vector[1], edge_vector[0])
+#     for i in range(6):
+#         start = vertices[i]
+#         end = vertices[(i+1)%6]
+#         edge_vector = (end[0]-start[0], end[1]-start[1])
+#         edge_angle = math.atan2(edge_vector[1], edge_vector[0])
         
-        # Add 180 degrees (pi radians) for bottom edges
-        # Bottom edges are indices 0, 1, 5 in the hexagon
-        if i in [0, 1, 5]:
-            edge_angle += math.pi
+#         # Add 180 degrees (pi radians) for bottom edges
+#         # Bottom edges are indices 0, 1, 5 in the hexagon
+#         if i in [0, 1, 5]:
+#             edge_angle += math.pi
         
-        # Create two buttons per edge with numbers
-        for t in [9/30, 21/30]:
-            x = start[0] + t * edge_vector[0]
-            y = start[1] + t * edge_vector[1]
-            buttons.append(HexagonButton((x, y), edge_angle, 
-                                      BUTTON_WIDTH, BUTTON_LENGTH,
-                                      button_number,))
-            button_number += 1  # Increment for next button
+#         # Create two buttons per edge with numbers
+#         for t in [9/30, 21/30]:
+#             x = start[0] + t * edge_vector[0]
+#             y = start[1] + t * edge_vector[1]
+#             buttons.append(HexagonButton((x, y), edge_angle, 
+#                                       BUTTON_WIDTH, BUTTON_LENGTH,
+#                                       button_number,))
+#             button_number += 1  # Increment for next button
     
-    return buttons
+#     return buttons
 
-def createLevelButtons():
+def createButtons():
     buttons = []
     for i in range(1,5):
-        btn = HexagonButton((850, 20 + 110*i), 0, 52, 100, 5-i, is_level_button=True)
-        buttons.append(btn)
+        button = HexagonButton((250, 20 + 110*i), 0, BUTTON_WIDTH, BUTTON_LENGTH, False, 5-i)
+        buttons.append(button)
+        button = HexagonButton((774, 20 + 110*i), 0, BUTTON_WIDTH, BUTTON_LENGTH, True, 5-i)
+        buttons.append(button)
     return buttons
 
 
@@ -298,11 +298,11 @@ def main():
     
     # Calculate initial positions with rotation
     center = (WINDOW_SIZE[0]//2-180, WINDOW_SIZE[1]//2)
-    buttons = create_buttons(center, HEX_RADIUS, BUTTON_ANGLE)
+    # buttons = create_buttons(center, HEX_RADIUS, BUTTON_ANGLE)
     active_button = None  # Track the currently active button
 
-    levelButtons = createLevelButtons()
-    active_buttonLevel = levelButtons[0]
+    buttons = createButtons()
+    # active_buttonLevel = levelButtons[0]
     
     running = True
     while running:
@@ -318,57 +318,53 @@ def main():
                         connecting_screen.toggle.toggle()
                         connection_manager.toggle_mode()
                 else:
-                    for btnl in levelButtons:
-                        if btnl.check_click(mouse_pos):
-                            if active_buttonLevel:
-                                active_buttonLevel.is_active = False
-                            btnl.is_active = True  # Activate new button
-                            active_buttonLevel = btnl  # Update active button
-                    for btn in buttons:
-                        if btn.check_click(mouse_pos):
+                    for button in buttons:
+                        if button.check_click(mouse_pos):
                             if active_button:
                                 active_button.is_active = False  # Deactivate previous button
-                                active_buttonLevel.is_active = False
-                            btn.is_active = True  # Activate new button
-                            active_button = btn  # Update active button
+                            button.is_active = True  # Activate new button
+                            active_button = button  # Update active button
 
-                    for btn in buttons:
-                        if btn.is_active:
-                            connection_manager.sd.putNumber("ReefTargets", buttons.index(btn))
-                            connection_manager.sd.putNumber("ReefTargetsLevel",1)
-                    for btnl in levelButtons:
-                        if btnl.is_active:
-                            connection_manager.sd.putNumber("ReefTargetsLevel", 4 - levelButtons.index(btnl))
+                    for button in buttons:
+                        if button.is_active:
+                            if button.isRight:
+                                connection_manager.sd.putNumber("ReefTargets", 0)
+                            else:
+                                connection_manager.sd.putNumber("ReefTargets", 1)   
+                            connection_manager.sd.putNumber("ReefTargetsLevel", button.level)
+                    # for btnl in levelButtons:
+                    #     if btnl.is_active:
+                    #         connection_manager.sd.putNumber("ReefTargetsLevel", 4 - levelButtons.index(btnl))
         
         # Draw elements
         if not NetworkTables.isConnected():
             connecting_screen.draw(screen, connection_manager)
         else:
             screen.fill(COLORS['background'])
-            screen.blit(reef, (21, 56))
-            screen.blit(branch, (650, 100))
+            # screen.blit(reef, (21, 56))
+            screen.blit(leftBranch, (374, 100))
+            screen.blit(rightBranch, (524, 100))
             # Draw hexagon outline with rotation
-            pygame.draw.polygon(screen, COLORS['hexagon'], 
-                               calculate_hexagon_points(center, HEX_RADIUS, ROTATION_ANGLE), 2)
+            # pygame.draw.polygon(screen, COLORS['hexagon'], 
+            #                    calculate_hexagon_points(center, HEX_RADIUS, ROTATION_ANGLE), 2)
             
             # Draw buttons
-            for btn in buttons:
-                btn.draw(screen)
-            for btn in levelButtons:
-                btn.draw(screen)
-            for btn in buttons:
-                if btn.is_active:
-                    # Update level button numbers based on active hexagon button
-                    base = 4 if btn.number % 2 != 0 else 8
-                    for i, level_btn in enumerate(levelButtons):
-                        level_btn.display_number = base - i
+            for button in buttons:
+                button.draw(screen)
+
+            # for btn in buttons:
+            #     if btn.is_active:
+            #         # Update level button numbers based on active hexagon button
+            #         base = 4 if btn.number % 2 != 0 else 8
+            #         for i, level_btn in enumerate(levelButtons):
+            #             level_btn.display_number = base - i
             
             # Draw letters only
-            for i, letter in enumerate(letters):
-                x, y = positions[i]
-                text_surface = font.render(letter, True, (255, 255, 255))
-                text_rect = text_surface.get_rect(center=(x, y))
-                screen.blit(text_surface, text_rect)  # Draw text
+            # for i, letter in enumerate(letters):
+            #     x, y = positions[i]
+            #     text_surface = font.render(letter, True, (255, 255, 255))
+            #     text_rect = text_surface.get_rect(center=(x, y))
+            #     screen.blit(text_surface, text_rect)  # Draw text
         
         pygame.display.flip()
         clock.tick(60)

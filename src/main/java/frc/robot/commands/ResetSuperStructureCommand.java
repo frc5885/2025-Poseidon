@@ -10,12 +10,15 @@ import frc.robot.subsystems.SuperStructure.SuperStructureState;
 import frc.robot.subsystems.drive.Drive;
 
 public class ResetSuperStructureCommand extends SequentialCommandGroup {
-  public ResetSuperStructureCommand(Drive drive, SuperStructure superStructure) {
+  public ResetSuperStructureCommand(
+      Drive drive, SuperStructure superStructure, boolean isHoldingAlgae) {
     addCommands(
         new InstantCommand(
             () -> LEDSubsystem.getInstance().setStates(LEDStates.RESETTING_SUPERSTRUCTURE)),
         new WaitUntilFarFromCommand(drive::getPose, 0.5).unless(() -> DriverStation.isTest()),
-        new SuperStructureCommand(superStructure, () -> SuperStructureState.IDLE),
+        new SuperStructureCommand(
+            superStructure,
+            () -> isHoldingAlgae ? SuperStructureState.IDLE_ALGAE : SuperStructureState.IDLE),
         new InstantCommand(() -> LEDSubsystem.getInstance().setStates(LEDStates.IDLE)));
   }
 }

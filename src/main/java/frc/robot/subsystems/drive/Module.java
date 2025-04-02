@@ -54,12 +54,12 @@ public class Module {
     m_io = io;
     m_index = index;
 
-    SmartDashboard.putBoolean("DriveStateSpace", true);
+    SmartDashboard.putBoolean("DriveStateSpace", false);
     m_drivePlant = LinearSystemId.identifyVelocitySystem(kDriveKv, kDriveKa);
     m_driveFF = new LinearPlantInversionFeedforward<>(m_drivePlant, 0.02);
     m_driveRegulator =
         new LinearQuadraticRegulator<>(
-            m_drivePlant, VecBuilder.fill(0.001), VecBuilder.fill(12.0), 0.02);
+            m_drivePlant, VecBuilder.fill(0.8), VecBuilder.fill(12.0), 0.02);
 
     if (Constants.kCurrentMode == Mode.REAL) {
       m_driveRegulator.latencyCompensate(m_drivePlant, 0.02, kModuleLatencyCompensationMs);
@@ -83,7 +83,7 @@ public class Module {
     m_io.updateInputs(m_inputs);
     Logger.processInputs("Drive/Module" + Integer.toString(m_index), m_inputs);
 
-    if (SmartDashboard.getBoolean("DriveStateSpace", true)) {
+    if (SmartDashboard.getBoolean("DriveStateSpace", false)) {
       if (isClosedLoop) {
         double driveSetpoint = m_driveController.getSetpoint();
         Vector<N1> nextDriveR = VecBuilder.fill(driveSetpoint);
