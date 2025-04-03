@@ -38,8 +38,8 @@ public class BargeAuto extends SequentialCommandGroup {
               }
             }));
 
-    // start feeding immediately
-    addCommands(feeder.startFeederCmd());
+    // start intake immediately
+    addCommands(new InstantCommand(() -> endEffector.runEndEffectorIntake()));
 
     // score first coral
     int branchNum = 6;
@@ -56,7 +56,7 @@ public class BargeAuto extends SequentialCommandGroup {
     addCommands(DriveCommands.driveStraight(drive, -1.0).withTimeout(0.5));
 
     // intake algae
-    addCommands(new AutoIntakeAlgaeReefCommand(drive, superStructure, endEffector));
+    addCommands(new AutoIntakeAlgaeReefCommand(drive, superStructure, endEffector, () -> false));
 
     // drive to barge pose
     addCommands(
@@ -74,7 +74,7 @@ public class BargeAuto extends SequentialCommandGroup {
                     drive, () -> FieldConstants.getAutonomous2ndAlgaeLineupPose())));
 
     // intake algae
-    addCommands(new AutoIntakeAlgaeReefCommand(drive, superStructure, endEffector));
+    addCommands(new AutoIntakeAlgaeReefCommand(drive, superStructure, endEffector, () -> false));
 
     // score algae
     addCommands(new ScoreAlgaeNetCommand(drive, superStructure, endEffector));

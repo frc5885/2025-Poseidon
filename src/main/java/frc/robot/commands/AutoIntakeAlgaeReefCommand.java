@@ -13,8 +13,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.Constants;
-import frc.robot.Constants.Mode;
 import frc.robot.subsystems.EndEffector.EndEffector;
 import frc.robot.subsystems.LEDS.LEDSubsystem;
 import frc.robot.subsystems.LEDS.LEDSubsystem.LEDStates;
@@ -25,6 +23,7 @@ import frc.robot.util.CalculateAlgaeStateUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.GamePieces.GamePieceVisualizer;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
@@ -40,7 +39,10 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
    * to the correct height, and intakes the algae.
    */
   public AutoIntakeAlgaeReefCommand(
-      Drive drive, SuperStructure superStructure, EndEffector endEffector) {
+      Drive drive,
+      SuperStructure superStructure,
+      EndEffector endEffector,
+      BooleanSupplier isManualSwitchOn) {
 
     addCommands(
         // Fake initializer to calculate target pose and state
@@ -64,26 +66,29 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
             new DeferredCommand(
                     () -> DriveCommands.pidToPoseLooseTolerance(drive, () -> transitionPose2d),
                     Set.of(drive))
-                .unless(() -> DriverStation.isTest())),
+                .unless(() -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean())),
         // drive in to reef
         new ParallelDeadlineGroup(
-            DriveCommands.driveStraight(drive, kDriveInSpeed)
-                .until(() -> endEffector.isHoldingAlgae())
-                .unless(() -> DriverStation.isTest())
-                .withTimeout(Constants.kCurrentMode == Mode.SIM ? 1.0 : 30),
-            new IntakeAlgaeCommand(endEffector)),
+                DriveCommands.driveStraight(drive, kDriveInSpeed)
+                    .until(() -> endEffector.isHoldingAlgae())
+                    .unless(() -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean())
+                // timeout in case algae detection fails
+                ,
+                new IntakeAlgaeCommand(endEffector))
+            .withTimeout(2.0),
         new InstantCommand(
             () -> {
               GamePieceVisualizer.setHasAlgae(true);
             }),
         // raise elevator
         new SuperStructureCommand(
-            superStructure,
-            () -> CalculateAlgaeStateUtil.calculateAfterIntakeState(stateSupplier.get())),
+                superStructure,
+                () -> CalculateAlgaeStateUtil.calculateAfterIntakeState(stateSupplier.get()))
+            .withTimeout(0.5),
         // back out of reef
         DriveCommands.driveStraight(drive, -kDriveInSpeed)
             .withTimeout(1.0)
-            .unless(() -> DriverStation.isTest()));
+            .unless(() -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean()));
 
     addRequirements(drive, superStructure);
   }

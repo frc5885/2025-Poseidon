@@ -41,7 +41,7 @@ public class AlgeaAuto extends SequentialCommandGroup {
     addCommands(
         new AutoScoreCoralAtBranchCommand(
             drive, superStructure, endEffector, () -> 7, () -> 4, () -> false),
-        new AutoIntakeAlgaeReefCommand(drive, superStructure, endEffector),
+        new AutoIntakeAlgaeReefCommand(drive, superStructure, endEffector, () -> false),
         DriveCommands.pidToPose(
             drive, () -> AllianceFlipUtil.apply(new Pose2d(7.64, 5.19, new Rotation2d(Math.PI)))),
         new ScoreAlgaeNetCommand(drive, superStructure, endEffector));

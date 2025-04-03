@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -46,11 +47,13 @@ public class PlaceCoralCommand extends SequentialCommandGroup {
                     .andThen(new WaitCommand(0.5)),
                 // L2, L3, L4
                 new ParallelCommandGroup(
-                    // move to scored state, but wait 0.1s before running outtake
-                    new SuperStructureCommand(superStructure, () -> scoredState),
-                    new SequentialCommandGroup(
-                        new WaitCommand(0.1),
-                        new InstantCommand(() -> endEffector.runEndEffectorOuttake()))),
+                        // move to scored state, but wait 0.1s before running outtake
+                        new SuperStructureCommand(superStructure, () -> scoredState),
+                        new SequentialCommandGroup(
+                            new WaitCommand(0.1),
+                            new InstantCommand(() -> endEffector.runEndEffectorOuttake())))
+                    // fast slam
+                    .withTimeout(DriverStation.isAutonomous() ? 0.3 : 5.0),
                 () -> reefLevel == ReefLevel.L1)
             // after all levels
             .finallyDo(

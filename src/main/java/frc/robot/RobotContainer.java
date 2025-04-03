@@ -249,12 +249,22 @@ public class RobotContainer {
     m_autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
     // m_autoChooser.addDefaultOption("Test", new TestAuto(m_drive, m_feeder));
 
+    // m_autoChooser.addDefaultOption(
+    //     "LCC Testing",
+    //     new MultiCoralAuto(
+    //         m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
+
     m_autoChooser.addDefaultOption(
-        "LCC Testing",
+        "Right 3 Piece",
         new MultiCoralAuto(
             m_drive, m_superStructure, m_feeder, m_endEffector, Side.RIGHT, List.of(9, 10, 11)));
 
-    m_autoChooser.addOption(
+    m_autoChooser.addDefaultOption(
+        "Left 3 Piece",
+        new MultiCoralAuto(
+            m_drive, m_superStructure, m_feeder, m_endEffector, Side.LEFT, List.of(4, 3, 2)));
+
+    m_autoChooser.addDefaultOption(
         "Middle Barge", new BargeAuto(m_drive, m_superStructure, m_feeder, m_endEffector));
 
     // Set up SysId routines
@@ -283,25 +293,23 @@ public class RobotContainer {
     // m_autoChooser.addOption(
     //     "Turn SysId (Quasistatic Reverse)",
     //     m_drive.turnSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // m_autoChooser.addOption(
-    //     "Turn SysId (Dynamic Forward)",
-    // m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // m_autoChooser.addOption(
-    //     "Turn SysId (Dynamic Reverse)",
-    // m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    m_autoChooser.addOption(
+        "Turn SysId (Dynamic Forward)", m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kForward));
+    m_autoChooser.addOption(
+        "Turn SysId (Dynamic Reverse)", m_drive.turnSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    m_autoChooser.addOption(
-        "Elevator SysId (Quasistatic Forward)",
-        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Elevator SysId (Quasistatic Reverse)",
-        m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    m_autoChooser.addOption(
-        "Elevator SysId (Dynamic Forward)",
-        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    m_autoChooser.addOption(
-        "Elevator SysId (Dynamic Reverse)",
-        m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Forward)",
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Quasistatic Reverse)",
+    //     m_superStructure.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Forward)",
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // m_autoChooser.addOption(
+    //     "Elevator SysId (Dynamic Reverse)",
+    //     m_superStructure.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
     // m_autoChooser.addOption(
     //     "Arm SysId (Quasistatic Forward)",
     //     m_superStructure.armSysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -434,7 +442,9 @@ public class RobotContainer {
 
     // INTAKE ALGAE REEF
     m_algaeReefTrigger
-        .whileTrue(new AutoIntakeAlgaeReefCommand(m_drive, m_superStructure, m_endEffector))
+        .whileTrue(
+            new AutoIntakeAlgaeReefCommand(
+                m_drive, m_superStructure, m_endEffector, m_operatorPanel.getOverrideSwitch(3)))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, true));
 
     // INTAKE ALGAE FLOOR
