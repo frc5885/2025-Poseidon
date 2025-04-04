@@ -65,6 +65,7 @@ public class StateGraph {
             // IDLE transitions
             new SuperStructureState[] {
               SuperStructureState.IDLE,
+              SuperStructureState.BEFORE_CLIMB,
               // SuperStructureState.IDLE_ALGAE,
               SuperStructureState.INTAKE_CORAL,
               SuperStructureState.INTAKE_ALGAE_L2,
@@ -326,6 +327,24 @@ public class StateGraph {
               // SuperStructureState.SCORED_CORAL_L2,
               // SuperStructureState.SCORED_CORAL_L3,
               // SuperStructureState.SCORED_CORAL_L4,
+            },
+            
+            // BEFORE_CLIMB transitions
+            new SuperStructureState[] {
+              SuperStructureState.BEFORE_CLIMB,
+              SuperStructureState.CLIMBING
+            },
+            
+            // CLIMBING transitions
+            new SuperStructureState[] {
+              SuperStructureState.CLIMBING,
+              SuperStructureState.CLIMBED,
+            },
+            
+            // CLIMBED transitions
+            new SuperStructureState[] {
+              SuperStructureState.CLIMBED,
+              SuperStructureState.IDLE
             });
 
     // for each set of transitions

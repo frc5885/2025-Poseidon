@@ -51,6 +51,7 @@ public class SuperStructureConstants {
       AFTER_ALGAE_L2(TunableDouble.register("Elevator/AFTER_ALGAE_L2", 0.1)),
       AFTER_ALGAE_L3(TunableDouble.register("Elevator/AFTER_ALGAE_L3", 0.4)),
       L4(TunableDouble.register("Elevator/L4", 0.65)),
+      CLIMB(TunableDouble.register("Elevator/CLIMB", 0.2)),
       NET(TunableDouble.register("Elevator/NET", 0.78));
 
       public DoubleSupplier setpointMeters;
@@ -102,7 +103,8 @@ public class SuperStructureConstants {
       SCORED_REEF_HIGH(TunableDouble.register("Arm/SCORED_REEF_HIGH", -10.0)),
       NET(TunableDouble.register("Arm/NET", 108.0)),
       PROCESSOR(TunableDouble.register("Arm/PROCESSOR", -55.0)),
-      ALGAE_LOLLIPOP(TunableDouble.register("Arm/LOLLIPOP", -50.0));
+      ALGAE_LOLLIPOP(TunableDouble.register("Arm/LOLLIPOP", -50.0)),
+      CLIMB(TunableDouble.register("Arm/CLIMB", 0.0));
 
       public DoubleSupplier setpointDegrees;
     }

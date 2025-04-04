@@ -28,7 +28,12 @@ public enum SuperStructureState {
 
   // transition for between idle and L3
   BEFORE_L3(ElevatorLevel.IDLE, ArmGoals.IDLE),
-  BEFORE_NET(ElevatorLevel.NET, ArmGoals.IDLE_ALGAE);
+  BEFORE_NET(ElevatorLevel.NET, ArmGoals.IDLE_ALGAE),
+
+  // climb
+  BEFORE_CLIMB(ElevatorLevel.CLIMB, ArmGoals.IDLE),
+  CLIMBING(ElevatorLevel.CLIMB, ArmGoals.CLIMB),
+  CLIMBED(ElevatorLevel.STOW, ArmGoals.CLIMB);
 
   public ElevatorLevel elevatorGoal;
   public ArmGoals armGoal;
