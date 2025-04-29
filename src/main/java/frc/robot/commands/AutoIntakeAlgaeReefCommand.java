@@ -71,10 +71,9 @@ public class AutoIntakeAlgaeReefCommand extends SequentialCommandGroup {
         new ParallelDeadlineGroup(
                 DriveCommands.driveStraight(drive, kDriveInSpeed)
                     .until(() -> endEffector.isHoldingAlgae())
-                    .unless(() -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean())
-                // timeout in case algae detection fails
-                ,
+                    .unless(() -> DriverStation.isTest() || isManualSwitchOn.getAsBoolean()),
                 new IntakeAlgaeCommand(endEffector))
+            // timeout in case algae detection fails
             .withTimeout(2.0),
         new InstantCommand(
             () -> {
