@@ -34,7 +34,7 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
                             drive,
                             () ->
                                 new Pose2d(
-                                    AllianceFlipUtil.applyX(8.12),
+                                    AllianceFlipUtil.applyX(8.3),
                                     drive.getPose().getY(),
                                     AllianceFlipUtil.apply(Rotation2d.k180deg))),
                     Set.of(drive))
@@ -44,9 +44,12 @@ public class ScoreAlgaeNetCommand extends SequentialCommandGroup {
         new SequentialCommandGroup(
             // need to timeout if arm slams barge and can't hit setpoint
             new SuperStructureCommand(superStructure, () -> SuperStructureState.SCORE_ALGAE_NET)
-                .withTimeout(1.0),
+                .withTimeout(0.7),
             new ScoreAlgaeCommand(endEffector)
-                .withTimeout(Constants.kCurrentMode == Mode.SIM ? 0.5 : 30)),
+                .withTimeout(
+                    (Constants.kCurrentMode == Mode.SIM || DriverStation.isAutonomous())
+                        ? 0.5
+                        : 30)),
         new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)));
 
     addRequirements(drive, superStructure);

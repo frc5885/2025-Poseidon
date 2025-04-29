@@ -21,8 +21,8 @@ public class PoseUtil {
             .filter(index -> index % 2 == sideIndex)
             .mapToObj(allL4Poses::get)
             .toList();
-    System.out.println(allL4Poses.size());
-    System.out.println(allL4PosesOnSide.size());
+    // System.out.println(allL4Poses.size());
+    // System.out.println(allL4PosesOnSide.size());
     return allL4Poses.indexOf(robotPose.nearest(allL4PosesOnSide));
   }
 

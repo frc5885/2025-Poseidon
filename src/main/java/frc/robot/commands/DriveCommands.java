@@ -122,6 +122,7 @@ public class DriveCommands {
       DoubleSupplier omegaSupplier) {
     return Commands.run(
         () -> {
+          Logger.recordOutput("Drive/ActiveCommand", "Joystick");
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
@@ -166,6 +167,7 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
         () -> {
+          Logger.recordOutput("Drive/ActiveCommand", "JoystickOrbitReef");
           // cancel snap to reef on right joystick move
           if (Math.abs(omegaSupplier.getAsDouble()) > 0.75) {
             snapToReef = false;
@@ -322,6 +324,7 @@ public class DriveCommands {
         () ->
             Commands.run(
                     () -> {
+                      Logger.recordOutput("Drive/ActiveCommand", "PIDtoPose");
                       drive.runVelocity(m_chassisController.calculate(drive.getPose()));
                     },
                     drive)

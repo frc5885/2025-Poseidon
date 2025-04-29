@@ -31,7 +31,7 @@ public class ChassisTrapezoidalController {
   private PIDController m_translateController;
   private PIDController m_thetaController;
 
-  private Debouncer m_atGoalDwellDebouncer = new Debouncer(0.25); // hehehehehe
+  private Debouncer m_atGoalDwellDebouncer = new Debouncer(0.1); // hehehehehe
 
   public ChassisTrapezoidalController(
       TrapezoidProfile.Constraints translateConstraints,
