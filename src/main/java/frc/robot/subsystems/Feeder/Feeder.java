@@ -136,6 +136,11 @@ public class Feeder extends SubsystemBase {
           public boolean isFinished() {
             return m_isFinished || (Constants.kCurrentMode == Mode.SIM && m_isHandOffReady);
           }
+
+          // @Override
+          // public void end(boolean interrupted) {
+          //   stop();
+          // }
         };
     cmd.addRequirements(this);
     return new InstantCommand(() -> cmd.schedule());

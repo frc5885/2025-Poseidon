@@ -16,6 +16,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -28,13 +29,16 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoCommands.AutoScoreCoralAtBranchCommand;
 import frc.robot.AutoCommands.BargeAuto;
 import frc.robot.AutoCommands.MultiCoralAuto;
+import frc.robot.Constants.Mode;
 import frc.robot.commands.AlgaeProcessorCommand;
 import frc.robot.commands.AutoIntakeAlgaeReefCommand;
 import frc.robot.commands.CoralHandoffCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeAlgaeCommand;
+import frc.robot.commands.ManualAlgaeNetCommand;
 import frc.robot.commands.PlaceCoralCommand;
 import frc.robot.commands.ResetSuperStructureCommand;
+import frc.robot.commands.ScoreAlgaeCommand;
 import frc.robot.commands.ScoreAlgaeNetCommand;
 import frc.robot.commands.SuperStructureCommand;
 import frc.robot.io.beambreak.BeamBreakIO;
@@ -112,6 +116,8 @@ public class RobotContainer {
   private final Trigger m_algaeProcessorTrigger;
   /** leftTrigger and button 1 true */
   private final Trigger m_algaeNetTrigger;
+  /** leftTrigger and button 4 true */
+  private final Trigger m_manualAlgaeNetTrigger;
   /** leftBumper and button 2 true */
   private final Trigger m_algaeReefTrigger;
   /** left bumper and button 2 false */
@@ -137,6 +143,8 @@ public class RobotContainer {
 
     m_algaeNetTrigger =
         m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(0));
+    m_manualAlgaeNetTrigger =
+        m_driverController.leftTrigger(0.1).and(m_operatorPanel.getOverrideSwitch(3));
     m_algaeProcessorTrigger =
         m_driverController.leftTrigger(0.1).and(m_operatorPanel.getNegatedOverrideSwitch(0));
     m_algaeReefTrigger =
@@ -481,6 +489,18 @@ public class RobotContainer {
     m_algaeNetTrigger
         .whileTrue(new ScoreAlgaeNetCommand(m_drive, m_superStructure, m_endEffector))
         .onFalse(new ResetSuperStructureCommand(m_drive, m_superStructure, false));
+
+    m_manualAlgaeNetTrigger
+        .whileTrue(new ManualAlgaeNetCommand(m_drive, m_superStructure, m_endEffector))
+        .onFalse(
+            new ScoreAlgaeCommand(m_endEffector)
+                .withTimeout(
+                    (Constants.kCurrentMode == Mode.SIM || DriverStation.isAutonomous())
+                        ? 0.5
+                        : 1.5)
+                .andThen(
+                    new InstantCommand(() -> GamePieceVisualizer.setHasAlgae(false)),
+                    new ResetSuperStructureCommand(m_drive, m_superStructure, false)));
 
     // MANUAL TROUGH SUPERSTRUCTURE
     // m_manualTroughSuperStructureTrigger
