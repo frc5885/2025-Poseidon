@@ -42,10 +42,10 @@ public class DriveConstants {
       };
 
   // Zeroed rotation values for each module, see setup instructions
-  public static final Rotation2d kFrontLeftZeroRotation = new Rotation2d(5.844648404296888);
-  public static final Rotation2d kFrontRightZeroRotation = new Rotation2d(0.5623250622059073);
-  public static final Rotation2d kBackLeftZeroRotation = new Rotation2d(3.840143520854242);
-  public static final Rotation2d kBackRightZeroRotation = new Rotation2d(6.124233327397502);
+  public static final Rotation2d kFrontLeftZeroRotation = new Rotation2d(5.745);
+  public static final Rotation2d kFrontRightZeroRotation = new Rotation2d(0.5755);
+  public static final Rotation2d kBackLeftZeroRotation = new Rotation2d(3.785);
+  public static final Rotation2d kBackRightZeroRotation = new Rotation2d(6.1);
 
   // Device CAN IDs
   public static final int kFrontLeftDriveCanId = 13;
@@ -89,7 +89,7 @@ public class DriveConstants {
   public static final double kTurnEncoderVelocityFactor =
       (2 * Math.PI) / 60.0 / kTurnMotorReduction; // Rotor RPM -> Wheel Rad/Sec
   public static final double kTurnAbsoluteEncoderPositionFactor =
-      2 * Math.PI; // Rotations -> Radians
+      2 * Math.PI / 3.3; // 0-3.3V -> Radians
   public static final double kTurnAbsoluteEncoderVelocityFactor =
       (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
 
@@ -106,7 +106,7 @@ public class DriveConstants {
   public static final double kDriveSimKa = 0.020314;
 
   // Turn PID configuration
-  public static final double kTurnKp = 5.5;
+  public static final double kTurnKp = 1.0;
   public static final double kTurnKd = 0.0;
   public static final double kTurnSimP = 8.0;
   public static final double kTurnSimD = 0.0;

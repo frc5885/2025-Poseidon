@@ -17,6 +17,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkAnalogSensor;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -25,7 +26,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
@@ -42,7 +42,7 @@ public class ModuleIOSpark implements ModuleIO {
   private final SparkMax m_turnSpark;
   private final RelativeEncoder m_driveEncoder;
   private final RelativeEncoder m_turnEncoder;
-  private final AnalogInput m_turnAbsoluteEncoder;
+  private final SparkAnalogSensor m_turnAbsoluteEncoder;
 
   // Queue inputs from odometry thread
   private final Queue<Double> m_timestampQueue;
@@ -84,15 +84,7 @@ public class ModuleIOSpark implements ModuleIO {
             MotorType.kBrushless);
     m_driveEncoder = m_driveSpark.getEncoder();
     m_turnEncoder = m_turnSpark.getEncoder();
-    m_turnAbsoluteEncoder =
-        new AnalogInput(
-            switch (module) {
-              case 0 -> kFrontLeftAbsoluteEncoderPort;
-              case 1 -> kFrontRightAbsoluteEncoderPort;
-              case 2 -> kBackLeftAbsoluteEncoderPort;
-              case 3 -> kBackRightAbsoluteEncoderPort;
-              default -> 0;
-            });
+    m_turnAbsoluteEncoder = m_turnSpark.getAnalog();
 
     // Configure drive motor
     var driveConfig = new SparkMaxConfig();
@@ -136,6 +128,7 @@ public class ModuleIOSpark implements ModuleIO {
         .velocityConversionFactor(kTurnEncoderVelocityFactor)
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
+    turnConfig.analogSensor.positionConversionFactor(kTurnAbsoluteEncoderPositionFactor);
     turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -191,11 +184,11 @@ public class ModuleIOSpark implements ModuleIO {
         m_turnSpark,
         m_turnEncoder::getPosition,
         (value) -> inputs.turnPosition = new Rotation2d(value).minus(m_zeroRotation));
-    inputs.turnAbsolutePosition =
-        new Rotation2d(
-            m_turnAbsoluteEncoder.getVoltage()
-                / RobotController.getVoltage5V()
-                * kTurnAbsoluteEncoderPositionFactor);
+    ifOk(
+        m_turnSpark,
+        m_turnAbsoluteEncoder::getPosition,
+        (value) -> inputs.turnAbsolutePosition = new Rotation2d(value));
+    inputs.turnAbsolutePosition = new Rotation2d(m_turnAbsoluteEncoder.getPosition());
     ifOk(m_turnSpark, m_turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
     ifOk(
         m_turnSpark,
