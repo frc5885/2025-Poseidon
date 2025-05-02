@@ -106,7 +106,7 @@ public class DriveConstants {
   public static final double kDriveSimKa = 0.020314;
 
   // Turn PID configuration
-  public static final double kTurnKp = 1.0;
+  public static final double kTurnKp = 5.5;
   public static final double kTurnKd = 0.0;
   public static final double kTurnSimP = 8.0;
   public static final double kTurnSimD = 0.0;
