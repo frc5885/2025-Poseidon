@@ -3,7 +3,6 @@
     "fwcd.kotlin",
     "richardwillis.vscode-spotless-gradle",
     "streetsidesoftware.code-spell-checker",
-    "edonet.vscode-command-runner",
-    null
+    "edonet.vscode-command-runner"
   ]
 }

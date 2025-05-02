@@ -434,7 +434,7 @@ public class RobotContainer {
                 m_superStructure,
                 m_endEffector,
                 () ->
-                    PoseUtil.INSTANCE.getClosestDesiredBranchID(
+                    PoseUtil.getClosestDesiredBranchID(
                         m_drive.getPose(), Side.from(m_operatorPanel.getReefTarget())),
                 () -> m_operatorPanel.getReefLevel() - 1,
                 m_operatorPanel.getOverrideSwitch(3)))
