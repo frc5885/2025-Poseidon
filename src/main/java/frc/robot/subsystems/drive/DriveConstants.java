@@ -42,10 +42,10 @@ public class DriveConstants {
       };
 
   // Zeroed rotation values for each module, see setup instructions
-  public static final Rotation2d kFrontLeftZeroRotation = new Rotation2d(5.745);
-  public static final Rotation2d kFrontRightZeroRotation = new Rotation2d(0.5755);
-  public static final Rotation2d kBackLeftZeroRotation = new Rotation2d(3.785);
-  public static final Rotation2d kBackRightZeroRotation = new Rotation2d(6.1);
+  public static final Rotation2d kFrontLeftZeroRotation = new Rotation2d(5.844648404296888);
+  public static final Rotation2d kFrontRightZeroRotation = new Rotation2d(0.5623250622059073);
+  public static final Rotation2d kBackLeftZeroRotation = new Rotation2d(3.840143520854242);
+  public static final Rotation2d kBackRightZeroRotation = new Rotation2d(6.124233327397502);
 
   // Device CAN IDs
   public static final int kFrontLeftDriveCanId = 13;
