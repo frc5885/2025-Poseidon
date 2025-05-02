@@ -26,7 +26,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.RobotController;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
@@ -128,7 +127,11 @@ public class ModuleIOSpark implements ModuleIO {
         .velocityConversionFactor(kTurnEncoderVelocityFactor)
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
-    turnConfig.analogSensor.positionConversionFactor(kTurnAbsoluteEncoderPositionFactor);
+    turnConfig
+        .analogSensor
+        .inverted(kTurnEncoderInverted)
+        .positionConversionFactor(kTurnAbsoluteEncoderPositionFactor)
+        .velocityConversionFactor(kTurnAbsoluteEncoderVelocityFactor);
     turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -146,13 +149,7 @@ public class ModuleIOSpark implements ModuleIO {
                 turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     // Reset neo relative encoder using absolute encoder position
     tryUntilOk(
-        m_turnSpark,
-        5,
-        () ->
-            m_turnEncoder.setPosition(
-                m_turnAbsoluteEncoder.getVoltage()
-                    / RobotController.getVoltage5V()
-                    * kTurnAbsoluteEncoderPositionFactor));
+        m_turnSpark, 5, () -> m_turnEncoder.setPosition(m_turnAbsoluteEncoder.getPosition()));
 
     // Create odometry queues
     m_timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
@@ -188,7 +185,6 @@ public class ModuleIOSpark implements ModuleIO {
         m_turnSpark,
         m_turnAbsoluteEncoder::getPosition,
         (value) -> inputs.turnAbsolutePosition = new Rotation2d(value));
-    inputs.turnAbsolutePosition = new Rotation2d(m_turnAbsoluteEncoder.getPosition());
     ifOk(m_turnSpark, m_turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
     ifOk(
         m_turnSpark,
