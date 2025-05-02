@@ -94,8 +94,7 @@ public class Module {
                 .plus(m_driveFF.calculate(nextDriveR).plus(kDriveKs * Math.signum(driveSetpoint)))
                 .get(0, 0));
 
-        m_io.setTurnOpenLoop(
-            m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+        m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
       } else {
         m_driveController.reset();
         m_turnController.reset();
@@ -104,8 +103,7 @@ public class Module {
       if (isClosedLoop) {
         m_io.setDriveOpenLoop(
             m_driveFFVolts + m_driveController.calculate(m_inputs.driveVelocityRadPerSec));
-        m_io.setTurnOpenLoop(
-            m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+        m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
       } else {
         m_driveController.reset();
         m_turnController.reset();
@@ -144,7 +142,7 @@ public class Module {
     isClosedLoop = false;
     m_io.setDriveOpenLoop(output);
     m_turnController.setSetpoint(m_io.getZeroRotation().getRadians());
-    m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+    m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
   }
 
   public void runTurnCharacterization(double output) {

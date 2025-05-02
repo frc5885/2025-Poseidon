@@ -89,9 +89,9 @@ public class DriveConstants {
   public static final double kTurnEncoderVelocityFactor =
       (2 * Math.PI) / 60.0 / kTurnMotorReduction; // Rotor RPM -> Wheel Rad/Sec
   public static final double kTurnAbsoluteEncoderPositionFactor =
-      2 * Math.PI; // Rotations -> Radians
+      2 * Math.PI / 3.3; // 0-3.3V -> Radians
   public static final double kTurnAbsoluteEncoderVelocityFactor =
-      (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
+      kTurnAbsoluteEncoderPositionFactor / 60.0; // RPM -> Rad/Sec
 
   // Drive PID configuration
   public static final double kDriveKp = 0.0;
