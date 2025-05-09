@@ -52,6 +52,9 @@ public class ModuleIOSpark implements ModuleIO {
   private final Debouncer m_driveConnectedDebounce = new Debouncer(0.5);
   private final Debouncer m_turnConnectedDebounce = new Debouncer(0.5);
 
+  // Flag to set relative encoder at startup
+  private boolean m_turnEncoderInitialized = false;
+
   public ModuleIOSpark(int module) {
     m_zeroRotation =
         switch (module) {
@@ -147,10 +150,6 @@ public class ModuleIOSpark implements ModuleIO {
         () ->
             m_turnSpark.configure(
                 turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    // Reset neo relative encoder using absolute encoder position
-    double[] turnAbsPos = new double[1];
-    ifOk(m_turnSpark, m_turnAbsoluteEncoder::getPosition, (value) -> turnAbsPos[0] = value);
-    tryUntilOk(m_turnSpark, 5, () -> m_turnEncoder.setPosition(turnAbsPos[0]));
 
     // Create odometry queues
     m_timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
@@ -206,6 +205,15 @@ public class ModuleIOSpark implements ModuleIO {
     m_timestampQueue.clear();
     m_drivePositionQueue.clear();
     m_turnPositionQueue.clear();
+
+    // Reset neo relative encoder using absolute encoder position
+    if (!m_turnEncoderInitialized) {
+      m_turnEncoderInitialized = true;
+      tryUntilOk(
+          m_turnSpark,
+          5,
+          () -> m_turnEncoder.setPosition(inputs.turnAbsolutePosition.getRadians()));
+    }
   }
 
   @Override
