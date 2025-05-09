@@ -134,7 +134,7 @@ public class Module {
     double velocityRadPerSec = state.speedMetersPerSecond / kWheelRadiusMeters;
     m_driveFFVolts = kDriveKs * Math.signum(velocityRadPerSec) + kDriveKv * velocityRadPerSec;
     m_driveController.setSetpoint(velocityRadPerSec);
-    m_turnController.setSetpoint(state.angle.plus(m_io.getZeroRotation()).getRadians());
+    m_turnController.setSetpoint(state.angle.getRadians());
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
