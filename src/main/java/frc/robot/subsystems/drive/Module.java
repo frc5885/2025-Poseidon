@@ -141,7 +141,7 @@ public class Module {
   public void runCharacterization(double output) {
     isClosedLoop = false;
     m_io.setDriveOpenLoop(output);
-    m_turnController.setSetpoint(m_io.getZeroRotation().getRadians());
+    m_turnController.setSetpoint(0.0);
     m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
   }
 

@@ -180,11 +180,11 @@ public class ModuleIOSpark implements ModuleIO {
     ifOk(
         m_turnSpark,
         m_turnEncoder::getPosition,
-        (value) -> inputs.turnPosition = new Rotation2d(value).minus(m_zeroRotation));
+        (value) -> inputs.turnPosition = new Rotation2d(value));
     ifOk(
         m_turnSpark,
         m_turnAbsoluteEncoder::getPosition,
-        (value) -> inputs.turnAbsolutePosition = new Rotation2d(value));
+        (value) -> inputs.turnAbsolutePosition = new Rotation2d(value).minus(m_zeroRotation));
     ifOk(m_turnSpark, m_turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
     ifOk(
         m_turnSpark,
@@ -200,7 +200,7 @@ public class ModuleIOSpark implements ModuleIO {
         m_drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryTurnPositions =
         m_turnPositionQueue.stream()
-            .map((Double value) -> new Rotation2d(value).minus(m_zeroRotation))
+            .map((Double value) -> new Rotation2d(value))
             .toArray(Rotation2d[]::new);
     m_timestampQueue.clear();
     m_drivePositionQueue.clear();
@@ -224,10 +224,5 @@ public class ModuleIOSpark implements ModuleIO {
   @Override
   public void setTurnOpenLoop(double output) {
     m_turnSpark.setVoltage(output);
-  }
-
-  @Override
-  public Rotation2d getZeroRotation() {
-    return m_zeroRotation;
   }
 }
