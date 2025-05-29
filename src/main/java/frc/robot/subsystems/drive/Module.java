@@ -94,8 +94,7 @@ public class Module {
                 .plus(m_driveFF.calculate(nextDriveR).plus(kDriveKs * Math.signum(driveSetpoint)))
                 .get(0, 0));
 
-        m_io.setTurnOpenLoop(
-            m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+        m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
       } else {
         m_driveController.reset();
         m_turnController.reset();
@@ -104,8 +103,7 @@ public class Module {
       if (isClosedLoop) {
         m_io.setDriveOpenLoop(
             m_driveFFVolts + m_driveController.calculate(m_inputs.driveVelocityRadPerSec));
-        m_io.setTurnOpenLoop(
-            m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+        m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
       } else {
         m_driveController.reset();
         m_turnController.reset();
@@ -136,15 +134,15 @@ public class Module {
     double velocityRadPerSec = state.speedMetersPerSecond / kWheelRadiusMeters;
     m_driveFFVolts = kDriveKs * Math.signum(velocityRadPerSec) + kDriveKv * velocityRadPerSec;
     m_driveController.setSetpoint(velocityRadPerSec);
-    m_turnController.setSetpoint(state.angle.plus(m_io.getZeroRotation()).getRadians());
+    m_turnController.setSetpoint(state.angle.getRadians());
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
     isClosedLoop = false;
     m_io.setDriveOpenLoop(output);
-    m_turnController.setSetpoint(m_io.getZeroRotation().getRadians());
-    m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnAbsolutePosition.getRadians()));
+    m_turnController.setSetpoint(0.0);
+    m_io.setTurnOpenLoop(m_turnController.calculate(m_inputs.turnPosition.getRadians()));
   }
 
   public void runTurnCharacterization(double output) {

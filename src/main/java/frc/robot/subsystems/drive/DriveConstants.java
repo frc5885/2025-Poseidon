@@ -43,7 +43,7 @@ public class DriveConstants {
 
   // Zeroed rotation values for each module, see setup instructions
   public static final Rotation2d kFrontLeftZeroRotation = new Rotation2d(5.844648404296888);
-  public static final Rotation2d kFrontRightZeroRotation = new Rotation2d(0.5623250622059073);
+  public static final Rotation2d kFrontRightZeroRotation = new Rotation2d(0.5237208604812622);
   public static final Rotation2d kBackLeftZeroRotation = new Rotation2d(3.840143520854242);
   public static final Rotation2d kBackRightZeroRotation = new Rotation2d(6.124233327397502);
 
@@ -89,9 +89,9 @@ public class DriveConstants {
   public static final double kTurnEncoderVelocityFactor =
       (2 * Math.PI) / 60.0 / kTurnMotorReduction; // Rotor RPM -> Wheel Rad/Sec
   public static final double kTurnAbsoluteEncoderPositionFactor =
-      2 * Math.PI; // Rotations -> Radians
+      2 * Math.PI / 3.3; // 0-3.3V -> Radians
   public static final double kTurnAbsoluteEncoderVelocityFactor =
-      (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
+      kTurnAbsoluteEncoderPositionFactor / 60.0; // RPM -> Rad/Sec
 
   // Drive PID configuration
   public static final double kDriveKp = 0.0;

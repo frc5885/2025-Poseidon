@@ -16,6 +16,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -465,13 +466,12 @@ public class RobotContainer {
         new AlgaeProcessorCommand(m_superStructure)
             .alongWith(
                 DriveCommands.joystickDriveAtAngle(
-                    m_drive,
-                    () -> -m_driverController.getLeftY(),
-                    () -> -m_driverController.getLeftX(),
-                    () -> -m_driverController.getRightX(),
-                    () -> FieldConstants.getProcessorAngle()))
-        // .unless(() -> DriverStation.isTest()))
-        );
+                        m_drive,
+                        () -> -m_driverController.getLeftY(),
+                        () -> -m_driverController.getLeftX(),
+                        () -> -m_driverController.getRightX(),
+                        () -> FieldConstants.getProcessorAngle())
+                    .unless(() -> DriverStation.isTest())));
     // .onFalse(
     //     new SuperStructureCommand(m_superStructure, () -> SuperStructureState.IDLE)
     //         .alongWith(new ScoreAlgaeCommand(m_endEffector)));
