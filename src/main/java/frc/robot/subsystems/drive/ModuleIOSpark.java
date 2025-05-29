@@ -16,6 +16,7 @@ package frc.robot.subsystems.drive;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAnalogSensor;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -207,12 +208,11 @@ public class ModuleIOSpark implements ModuleIO {
     m_turnPositionQueue.clear();
 
     // Reset neo relative encoder using absolute encoder position
-    if (!m_turnEncoderInitialized) {
-      m_turnEncoderInitialized = true;
-      tryUntilOk(
-          m_turnSpark,
-          5,
-          () -> m_turnEncoder.setPosition(inputs.turnAbsolutePosition.getRadians()));
+    if (!m_turnEncoderInitialized && !inputs.turnAbsolutePosition.equals(new Rotation2d())) {
+      REVLibError result = m_turnEncoder.setPosition(inputs.turnAbsolutePosition.getRadians());
+      if (result == REVLibError.kOk) {
+        m_turnEncoderInitialized = true;
+      }
     }
   }
 
