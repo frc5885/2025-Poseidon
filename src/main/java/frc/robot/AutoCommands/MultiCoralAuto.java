@@ -57,6 +57,7 @@ public class MultiCoralAuto extends SequentialCommandGroup {
               if (Constants.kCurrentMode.equals(Mode.SIM)) {
                 drive.setPose(FieldConstants.getSimInitialPose(side));
                 feeder.simulateCoralFeed();
+                feeder.handoffComplete();
               }
             }));
 
